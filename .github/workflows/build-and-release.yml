@@ -53,8 +53,8 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: executables # Nome do artefato unificado
-        path: dist/${{ matrix.asset_name }} # O caminho do arquivo a ser adicionado
+        name: ${{ matrix.asset_name }}
+        path: dist/${{ matrix.asset_name }}
 
   create-release:
     name: Create Release
@@ -69,7 +69,6 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
-        name: executables # Baixa apenas o artefato 'executables'
         path: artifacts
 
     - name: Display structure of downloaded files
@@ -160,6 +159,6 @@ jobs:
         prerelease: false
         files: |
           artifacts/*
-          artifacts/checksums.txt
+          artifacts/checksums.txt # O curinga 'artifacts/*' já inclui o checksums.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
