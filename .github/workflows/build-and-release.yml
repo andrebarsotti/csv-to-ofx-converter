@@ -76,7 +76,7 @@ jobs:
 
     - name: Create Release Notes
       run: |
-        cat > RELEASE_NOTES.md << 'EOF'
+        cat > RELEASE_NOTES.md << EOF
         # CSV to OFX Converter - Release ${{ github.ref_name }}
 
         ## Downloads
@@ -158,7 +158,6 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          artifacts/*
-          artifacts/checksums.txt # O curinga 'artifacts/*' já inclui o checksums.txt
+          artifacts/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
