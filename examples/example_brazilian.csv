@@ -1,0 +1,11 @@
+data;valor;descricao;tipo
+01/10/2025;-100,50;Supermercado XYZ;DEBIT
+02/10/2025;-50,25;Posto de Gasolina ABC;DEBIT
+03/10/2025;-25,00;Cafeteria;DEBIT
+05/10/2025;1.000,00;Pagamento Salário;CREDIT
+07/10/2025;-150,75;Conta de Luz;DEBIT
+10/10/2025;-80,00;Internet;DEBIT
+12/10/2025;-200,00;Restaurante;DEBIT
+15/10/2025;500,00;Freelance;CREDIT
+18/10/2025;-45,50;Farmácia;DEBIT
+20/10/2025;-120,00;Academia;DEBIT

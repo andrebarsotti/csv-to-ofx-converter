@@ -1,0 +1,10 @@
+name: csv-to-ofx-converter
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - tk
+  - pip
+  - pip:
+    - setuptools

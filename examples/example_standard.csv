@@ -1,0 +1,11 @@
+date,amount,description,type
+2025-10-01,-100.50,Grocery Store XYZ,DEBIT
+2025-10-02,-50.25,Gas Station ABC,DEBIT
+2025-10-03,-25.00,Coffee Shop,DEBIT
+2025-10-05,1000.00,Salary Payment,CREDIT
+2025-10-07,-150.75,Electric Bill,DEBIT
+2025-10-10,-80.00,Internet Service,DEBIT
+2025-10-12,-200.00,Restaurant Dinner,DEBIT
+2025-10-15,500.00,Freelance Payment,CREDIT
+2025-10-18,-45.50,Pharmacy,DEBIT
+2025-10-20,-120.00,Gym Membership,DEBIT

@@ -1,0 +1,40 @@
+# CSV to OFX Converter - Requirements
+#
+# This application uses only Python standard library modules.
+# No external dependencies are required!
+#
+# Python version: 3.7+
+#
+# Standard library modules used:
+# - tkinter (GUI - usually included with Python)
+# - csv (CSV parsing)
+# - os (file operations)
+# - logging (logging functionality)
+# - datetime (date handling)
+# - typing (type hints)
+# - uuid (unique ID generation)
+# - re (regular expressions)
+# - tempfile (for tests)
+# - unittest (testing framework)
+
+# For development and testing:
+# No additional packages needed
+
+# Optional (for code quality checks):
+# pylint>=2.15.0
+# mypy>=0.991
+# black>=22.10.0
+
+# Note: If tkinter is not installed on your system, install it using:
+#
+# Ubuntu/Debian:
+#   sudo apt-get install python3-tk
+#
+# Fedora/RHEL:
+#   sudo dnf install python3-tkinter
+#
+# macOS:
+#   Usually included with Python installation
+#
+# Windows:
+#   Usually included with Python installation

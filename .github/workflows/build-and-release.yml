@@ -1,0 +1,193 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: csv-to-ofx-converter-linux
+            asset_name: csv-to-ofx-converter-linux-x64
+          - os: windows-latest
+            artifact_name: csv-to-ofx-converter-windows
+            asset_name: csv-to-ofx-converter-windows-x64.exe
+          - os: macos-latest
+            artifact_name: csv-to-ofx-converter-macos
+            asset_name: csv-to-ofx-converter-macos-x64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+
+    - name: Build with PyInstaller (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        pyinstaller --onefile \
+          --name="${{ matrix.artifact_name }}" \
+          --add-data "README.md:." \
+          --add-data "README.pt-BR.md:." \
+          --add-data "LICENSE:." \
+          --windowed \
+          --noconfirm \
+          src/csv_to_ofx_converter.py
+
+    - name: Build with PyInstaller (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        pyinstaller --onefile `
+          --name="${{ matrix.artifact_name }}" `
+          --add-data "README.md;." `
+          --add-data "README.pt-BR.md;." `
+          --add-data "LICENSE;." `
+          --windowed `
+          --noconfirm `
+          src/csv_to_ofx_converter.py
+
+    - name: Rename artifact (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
+
+    - name: Rename artifact (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        Move-Item -Path "dist\${{ matrix.artifact_name }}.exe" -Destination "dist\${{ matrix.asset_name }}"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.asset_name }}
+        path: dist/${{ matrix.asset_name }}
+
+  create-release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Display structure of downloaded files
+      run: ls -R artifacts/
+
+    - name: Create Release Notes
+      run: |
+        cat > RELEASE_NOTES.md << 'EOF'
+        # CSV to OFX Converter - Release ${{ github.ref_name }}
+
+        ## Downloads
+
+        Choose the version for your operating system:
+
+        - **Windows**: `csv-to-ofx-converter-windows-x64.exe`
+        - **macOS**: `csv-to-ofx-converter-macos-x64`
+        - **Linux**: `csv-to-ofx-converter-linux-x64`
+
+        ## What's Included
+
+        This release includes self-contained executables that don't require Python installation.
+
+        ### Features
+        - CSV to OFX conversion with GUI
+        - Support for Brazilian and standard CSV formats
+        - Date validation for credit card statements
+        - Multiple currency support (BRL, USD, EUR, GBP)
+        - Flexible column mapping
+
+        ### Installation
+
+        #### Windows
+        1. Download `csv-to-ofx-converter-windows-x64.exe`
+        2. Double-click to run
+        3. Windows may show a security warning - click "More info" then "Run anyway"
+
+        #### macOS
+        1. Download `csv-to-ofx-converter-macos-x64`
+        2. Open Terminal and navigate to download folder
+        3. Make executable: `chmod +x csv-to-ofx-converter-macos-x64`
+        4. Run: `./csv-to-ofx-converter-macos-x64`
+        5. If macOS blocks it, go to System Preferences > Security & Privacy and allow
+
+        #### Linux
+        1. Download `csv-to-ofx-converter-linux-x64`
+        2. Make executable: `chmod +x csv-to-ofx-converter-linux-x64`
+        3. Run: `./csv-to-ofx-converter-linux-x64`
+
+        ## Documentation
+
+        - [English Documentation](https://github.com/${{ github.repository }}/blob/main/README.md)
+        - [Documentação em Português](https://github.com/${{ github.repository }}/blob/main/README.pt-BR.md)
+        - [Date Validation Guide](https://github.com/${{ github.repository }}/blob/main/DATE_VALIDATION_GUIDE.md)
+
+        ## Important Notes
+
+        ⚠️ **This application was developed with AI assistance**
+        - Always maintain backups of your CSV files
+        - Review generated OFX files before importing
+        - Test with small files first
+
+        ## Checksums
+
+        SHA256 checksums are provided below for verification.
+
+        ## Support
+
+        For issues or questions:
+        - Check the [README](https://github.com/${{ github.repository }}/blob/main/README.md)
+        - Review the log file: `csv_to_ofx_converter.log`
+        - Open an issue with details
+
+        ---
+        **Version**: ${{ github.ref_name }}
+        **Build Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        EOF
+
+    - name: Generate checksums
+      run: |
+        cd artifacts
+        for dir in */; do
+          cd "$dir"
+          for file in *; do
+            sha256sum "$file" >> ../checksums.txt
+          done
+          cd ..
+        done
+        cat checksums.txt
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: false
+        files: |
+          artifacts/*/csv-to-ofx-converter-*
+          artifacts/checksums.txt
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
