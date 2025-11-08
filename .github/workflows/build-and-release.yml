@@ -6,6 +6,9 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
@@ -14,13 +17,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: csv-to-ofx-converter-linux
             asset_name: csv-to-ofx-converter-linux-x64
           - os: windows-latest
-            artifact_name: csv-to-ofx-converter-windows
             asset_name: csv-to-ofx-converter-windows-x64.exe
           - os: macos-latest
-            artifact_name: csv-to-ofx-converter-macos
             asset_name: csv-to-ofx-converter-macos-x64
 
     steps:
@@ -31,57 +31,36 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
 
-    - name: Build with PyInstaller (Linux/macOS)
-      if: runner.os != 'Windows'
-      run: |
-        pyinstaller --onefile \
-          --name="${{ matrix.artifact_name }}" \
-          --add-data "README.md:." \
-          --add-data "README.pt-BR.md:." \
-          --add-data "LICENSE:." \
-          --windowed \
-          --noconfirm \
-          src/csv_to_ofx_converter.py
+    - name: Build with PyInstaller using spec file
+      run: pyinstaller csv_to_ofx_converter.spec
 
-    - name: Build with PyInstaller (Windows)
-      if: runner.os == 'Windows'
+    - name: Rename artifact
+      shell: bash
       run: |
-        pyinstaller --onefile `
-          --name="${{ matrix.artifact_name }}" `
-          --add-data "README.md;." `
-          --add-data "README.pt-BR.md;." `
-          --add-data "LICENSE;." `
-          --windowed `
-          --noconfirm `
-          src/csv_to_ofx_converter.py
-
-    - name: Rename artifact (Linux/macOS)
-      if: runner.os != 'Windows'
-      run: |
-        mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
-
-    - name: Rename artifact (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        Move-Item -Path "dist\${{ matrix.artifact_name }}.exe" -Destination "dist\${{ matrix.asset_name }}"
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          mv dist/csv-to-ofx-converter.exe "dist/${{ matrix.asset_name }}"
+        else
+          mv dist/csv-to-ofx-converter "dist/${{ matrix.asset_name }}"
+        fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.asset_name }}
-        path: dist/${{ matrix.asset_name }}
+        name: executables # Nome do artefato unificado
+        path: dist/${{ matrix.asset_name }} # O caminho do arquivo a ser adicionado
 
   create-release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')  
 
     steps:
     - name: Checkout code
@@ -90,6 +69,7 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
+        name: executables # Baixa apenas o artefato 'executables'
         path: artifacts
 
     - name: Display structure of downloaded files
@@ -169,25 +149,17 @@ jobs:
 
     - name: Generate checksums
       run: |
-        cd artifacts
-        for dir in */; do
-          cd "$dir"
-          for file in *; do
-            sha256sum "$file" >> ../checksums.txt
-          done
-          cd ..
-        done
-        cat checksums.txt
+        cd artifacts && find . -type f -exec sha256sum {} + | tee checksums.txt
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: Release ${{ github.ref_name }}
         body_path: RELEASE_NOTES.md
         draft: false
         prerelease: false
         files: |
-          artifacts/*/csv-to-ofx-converter-*
+          artifacts/*
           artifacts/checksums.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
