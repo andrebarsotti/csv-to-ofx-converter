@@ -1,8 +1,8 @@
-# CSV to OFX Converter
+# CSV to OFX Converter - Enhanced Edition
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.0** features a completely redesigned wizard-style interface with advanced features for enhanced user experience.
 
 ## ⚠️ Important Notice
 
@@ -15,18 +15,37 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
 - Use at your own risk - test thoroughly before using with important data
 - Community contributions and improvements are welcome
 
+## ✨ What's New in Version 2.0
+
+**Major User Experience Improvements:**
+
+1. **🎯 Step-by-Step Wizard Interface**: Guided multi-step process with clear progress indicators
+2. **👀 CSV Data Preview**: View your data in a table before converting
+3. **🔄 Value Inversion**: Easily swap debits and credits if needed
+4. **📝 Composite Descriptions**: Combine multiple columns to create transaction descriptions
+5. **✅ Enhanced Date Handling**: Keep, adjust, or exclude out-of-range transactions (new "Keep" option!)
+
 ## Features
 
-- **Intuitive GUI**: User-friendly Tkinter-based interface
+### Core Features
+- **Step-by-Step Wizard Interface**: Intuitive 6-step guided process with visual progress tracking
+- **CSV Data Preview**: View imported data in a tabular format before conversion
 - **Flexible CSV Support**:
   - Standard format (comma delimiter, dot decimal separator)
   - Brazilian format (semicolon delimiter, comma decimal separator)
   - Tab-delimited files
 - **Smart Column Mapping**: Map any CSV column to OFX fields
+- **Composite Descriptions**: Combine up to 4 columns to create rich transaction descriptions
+- **Value Inversion**: Option to invert all transaction values (swap debits and credits)
 - **Automatic Type Detection**: Infers debit/credit from amount sign
 - **Multiple Date Formats**: Supports various date formats (DD/MM/YYYY, YYYY-MM-DD, etc.)
 - **Multiple Currencies**: BRL, USD, EUR, GBP support
-- **Date Validation**: Validate transactions against credit card statement period with options to adjust or exclude out-of-range transactions
+
+### Advanced Features
+- **Date Validation**: Validate transactions against credit card statement period with three options:
+  - **Keep**: Use the original date as-is
+  - **Adjust**: Move to the nearest valid boundary (start or end date)
+  - **Exclude**: Remove the transaction from the output
 - **Error Handling**: Graceful error handling with detailed logging
 - **Comprehensive Testing**: Full unit test suite included
 
@@ -116,22 +135,26 @@ pip install pyinstaller
 
 **Method 1 - GUI Application**:
 ```bash
-python3 csv_to_ofx_converter.py
+python3 src/csv_to_ofx_converter.py
 ```
 
-This will launch the graphical interface where you can:
-1. Select your CSV file
-2. Configure CSV format (delimiter and decimal separator)
-3. Set OFX configuration (account ID, bank name, currency)
-4. Map CSV columns to OFX fields
-5. Convert and save the OFX file
+This will launch the **Enhanced Wizard Interface** that guides you through a 6-step process:
 
-### Step-by-Step Guide
+1. **File Selection** - Select your CSV file
+2. **CSV Format** - Configure delimiter and decimal separator
+3. **Data Preview** - View your data in a table (up to 100 rows)
+4. **OFX Configuration** - Set account details and currency
+5. **Field Mapping** - Map columns and configure composite descriptions
+6. **Advanced Options** - Value inversion and date validation
 
-#### 1. Select CSV File
-Click the "Browse..." button to select your CSV file.
+### Wizard Step-by-Step Guide
 
-#### 2. Configure CSV Format
+#### Step 1: File Selection
+Click the "Browse..." button to select your CSV file. The file should have a header row with column names.
+
+#### Step 2: Configure CSV Format
+
+Choose the format that matches your CSV file:
 
 **Standard Format** (international):
 - Delimiter: Comma (,)
@@ -143,49 +166,136 @@ Click the "Browse..." button to select your CSV file.
 - Decimal: Comma (,)
 - Example: `22/10/2025;100,50;Compra`
 
-#### 3. Set OFX Configuration
+**Tab Format**:
+- Delimiter: Tab
+- Decimal: Dot (.) or Comma (,)
 
-- **Account ID**: Your account identifier (e.g., account number)
-- **Bank Name**: Name of your financial institution
-- **Currency**: BRL (Brazilian Real), USD, EUR, or GBP
+Click "Next" to proceed.
 
-#### 3b. Enable Date Validation (Optional)
+#### Step 3: Data Preview
 
-For credit card statements, you can validate that all transactions fall within the statement period:
+**New in Version 2.0!**
 
-1. **Check the box**: "Enable date validation for credit card statement period"
-2. **Set Start Date**: Enter the first day of your statement period (e.g., `2025-10-01` or `01/10/2025`)
-3. **Set End Date**: Enter the last day of your statement period (e.g., `2025-10-31` or `31/10/2025`)
+View your CSV data in an easy-to-read table format. This step allows you to:
+- Verify that the file was parsed correctly
+- Check that column names match your expectations
+- Review sample data before conversion
+- Use the "Reload Data" button if you need to change format settings
 
-When enabled, the converter will:
-- Check each transaction date against the specified range
-- For transactions outside the range, prompt you to choose:
-  - **Adjust to boundary**: Move the date to the nearest valid boundary (start or end date)
-  - **Exclude transaction**: Remove the transaction from the output
+The preview shows up to 100 rows for performance. Click "Next" to continue.
 
-This is useful for ensuring statement consistency and handling transactions that may appear in the CSV but don't belong to the current statement period.
+#### Step 4: OFX Configuration
 
-#### 4. Load CSV
+Set up the output file settings:
 
-Click "Load CSV" to parse the file. The application will display all available columns.
+- **Account ID**: Your account identifier (e.g., account number) - **Required**
+- **Bank Name**: Name of your financial institution (default: "CSV Import")
+- **Currency**: Choose from:
+  - BRL (Brazilian Real)
+  - USD (US Dollar)
+  - EUR (Euro)
+  - GBP (British Pound)
 
-#### 5. Map Columns
+Click "Next" to proceed to field mapping.
 
-Map your CSV columns to OFX fields:
+#### Step 5: Field Mapping
 
-| OFX Field | Required | Description | Example CSV Column |
-|-----------|----------|-------------|--------------------|
-| Date | Yes | Transaction date | `data`, `date`, `Data` |
-| Amount | Yes | Transaction amount | `valor`, `amount`, `Valor` |
-| Description | Yes | Transaction description | `descricao`, `description`, `memo` |
-| Type | No | Transaction type (DEBIT/CREDIT) | `tipo`, `type` |
-| ID | No | Unique transaction identifier | `id`, `transaction_id` |
+Map your CSV columns to OFX transaction fields:
 
-**Note**: If Type is not mapped, it will be inferred from the amount sign (negative = DEBIT, positive = CREDIT).
+| OFX Field | Required | Description |
+|-----------|----------|-------------|
+| Date | Yes | Transaction date |
+| Amount | Yes | Transaction amount (positive or negative) |
+| Description | No* | Transaction description |
+| Type | No | Transaction type: DEBIT or CREDIT |
+| ID | No | Unique transaction identifier |
 
-#### 6. Convert
+**\*Note**: Description is required, but you can use either a single column mapping OR the composite description feature (see below).
 
-Click "Convert to OFX" to generate the OFX file. Choose where to save it.
+##### Composite Description Feature
+
+**New in Version 2.0!**
+
+Combine multiple CSV columns to create rich transaction descriptions:
+
+1. Select up to 4 columns to combine
+2. Choose a separator:
+   - Space: `Column1 Column2 Column3`
+   - Dash: `Column1 - Column2 - Column3`
+   - Comma: `Column1, Column2, Column3`
+   - Pipe: `Column1 | Column2 | Column3`
+
+**Example**:
+If your CSV has columns `category`, `merchant`, and `notes`:
+- Column 1: `category`
+- Column 2: `merchant`
+- Column 3: `notes`
+- Separator: Dash (-)
+- Result: `Food - Restaurant ABC - Business lunch`
+
+This is useful for creating detailed descriptions from multiple data fields, especially common in bank exports that separate transaction information across columns.
+
+Click "Next" to proceed to advanced options.
+
+#### Step 6: Advanced Options
+
+Configure optional advanced features:
+
+##### Value Inversion
+
+**New in Version 2.0!**
+
+Check the box "Invert all transaction values" if:
+- Your CSV shows debits as positive and credits as negative (or vice versa)
+- You need to flip the sign of all amounts
+
+This will multiply all transaction amounts by -1 and swap DEBIT/CREDIT types.
+
+**Example**: A CSV with `100.50` (positive) that should be a debit will become `-100.50` (DEBIT).
+
+##### Transaction Date Validation
+
+**Enhanced in Version 2.0!**
+
+For credit card statements, validate that transactions fall within the statement period:
+
+1. Check "Enable date validation for credit card statement period"
+2. Enter **Start Date** (e.g., `2025-10-01` or `01/10/2025`)
+3. Enter **End Date** (e.g., `2025-10-31` or `31/10/2025`)
+
+When enabled, for each transaction outside the date range, you'll see a dialog with **three options**:
+
+- **Keep original date**: Use the date as-is, even though it's out of range
+- **Adjust to boundary**: Move the date to the nearest valid boundary (start or end date)
+- **Exclude transaction**: Remove the transaction from the OFX file
+
+**Benefits**:
+- Ensures statement period accuracy
+- Helps identify misplaced transactions
+- Maintains chronological consistency
+- Provides full control over edge cases
+
+**Example Dialog**:
+```
+Transaction #5 is out of range!
+Transaction Date: 02/11/2025
+Description: Restaurant ABC
+Valid Range: 2025-10-01 to 2025-10-31
+Status: This transaction occurs AFTER the end date
+
+How would you like to handle this transaction?
+[Keep original date] [Adjust to end date] [Exclude this transaction]
+```
+
+Once configured, click **"Convert to OFX"** to start the conversion!
+
+### Navigation
+
+- **Back button**: Go to the previous step
+- **Next button**: Proceed to the next step (validates current step)
+- **Convert to OFX button**: Appears on the last step
+- **Clear All button**: Reset the entire form and return to Step 1
+- **Progress indicator**: Shows current step and completed steps
 
 ## CSV Format Examples
 
@@ -205,7 +315,25 @@ data;valor;descricao;tipo
 03/10/2025;1.000,00;Salário;CREDIT
 ```
 
-### Example 3: Minimal Format (Without Type Column)
+### Example 3: Composite Description Format
+```csv
+date,category,merchant,notes,amount
+2025-10-01,Food,Restaurant ABC,Business lunch,-75.50
+2025-10-02,Transport,Uber,Airport trip,-25.00
+2025-10-03,Salary,Company XYZ,Monthly payment,3000.00
+```
+
+**Mapping for Example 3**:
+- Date → `date`
+- Amount → `amount`
+- Composite Description:
+  - Column 1: `category`
+  - Column 2: `merchant`
+  - Column 3: `notes`
+  - Separator: Dash (-)
+- Result: `Food - Restaurant ABC - Business lunch`
+
+### Example 4: Minimal Format (Without Type Column)
 ```csv
 date,amount,description
 2025-10-01,-100.50,Grocery Store
@@ -213,7 +341,7 @@ date,amount,description
 2025-10-03,1000.00,Salary
 ```
 
-### Example 4: Nubank Export Format
+### Example 5: Nubank Export Format
 ```csv
 date,category,title,amount
 01/10/2025,alimentação,Supermercado ABC,-100,50
@@ -224,12 +352,28 @@ date,category,title,amount
 **Column Mapping for Nubank**:
 - Date → `date`
 - Amount → `amount`
-- Description → `title` (or combine `category` + `title`)
-- Type → Not mapped (auto-detected)
+- Option A: Description → `title`
+- Option B: Composite Description:
+  - Column 1: `category`
+  - Column 2: `title`
+  - Separator: Dash (-)
 
-### Example 5: Using Date Validation
+### Example 6: Using Value Inversion
 
-When you have transactions that might fall outside your statement period:
+**CSV with inverted values:**
+```csv
+date,amount,description
+2025-10-01,100.50,Expense (should be negative)
+2025-10-02,50.25,Expense (should be negative)
+2025-10-03,-1000.00,Income (should be positive)
+```
+
+Enable "Invert all transaction values" to fix the signs:
+- `100.50` becomes `-100.50` (DEBIT)
+- `50.25` becomes `-50.25` (DEBIT)
+- `-1000.00` becomes `1000.00` (CREDIT)
+
+### Example 7: Using Date Validation
 
 **CSV with mixed dates:**
 ```csv
@@ -242,15 +386,9 @@ date,amount,description
 ```
 
 **With Date Validation enabled (Start: 01/10/2025, End: 31/10/2025):**
-- Transaction from 28/09/2025: You'll be prompted to adjust to 01/10/2025 or exclude
+- Transaction from 28/09/2025: Choose to Keep / Adjust to 01/10/2025 / Exclude
 - Transactions from 01/10/2025 to 31/10/2025: Processed normally
-- Transaction from 02/11/2025: You'll be prompted to adjust to 31/10/2025 or exclude
-
-**Benefits:**
-- Ensures statement period accuracy
-- Helps identify misplaced transactions
-- Maintains chronological consistency
-- Provides control over boundary cases
+- Transaction from 02/11/2025: Choose to Keep / Adjust to 31/10/2025 / Exclude
 
 ## Supported Date Formats
 
@@ -323,7 +461,9 @@ The project includes comprehensive unit tests covering:
 - Amount normalization
 - Date parsing
 - OFX generation
+- Value inversion
 - Date validation and boundary handling
+- Composite descriptions
 - Error handling
 - Integration tests
 
@@ -340,6 +480,7 @@ python3 -m unittest tests.test_converter -v
 ### Run specific test class:
 ```bash
 python3 -m unittest tests.test_converter.TestCSVParser
+python3 -m unittest tests.test_converter.TestOFXGenerator
 python3 -m unittest tests.test_converter.TestDateValidator
 ```
 
@@ -352,7 +493,7 @@ test_date_validator_initialization (tests.test_converter.TestDateValidator) ... 
 test_is_within_range (tests.test_converter.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 33 tests in 0.XXXs
+Ran 33+ tests in 0.XXXs
 
 OK
 ```
@@ -362,9 +503,10 @@ OK
 The application generates detailed logs in `csv_to_ofx_converter.log`:
 
 ```
-2025-11-08 12:34:56 - __main__ - INFO - CSVParser initialized: delimiter=',', decimal='.'
+2025-11-08 12:34:56 - __main__ - INFO - GUI initialized with wizard interface
 2025-11-08 12:35:01 - __main__ - INFO - Parsed CSV: 150 rows, 4 columns
-2025-11-08 12:35:10 - __main__ - INFO - OFX file generated: output.ofx (150 transactions)
+2025-11-08 12:35:05 - __main__ - INFO - Value inversion enabled - all amounts will be inverted
+2025-11-08 12:35:10 - __main__ - INFO - OFX file generated: output.ofx (148 transactions)
 ```
 
 ## Troubleshooting
@@ -394,6 +536,9 @@ sudo dnf install python3-tkinter
 ### Issue: Characters appear corrupted (encoding issues)
 **Solution**: The application uses UTF-8 encoding. Ensure your CSV file is saved in UTF-8 format.
 
+### Issue: Preview shows wrong data
+**Solution**: Go back to Step 2 and verify your delimiter and decimal separator settings. Use "Reload Data" button after changing settings.
+
 ## Architecture
 
 ### Code Structure
@@ -405,6 +550,7 @@ csv_to_ofx_converter.py
 │   └── normalize_amount()    # Convert amounts to float
 │
 ├── OFXGenerator       # Generates OFX files
+│   ├── __init__(invert_values)   # Initialize with inversion option
 │   ├── add_transaction()     # Add transaction to queue
 │   ├── _parse_date()         # Parse and format dates
 │   └── generate()            # Create OFX file
@@ -414,51 +560,58 @@ csv_to_ofx_converter.py
 │   ├── get_date_status()     # Determine before/within/after
 │   └── adjust_date_to_boundary()  # Adjust out-of-range dates
 │
-└── ConverterGUI       # Tkinter GUI interface
-    ├── _create_widgets()     # Build UI components
-    ├── _load_csv()           # Load and parse CSV
+└── ConverterGUI       # Wizard-style Tkinter GUI
+    ├── _create_widgets()     # Build wizard interface
+    ├── _show_step()          # Display specific step
+    ├── _create_step_*()      # Create each step's UI
+    ├── _load_csv_data()      # Load and parse CSV
+    ├── _populate_preview()   # Fill data preview table
     ├── _convert()            # Perform conversion
     ├── _handle_out_of_range_transaction()  # Handle date issues
     └── _log()                # Display log messages
 ```
 
+### Wizard Flow
+
+```
+Step 1: File Selection
+    ↓
+Step 2: CSV Format Configuration
+    ↓
+Step 3: Data Preview (NEW!)
+    ↓ (CSV loaded automatically)
+Step 4: OFX Configuration
+    ↓
+Step 5: Field Mapping + Composite Description (NEW!)
+    ↓
+Step 6: Advanced Options (Value Inversion + Date Validation)
+    ↓
+Conversion Process
+    ↓
+OFX File Generated
+```
+
 ### Data Flow
 
 ```
-CSV File → CSVParser → Field Mapping → Date Validation → OFXGenerator → OFX File
-    ↓                        ↓              ↓                  ↓
-  Headers              GUI Mapping     DateValidator      Transactions
-  Rows                 User Input      (Optional)         Formatting
-                                       User Decision
-```
-
-**Date Validation Flow** (when enabled):
-```
-Transaction Date → DateValidator.is_within_range()
-                        ↓
-                   [Within Range?]
-                    ↙         ↘
-                  Yes          No
-                   ↓            ↓
-            Add to OFX    Show Dialog
-                              ↓
-                      [User Choice]
-                       ↙         ↘
-                  Adjust        Exclude
-                    ↓              ↓
-              Adjust Date     Skip Transaction
-                    ↓
-               Add to OFX
+CSV File → CSVParser → Preview Display → Field Mapping → Advanced Options → OFXGenerator → OFX File
+    ↓            ↓            ↓               ↓                ↓                ↓
+  Headers     Rows      Treeview      User Mapping    Value Inversion    Transactions
+              Data     (Step 3)       Composite Desc   Date Validation    Formatting
+                                                       (Keep/Adjust/Exclude)
 ```
 
 ## Best Practices
 
-1. **Always review your CSV data** before conversion to ensure data quality
+1. **Always review your CSV data in the preview** (Step 3) before conversion
 2. **Test with a small CSV file** first to verify mappings are correct
 3. **Keep backups** of your original CSV files
-4. **Verify OFX files** in your financial software before importing large datasets
-5. **Use consistent date formats** within a single CSV file
-6. **Check logs** if conversion fails or produces unexpected results
+4. **Use composite descriptions** when you have multiple related columns to combine
+5. **Use value inversion** if your amounts have the wrong sign instead of manually editing the CSV
+6. **Verify OFX files** in your financial software before importing large datasets
+7. **Use consistent date formats** within a single CSV file
+8. **Check logs** if conversion fails or produces unexpected results
+9. **Use date validation** to ensure statement period accuracy for credit cards
 
 ## Compatibility
 
@@ -484,6 +637,7 @@ The generated OFX files are compatible with:
 - Supports credit card statement format (CREDITCARDMSGSRSV1)
 - Does not support investment accounts or complex transactions
 - Single account per file
+- Preview limited to first 100 rows for performance
 
 ## Future Improvements
 
@@ -497,14 +651,13 @@ Possible enhancements for future versions:
 6. **Transaction Categories**: Support OFX category/class fields
 7. **Investment Accounts**: Support for stocks, bonds, and investment transactions
 8. **OFX 2.x Support**: Add support for newer OFX XML format
-9. **Preview Mode**: Preview OFX output before saving
-10. **Custom Date Formats**: Allow users to specify custom date formats
-11. **Command-Line Interface**: Add CLI for scripting and automation
-12. **Transaction Deduplication**: Detect and handle duplicate transactions
-13. **Split Transactions**: Support for split/categorized transactions
-14. **Multi-language Support**: Internationalization (i18n)
-15. **Excel Support**: Direct import from .xlsx/.xls files
-16. **Bulk Date Adjustment**: Option to adjust all out-of-range dates at once
+9. **Custom Date Formats**: Allow users to specify custom date formats
+10. **Command-Line Interface**: Add CLI for scripting and automation
+11. **Transaction Deduplication**: Detect and handle duplicate transactions
+12. **Split Transactions**: Support for split/categorized transactions
+13. **Multi-language Support**: Internationalization (i18n)
+14. **Excel Support**: Direct import from .xlsx/.xls files
+15. **Bulk Date Adjustment**: Option to adjust all out-of-range dates at once without dialogs
 
 ## Contributing
 
@@ -542,12 +695,45 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 1.1.0
+**Version**: 2.0.0 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.0.0 (November 2025) - Enhanced Edition
+- **Major Update**: Complete UI redesign with step-by-step wizard interface
+  - 6-step guided process with visual progress indicators
+  - Clear navigation with Back/Next buttons
+  - Step validation before proceeding
+- **New Feature**: CSV Data Preview
+  - View imported data in tabular format (Treeview widget)
+  - Preview up to 100 rows before conversion
+  - Reload data button for format changes
+- **New Feature**: Composite Descriptions
+  - Combine up to 4 CSV columns into transaction descriptions
+  - Choice of separators: Space, Dash, Comma, Pipe
+  - Perfect for CSVs with split transaction information
+- **New Feature**: Value Inversion
+  - Option to invert all transaction amounts
+  - Automatically swaps DEBIT/CREDIT types
+  - Useful for CSVs with reversed sign conventions
+- **Enhanced Feature**: Date Validation with "Keep" Option
+  - Added "Keep original date" as third option
+  - Now offers: Keep / Adjust / Exclude
+  - Better statistics tracking (kept out-of-range dates)
+- **UI Improvements**:
+  - Larger window (1000x850) for better visibility
+  - Improved layout and spacing
+  - Better error messages and validation
+  - Enhanced activity log display
+  - Clear step descriptions and help text
+- **Documentation**: Complete rewrite of README with:
+  - Detailed wizard step instructions
+  - New feature examples
+  - Updated screenshots and diagrams
+  - Best practices guide
 
 ### Version 1.1.0 (November 2025)
 - **New Feature**: Credit card statement date validation

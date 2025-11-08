@@ -8,8 +8,17 @@ A complete application to convert CSV files to OFX format with GUI support.
 This module provides a graphical interface for converting bank transaction CSV files
 into OFX (Open Financial Exchange) format, supporting both standard and Brazilian CSV formats.
 
+Features:
+- Multi-step wizard interface
+- CSV data preview
+- Flexible column mapping
+- Composite descriptions from multiple columns
+- Value inversion option
+- Transaction date validation with Keep/Adjust/Exclude options
+
 Author: Generated for Brazilian banking compatibility
 License: MIT
+Version: 2.0.0
 """
 
 import tkinter as tk
@@ -20,7 +29,6 @@ import logging
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 import uuid
-import re
 
 
 # Configure logging
@@ -141,10 +149,16 @@ class OFXGenerator:
     institutions and users.
     """
 
-    def __init__(self):
-        """Initialize OFX generator."""
+    def __init__(self, invert_values: bool = False):
+        """
+        Initialize OFX generator.
+
+        Args:
+            invert_values: If True, invert all transaction amounts (debit <-> credit)
+        """
         self.transactions = []
-        logger.info("OFXGenerator initialized")
+        self.invert_values = invert_values
+        logger.info(f"OFXGenerator initialized (invert_values={invert_values})")
 
     def add_transaction(self, date: str, amount: float, description: str,
                        transaction_type: str = 'DEBIT', transaction_id: Optional[str] = None):
@@ -161,6 +175,12 @@ class OFXGenerator:
         parsed_date = self._parse_date(date)
         if transaction_id is None:
             transaction_id = str(uuid.uuid4())
+
+        # Apply value inversion if enabled
+        if self.invert_values:
+            amount = -amount
+            # Swap transaction type
+            transaction_type = 'CREDIT' if transaction_type == 'DEBIT' else 'DEBIT'
 
         # Ensure amount sign matches transaction type
         if transaction_type == 'DEBIT' and amount > 0:
@@ -475,11 +495,13 @@ class DateValidator:
 
 class ConverterGUI:
     """
-    Graphical User Interface for CSV to OFX conversion.
+    Graphical User Interface for CSV to OFX conversion with step-by-step wizard.
 
-    Provides an intuitive interface for:
+    Provides an intuitive multi-step interface for:
     - Loading CSV files
+    - Previewing CSV data
     - Mapping CSV columns to OFX fields
+    - Creating composite descriptions
     - Configuring CSV format (delimiter, decimal separator)
     - Converting and saving OFX files
     """
@@ -492,8 +514,8 @@ class ConverterGUI:
             root: Tkinter root window
         """
         self.root = root
-        self.root.title("CSV to OFX Converter")
-        self.root.geometry("900x800")
+        self.root.title("CSV to OFX Converter - Enhanced Edition")
+        self.root.geometry("1000x850")
 
         # Variables
         self.csv_file = tk.StringVar()
@@ -505,16 +527,32 @@ class ConverterGUI:
         self.start_date = tk.StringVar(value='')
         self.end_date = tk.StringVar(value='')
         self.enable_date_validation = tk.BooleanVar(value=False)
+        self.invert_values = tk.BooleanVar(value=False)
+
+        # Composite description variables
+        self.description_columns = []  # List of selected column variables
+        self.description_separator = tk.StringVar(value=' ')
 
         # Data
         self.csv_headers: List[str] = []
         self.csv_data: List[Dict[str, str]] = []
         self.field_mappings: Dict[str, tk.StringVar] = {}
 
+        # Wizard steps
+        self.current_step = 0
+        self.steps = [
+            "File Selection",
+            "CSV Format",
+            "Data Preview",
+            "OFX Configuration",
+            "Field Mapping",
+            "Advanced Options"
+        ]
+
         # Build UI
         self._create_widgets()
 
-        logger.info("GUI initialized")
+        logger.info("GUI initialized with wizard interface")
 
     def _create_widgets(self):
         """Create all GUI widgets."""
@@ -526,162 +564,234 @@ class ConverterGUI:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(2, weight=1)
 
         # Title
-        title_label = ttk.Label(main_frame, text="CSV to OFX Converter",
+        title_label = ttk.Label(main_frame, text="CSV to OFX Converter - Enhanced Edition",
                                font=('Arial', 16, 'bold'))
-        title_label.grid(row=0, column=0, pady=(0, 20))
+        title_label.grid(row=0, column=0, pady=(0, 10))
 
-        # File selection section
-        self._create_file_section(main_frame, row=1)
+        # Progress indicator
+        self._create_progress_indicator(main_frame, row=1)
 
-        # CSV format section
-        self._create_format_section(main_frame, row=2)
+        # Step container
+        self.step_container = ttk.Frame(main_frame)
+        self.step_container.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+        self.step_container.columnconfigure(0, weight=1)
+        self.step_container.rowconfigure(0, weight=1)
 
-        # OFX configuration section
-        self._create_ofx_config_section(main_frame, row=3)
-
-        # Date validation section
-        self._create_date_validation_section(main_frame, row=4)
-
-        # Field mapping section
-        self._create_mapping_section(main_frame, row=5)
-
-        # Buttons section
-        self._create_buttons_section(main_frame, row=6)
+        # Navigation buttons
+        self._create_navigation_buttons(main_frame, row=3)
 
         # Log section
-        self._create_log_section(main_frame, row=7)
+        self._create_log_section(main_frame, row=4)
 
-    def _create_file_section(self, parent: ttk.Frame, row: int):
-        """Create file selection section."""
-        frame = ttk.LabelFrame(parent, text="1. Select CSV File", padding="10")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
-        frame.columnconfigure(1, weight=1)
+        # Show first step
+        self._show_step(0)
 
-        ttk.Label(frame, text="CSV File:").grid(row=0, column=0, sticky=tk.W, padx=5)
-        ttk.Entry(frame, textvariable=self.csv_file, state='readonly').grid(
-            row=0, column=1, sticky=(tk.W, tk.E), padx=5)
-        ttk.Button(frame, text="Browse...", command=self._browse_csv).grid(
-            row=0, column=2, padx=5)
+    def _create_progress_indicator(self, parent: ttk.Frame, row: int):
+        """Create progress indicator showing current step."""
+        self.progress_frame = ttk.Frame(parent)
+        self.progress_frame.grid(row=row, column=0, pady=10)
 
-    def _create_format_section(self, parent: ttk.Frame, row: int):
-        """Create CSV format configuration section."""
-        frame = ttk.LabelFrame(parent, text="2. CSV Format", padding="10")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
+        self.step_labels = []
+        for idx, step_name in enumerate(self.steps):
+            # Step number/indicator
+            indicator = ttk.Label(
+                self.progress_frame,
+                text=str(idx + 1),
+                width=3,
+                font=('Arial', 10, 'bold'),
+                relief='solid',
+                borderwidth=1,
+                padding=5
+            )
+            indicator.grid(row=0, column=idx * 2, padx=2)
 
-        # Delimiter options
-        ttk.Label(frame, text="Delimiter:").grid(row=0, column=0, sticky=tk.W, padx=5)
-        delimiter_frame = ttk.Frame(frame)
-        delimiter_frame.grid(row=0, column=1, sticky=tk.W, padx=5)
+            # Step name
+            label = ttk.Label(
+                self.progress_frame,
+                text=step_name,
+                font=('Arial', 8)
+            )
+            label.grid(row=1, column=idx * 2, padx=2)
 
-        ttk.Radiobutton(delimiter_frame, text="Comma (,)", variable=self.delimiter,
-                       value=',').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(delimiter_frame, text="Semicolon (;)", variable=self.delimiter,
-                       value=';').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(delimiter_frame, text="Tab", variable=self.delimiter,
-                       value='\t').pack(side=tk.LEFT, padx=5)
+            self.step_labels.append((indicator, label))
 
-        # Decimal separator options
-        ttk.Label(frame, text="Decimal:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        decimal_frame = ttk.Frame(frame)
-        decimal_frame.grid(row=1, column=1, sticky=tk.W, padx=5)
+            # Arrow (except after last step)
+            if idx < len(self.steps) - 1:
+                arrow = ttk.Label(self.progress_frame, text="→", font=('Arial', 12))
+                arrow.grid(row=0, column=idx * 2 + 1, padx=5)
 
-        ttk.Radiobutton(decimal_frame, text="Dot (.)", variable=self.decimal_separator,
-                       value='.').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(decimal_frame, text="Comma (,)", variable=self.decimal_separator,
-                       value=',').pack(side=tk.LEFT, padx=5)
+    def _update_progress_indicator(self):
+        """Update progress indicator to highlight current step."""
+        for idx, (indicator, label) in enumerate(self.step_labels):
+            if idx == self.current_step:
+                indicator.configure(background='#4CAF50', foreground='white')
+                label.configure(font=('Arial', 8, 'bold'))
+            elif idx < self.current_step:
+                indicator.configure(background='#E0E0E0')
+                label.configure(font=('Arial', 8))
+            else:
+                indicator.configure(background='white')
+                label.configure(font=('Arial', 8))
 
-    def _create_ofx_config_section(self, parent: ttk.Frame, row: int):
-        """Create OFX configuration section."""
-        frame = ttk.LabelFrame(parent, text="3. OFX Configuration", padding="10")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
-        frame.columnconfigure(1, weight=1)
+    def _create_navigation_buttons(self, parent: ttk.Frame, row: int):
+        """Create navigation buttons."""
+        nav_frame = ttk.Frame(parent)
+        nav_frame.grid(row=row, column=0, pady=10)
 
-        ttk.Label(frame, text="Account ID:").grid(row=0, column=0, sticky=tk.W, padx=5)
-        ttk.Entry(frame, textvariable=self.account_id).grid(
-            row=0, column=1, sticky=(tk.W, tk.E), padx=5, pady=2)
+        self.back_btn = ttk.Button(nav_frame, text="← Back", command=self._go_back)
+        self.back_btn.pack(side=tk.LEFT, padx=5)
 
-        ttk.Label(frame, text="Bank Name:").grid(row=1, column=0, sticky=tk.W, padx=5)
-        ttk.Entry(frame, textvariable=self.bank_name).grid(
-            row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=2)
+        self.next_btn = ttk.Button(nav_frame, text="Next →", command=self._go_next)
+        self.next_btn.pack(side=tk.LEFT, padx=5)
 
-        ttk.Label(frame, text="Currency:").grid(row=2, column=0, sticky=tk.W, padx=5)
-        currency_combo = ttk.Combobox(frame, textvariable=self.currency,
-                                     values=['BRL', 'USD', 'EUR', 'GBP'], state='readonly')
-        currency_combo.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
+        self.convert_btn = ttk.Button(nav_frame, text="Convert to OFX", command=self._convert)
+        self.convert_btn.pack(side=tk.LEFT, padx=5)
+        self.convert_btn.pack_forget()  # Hidden initially
 
-    def _create_date_validation_section(self, parent: ttk.Frame, row: int):
-        """Create date validation section."""
-        frame = ttk.LabelFrame(parent, text="3b. Statement Date Range (Optional)", padding="10")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
-        frame.columnconfigure(1, weight=1)
-
-        # Checkbox to enable date validation
-        enable_check = ttk.Checkbutton(
-            frame,
-            text="Enable date validation for credit card statement period",
-            variable=self.enable_date_validation,
-            command=self._toggle_date_inputs
-        )
-        enable_check.grid(row=0, column=0, columnspan=3, sticky=tk.W, padx=5, pady=5)
-
-        # Start date
-        ttk.Label(frame, text="Start Date:").grid(row=1, column=0, sticky=tk.W, padx=5)
-        self.start_date_entry = ttk.Entry(frame, textvariable=self.start_date, state='disabled')
-        self.start_date_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=2)
-        ttk.Label(frame, text="(e.g., 2025-10-01 or 01/10/2025)",
-                 font=('Arial', 8), foreground='gray').grid(row=1, column=2, sticky=tk.W, padx=5)
-
-        # End date
-        ttk.Label(frame, text="End Date:").grid(row=2, column=0, sticky=tk.W, padx=5)
-        self.end_date_entry = ttk.Entry(frame, textvariable=self.end_date, state='disabled')
-        self.end_date_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=5, pady=2)
-        ttk.Label(frame, text="(e.g., 2025-10-31 or 31/10/2025)",
-                 font=('Arial', 8), foreground='gray').grid(row=2, column=2, sticky=tk.W, padx=5)
-
-    def _toggle_date_inputs(self):
-        """Enable or disable date input fields based on checkbox state."""
-        if self.enable_date_validation.get():
-            self.start_date_entry.configure(state='normal')
-            self.end_date_entry.configure(state='normal')
-        else:
-            self.start_date_entry.configure(state='disabled')
-            self.end_date_entry.configure(state='disabled')
-
-    def _create_mapping_section(self, parent: ttk.Frame, row: int):
-        """Create field mapping section."""
-        self.mapping_frame = ttk.LabelFrame(parent, text="4. Map CSV Columns to OFX Fields",
-                                           padding="10")
-        self.mapping_frame.grid(row=row, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        self.mapping_frame.columnconfigure(1, weight=1)
-        parent.rowconfigure(row, weight=1)
-
-        # This will be populated when CSV is loaded
-        self.mapping_widgets = {}
-
-    def _create_buttons_section(self, parent: ttk.Frame, row: int):
-        """Create action buttons section."""
-        frame = ttk.Frame(parent)
-        frame.grid(row=row, column=0, pady=10)
-
-        ttk.Button(frame, text="Load CSV", command=self._load_csv).pack(
-            side=tk.LEFT, padx=5)
-        ttk.Button(frame, text="Convert to OFX", command=self._convert).pack(
-            side=tk.LEFT, padx=5)
-        ttk.Button(frame, text="Clear", command=self._clear).pack(
-            side=tk.LEFT, padx=5)
+        ttk.Button(nav_frame, text="Clear All", command=self._clear).pack(side=tk.LEFT, padx=5)
 
     def _create_log_section(self, parent: ttk.Frame, row: int):
         """Create log display section."""
-        frame = ttk.LabelFrame(parent, text="Log", padding="5")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        frame = ttk.LabelFrame(parent, text="Activity Log", padding="5")
+        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(0, weight=1)
-        parent.rowconfigure(row, weight=1)
 
-        self.log_text = scrolledtext.ScrolledText(frame, height=8, state='disabled')
-        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.log_text = scrolledtext.ScrolledText(frame, height=6, state='disabled')
+        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
+
+    def _show_step(self, step_num: int):
+        """Show the specified step."""
+        # Clear current step container
+        for widget in self.step_container.winfo_children():
+            widget.destroy()
+
+        # Update current step
+        self.current_step = step_num
+        self._update_progress_indicator()
+
+        # Create step content
+        if step_num == 0:
+            self._create_step_file_selection()
+        elif step_num == 1:
+            self._create_step_csv_format()
+        elif step_num == 2:
+            self._create_step_data_preview()
+        elif step_num == 3:
+            self._create_step_ofx_config()
+        elif step_num == 4:
+            self._create_step_field_mapping()
+        elif step_num == 5:
+            self._create_step_advanced_options()
+
+        # Update navigation buttons
+        self._update_navigation_buttons()
+
+    def _update_navigation_buttons(self):
+        """Update navigation button states."""
+        # Back button
+        if self.current_step == 0:
+            self.back_btn.configure(state='disabled')
+        else:
+            self.back_btn.configure(state='normal')
+
+        # Next button and Convert button
+        if self.current_step < len(self.steps) - 1:
+            self.next_btn.pack(side=tk.LEFT, padx=5)
+            self.convert_btn.pack_forget()
+        else:
+            self.next_btn.pack_forget()
+            self.convert_btn.pack(side=tk.LEFT, padx=5)
+
+    def _go_back(self):
+        """Go to previous step."""
+        if self.current_step > 0:
+            self._show_step(self.current_step - 1)
+
+    def _go_next(self):
+        """Go to next step."""
+        # Validate current step before proceeding
+        if not self._validate_current_step():
+            return
+
+        if self.current_step < len(self.steps) - 1:
+            self._show_step(self.current_step + 1)
+
+    def _validate_current_step(self) -> bool:
+        """Validate current step before proceeding."""
+        if self.current_step == 0:
+            # File selection
+            if not self.csv_file.get():
+                messagebox.showwarning("Required", "Please select a CSV file")
+                return False
+        elif self.current_step == 1:
+            # CSV format - always valid
+            pass
+        elif self.current_step == 2:
+            # Data preview - load CSV if not already loaded
+            if not self.csv_data:
+                try:
+                    self._load_csv_data()
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to load CSV:\n{e}")
+                    return False
+        elif self.current_step == 3:
+            # OFX config
+            if not self.account_id.get():
+                messagebox.showwarning("Required", "Please enter an Account ID")
+                return False
+        elif self.current_step == 4:
+            # Field mapping
+            date_col = self.field_mappings.get('date')
+            amount_col = self.field_mappings.get('amount')
+
+            if not date_col or date_col.get() == '-- Not Mapped --':
+                messagebox.showwarning("Required", "Please map the Date field")
+                return False
+            if not amount_col or amount_col.get() == '-- Not Mapped --':
+                messagebox.showwarning("Required", "Please map the Amount field")
+                return False
+
+            # Check description mapping
+            desc_col = self.field_mappings.get('description')
+            if not desc_col or desc_col.get() == '-- Not Mapped --':
+                # Check if composite description is configured
+                if not any(var.get() != '-- Not Selected --' for var in self.description_columns):
+                    messagebox.showwarning("Required",
+                        "Please map the Description field or configure composite description")
+                    return False
+
+        return True
+
+    # ==================== STEP 1: FILE SELECTION ====================
+
+    def _create_step_file_selection(self):
+        """Create file selection step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 1: Select CSV File", padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame.columnconfigure(1, weight=1)
+
+        ttk.Label(frame, text="Select a CSV file to convert to OFX format:",
+                 font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
+
+        ttk.Label(frame, text="CSV File:", font=('Arial', 10, 'bold')).grid(
+            row=1, column=0, sticky=tk.W, padx=5, pady=10)
+
+        ttk.Entry(frame, textvariable=self.csv_file, state='readonly', width=50).grid(
+            row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=10)
+
+        ttk.Button(frame, text="Browse...", command=self._browse_csv).grid(
+            row=1, column=2, padx=5, pady=10)
+
+        # Info text
+        info_text = ("Select a CSV file containing your bank transactions.\n"
+                    "The file should have a header row with column names.\n"
+                    "Supported formats: CSV with comma, semicolon, or tab delimiters.")
+        ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
+                 wraplength=600, justify=tk.LEFT).grid(
+            row=2, column=0, columnspan=3, sticky=tk.W, pady=20)
 
     def _browse_csv(self):
         """Open file dialog to select CSV file."""
@@ -693,76 +803,391 @@ class ConverterGUI:
             self.csv_file.set(filename)
             self._log(f"Selected file: {filename}")
 
-    def _load_csv(self):
-        """Load and parse CSV file."""
-        if not self.csv_file.get():
-            messagebox.showwarning("Warning", "Please select a CSV file first")
+    # ==================== STEP 2: CSV FORMAT ====================
+
+    def _create_step_csv_format(self):
+        """Create CSV format configuration step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 2: Configure CSV Format", padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+
+        ttk.Label(frame, text="Select the format of your CSV file:",
+                 font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
+
+        # Delimiter options
+        ttk.Label(frame, text="Column Delimiter:", font=('Arial', 10, 'bold')).grid(
+            row=1, column=0, sticky=tk.W, pady=10)
+
+        delimiter_frame = ttk.Frame(frame)
+        delimiter_frame.grid(row=1, column=1, sticky=tk.W, padx=20, pady=10)
+
+        ttk.Radiobutton(delimiter_frame, text="Comma (,) - Standard format",
+                       variable=self.delimiter, value=',').pack(anchor=tk.W, pady=2)
+        ttk.Radiobutton(delimiter_frame, text="Semicolon (;) - Common in Brazilian exports",
+                       variable=self.delimiter, value=';').pack(anchor=tk.W, pady=2)
+        ttk.Radiobutton(delimiter_frame, text="Tab - Tab-separated values",
+                       variable=self.delimiter, value='\t').pack(anchor=tk.W, pady=2)
+
+        # Decimal separator options
+        ttk.Label(frame, text="Decimal Separator:", font=('Arial', 10, 'bold')).grid(
+            row=2, column=0, sticky=tk.W, pady=10)
+
+        decimal_frame = ttk.Frame(frame)
+        decimal_frame.grid(row=2, column=1, sticky=tk.W, padx=20, pady=10)
+
+        ttk.Radiobutton(decimal_frame, text="Dot (.) - Standard format (e.g., 100.50)",
+                       variable=self.decimal_separator, value='.').pack(anchor=tk.W, pady=2)
+        ttk.Radiobutton(decimal_frame, text="Comma (,) - Brazilian format (e.g., 100,50)",
+                       variable=self.decimal_separator, value=',').pack(anchor=tk.W, pady=2)
+
+        # Info text
+        info_text = ("These settings determine how the CSV file is parsed.\n"
+                    "Common combinations:\n"
+                    "• Standard: Comma delimiter + Dot decimal (1,234.56)\n"
+                    "• Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
+        ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
+                 wraplength=600, justify=tk.LEFT).grid(
+            row=3, column=0, columnspan=2, sticky=tk.W, pady=20)
+
+    # ==================== STEP 3: DATA PREVIEW ====================
+
+    def _create_step_data_preview(self):
+        """Create data preview step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 3: Preview CSV Data", padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(1, weight=1)
+
+        # Info label
+        info_frame = ttk.Frame(frame)
+        info_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        info_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(info_frame, text="Preview of your CSV data:",
+                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W)
+
+        # Load button
+        ttk.Button(info_frame, text="Reload Data",
+                  command=lambda: self._load_csv_data(force_reload=True)).grid(
+            row=0, column=1, sticky=tk.E, padx=5)
+
+        # Create treeview for data preview
+        tree_frame = ttk.Frame(frame)
+        tree_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        tree_frame.columnconfigure(0, weight=1)
+        tree_frame.rowconfigure(0, weight=1)
+
+        # Scrollbars
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
+
+        self.preview_tree = ttk.Treeview(tree_frame,
+                                         yscrollcommand=vsb.set,
+                                         xscrollcommand=hsb.set)
+        vsb.configure(command=self.preview_tree.yview)
+        hsb.configure(command=self.preview_tree.xview)
+
+        self.preview_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
+
+        # Stats label
+        self.preview_stats_label = ttk.Label(frame, text="", font=('Arial', 9))
+        self.preview_stats_label.grid(row=2, column=0, sticky=tk.W, pady=(10, 0))
+
+        # Load data if not already loaded
+        if not self.csv_data:
+            try:
+                self._load_csv_data()
+            except Exception as e:
+                self._log(f"Error loading CSV: {e}")
+        else:
+            self._populate_preview()
+
+    def _load_csv_data(self, force_reload: bool = False):
+        """Load CSV data."""
+        if self.csv_data and not force_reload:
             return
 
-        try:
-            self._log("Loading CSV file...")
+        if not self.csv_file.get():
+            raise ValueError("No CSV file selected")
 
-            # Create parser with selected format
-            parser = CSVParser(
-                delimiter=self.delimiter.get(),
-                decimal_separator=self.decimal_separator.get()
-            )
+        self._log("Loading CSV data...")
 
-            # Parse file
-            self.csv_headers, self.csv_data = parser.parse_file(self.csv_file.get())
+        # Create parser with selected format
+        parser = CSVParser(
+            delimiter=self.delimiter.get(),
+            decimal_separator=self.decimal_separator.get()
+        )
 
-            # Update mapping UI
-            self._update_mapping_ui()
+        # Parse file
+        self.csv_headers, self.csv_data = parser.parse_file(self.csv_file.get())
 
-            self._log(f"CSV loaded successfully: {len(self.csv_data)} rows")
-            messagebox.showinfo("Success", f"CSV file loaded successfully!\n"
-                                         f"Rows: {len(self.csv_data)}\n"
-                                         f"Columns: {len(self.csv_headers)}")
+        self._log(f"CSV loaded: {len(self.csv_data)} rows, {len(self.csv_headers)} columns")
 
-        except Exception as e:
-            self._log(f"Error loading CSV: {e}")
-            messagebox.showerror("Error", f"Failed to load CSV file:\n{e}")
+        # Update preview if on preview step
+        if self.current_step == 2:
+            self._populate_preview()
 
-    def _update_mapping_ui(self):
-        """Update field mapping UI with CSV columns."""
-        # Clear existing mappings
-        for widget in self.mapping_frame.winfo_children():
-            widget.destroy()
+    def _populate_preview(self):
+        """Populate the preview treeview with CSV data."""
+        # Clear existing items
+        for item in self.preview_tree.get_children():
+            self.preview_tree.delete(item)
 
-        self.field_mappings.clear()
+        if not self.csv_data:
+            return
 
-        # Define OFX fields that need mapping
+        # Configure columns
+        self.preview_tree['columns'] = self.csv_headers
+        self.preview_tree['show'] = 'headings'
+
+        # Set column headings and widths
+        for col in self.csv_headers:
+            self.preview_tree.heading(col, text=col)
+            self.preview_tree.column(col, width=120, anchor=tk.W)
+
+        # Add data rows (limit to first 100 for performance)
+        max_rows = min(100, len(self.csv_data))
+        for row in self.csv_data[:max_rows]:
+            values = [row.get(col, '') for col in self.csv_headers]
+            self.preview_tree.insert('', tk.END, values=values)
+
+        # Update stats
+        stats_text = f"Showing {max_rows} of {len(self.csv_data)} rows"
+        if len(self.csv_data) > max_rows:
+            stats_text += f" (limited to first {max_rows} for preview)"
+        self.preview_stats_label.configure(text=stats_text)
+
+    # ==================== STEP 4: OFX CONFIGURATION ====================
+
+    def _create_step_ofx_config(self):
+        """Create OFX configuration step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 4: OFX Configuration", padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame.columnconfigure(1, weight=1)
+
+        ttk.Label(frame, text="Configure the OFX output file settings:",
+                 font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
+
+        # Account ID
+        ttk.Label(frame, text="Account ID:", font=('Arial', 10, 'bold')).grid(
+            row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.account_id, width=40).grid(
+            row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(frame, text="(Required - Your account number or identifier)",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=2, column=1, sticky=tk.W, padx=5)
+
+        # Bank Name
+        ttk.Label(frame, text="Bank Name:", font=('Arial', 10, 'bold')).grid(
+            row=3, column=0, sticky=tk.W, padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.bank_name, width=40).grid(
+            row=3, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(frame, text="(Optional - Default: 'CSV Import')",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=4, column=1, sticky=tk.W, padx=5)
+
+        # Currency
+        ttk.Label(frame, text="Currency:", font=('Arial', 10, 'bold')).grid(
+            row=5, column=0, sticky=tk.W, padx=5, pady=5)
+        currency_combo = ttk.Combobox(frame, textvariable=self.currency,
+                                     values=['BRL', 'USD', 'EUR', 'GBP'],
+                                     state='readonly', width=10)
+        currency_combo.grid(row=5, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(frame, text="(BRL=Brazilian Real, USD=US Dollar, EUR=Euro, GBP=British Pound)",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=6, column=1, sticky=tk.W, padx=5)
+
+    # ==================== STEP 5: FIELD MAPPING ====================
+
+    def _create_step_field_mapping(self):
+        """Create field mapping step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 5: Map CSV Columns to OFX Fields",
+                              padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame.columnconfigure(1, weight=1)
+
+        # Info label
+        ttk.Label(frame, text="Map your CSV columns to OFX transaction fields:",
+                 font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
+
+        # Ensure CSV is loaded
+        if not self.csv_headers:
+            ttk.Label(frame, text="No CSV data loaded. Please go back to step 3.",
+                     foreground='red').grid(row=1, column=0, columnspan=3)
+            return
+
+        # Define OFX fields
         ofx_fields = [
-            ('date', 'Date', 'Transaction date'),
-            ('amount', 'Amount', 'Transaction amount'),
-            ('description', 'Description', 'Transaction description/memo'),
-            ('type', 'Type (optional)', 'Transaction type: DEBIT or CREDIT'),
-            ('id', 'ID (optional)', 'Unique transaction identifier'),
+            ('date', 'Date *', 'Transaction date'),
+            ('amount', 'Amount *', 'Transaction amount (positive or negative)'),
+            ('description', 'Description', 'Transaction description (or use composite below)'),
+            ('type', 'Type', 'Transaction type: DEBIT or CREDIT (optional)'),
+            ('id', 'ID', 'Unique transaction identifier (optional)'),
         ]
 
-        # Add "None" option for optional fields
         column_options = ['-- Not Mapped --'] + self.csv_headers
 
         # Create mapping widgets
-        for idx, (field_key, field_label, field_help) in enumerate(ofx_fields):
-            ttk.Label(self.mapping_frame, text=f"{field_label}:").grid(
-                row=idx, column=0, sticky=tk.W, padx=5, pady=3)
+        for idx, (field_key, field_label, field_help) in enumerate(ofx_fields, start=1):
+            ttk.Label(frame, text=f"{field_label}:", font=('Arial', 10, 'bold')).grid(
+                row=idx, column=0, sticky=tk.W, padx=5, pady=5)
 
-            var = tk.StringVar(value='-- Not Mapped --')
-            self.field_mappings[field_key] = var
+            if field_key not in self.field_mappings:
+                self.field_mappings[field_key] = tk.StringVar(value='-- Not Mapped --')
 
-            combo = ttk.Combobox(self.mapping_frame, textvariable=var,
-                               values=column_options, state='readonly')
-            combo.grid(row=idx, column=1, sticky=(tk.W, tk.E), padx=5, pady=3)
+            combo = ttk.Combobox(frame, textvariable=self.field_mappings[field_key],
+                               values=column_options, state='readonly', width=30)
+            combo.grid(row=idx, column=1, sticky=tk.W, padx=5, pady=5)
 
-            ttk.Label(self.mapping_frame, text=field_help, font=('Arial', 8),
-                     foreground='gray').grid(row=idx, column=2, sticky=tk.W, padx=5)
+            ttk.Label(frame, text=field_help, font=('Arial', 8), foreground='gray').grid(
+                row=idx, column=2, sticky=tk.W, padx=5, pady=5)
 
-        self.mapping_frame.columnconfigure(1, weight=1)
+        # Composite description section
+        ttk.Separator(frame, orient='horizontal').grid(
+            row=len(ofx_fields) + 1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=20)
+
+        ttk.Label(frame, text="Composite Description (Optional)",
+                 font=('Arial', 11, 'bold')).grid(
+            row=len(ofx_fields) + 2, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
+
+        ttk.Label(frame, text="Combine multiple columns to create transaction descriptions:",
+                 font=('Arial', 9)).grid(
+            row=len(ofx_fields) + 3, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
+
+        # Create composite description interface
+        composite_frame = ttk.Frame(frame)
+        composite_frame.grid(row=len(ofx_fields) + 4, column=0, columnspan=3,
+                            sticky=(tk.W, tk.E), pady=5)
+
+        self._create_composite_description_ui(composite_frame)
+
+        # Note
+        note_text = ("* Required fields\n"
+                    "Note: If composite description is configured, it will be used instead of "
+                    "the Description field mapping.")
+        ttk.Label(frame, text=note_text, font=('Arial', 8), foreground='gray',
+                 wraplength=700, justify=tk.LEFT).grid(
+            row=len(ofx_fields) + 5, column=0, columnspan=3, sticky=tk.W, pady=(20, 0))
+
+    def _create_composite_description_ui(self, parent: ttk.Frame):
+        """Create UI for composite description configuration."""
+        parent.columnconfigure(1, weight=1)
+
+        # Up to 4 column selectors
+        column_options = ['-- Not Selected --'] + self.csv_headers
+
+        self.description_columns = []
+        for i in range(4):
+            ttk.Label(parent, text=f"Column {i+1}:", font=('Arial', 9)).grid(
+                row=i, column=0, sticky=tk.W, padx=5, pady=3)
+
+            var = tk.StringVar(value='-- Not Selected --')
+            self.description_columns.append(var)
+
+            combo = ttk.Combobox(parent, textvariable=var,
+                               values=column_options, state='readonly', width=30)
+            combo.grid(row=i, column=1, sticky=tk.W, padx=5, pady=3)
+
+        # Separator
+        ttk.Label(parent, text="Separator:", font=('Arial', 9)).grid(
+            row=4, column=0, sticky=tk.W, padx=5, pady=3)
+
+        sep_frame = ttk.Frame(parent)
+        sep_frame.grid(row=4, column=1, sticky=tk.W, padx=5, pady=3)
+
+        ttk.Radiobutton(sep_frame, text="Space", variable=self.description_separator,
+                       value=' ').pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(sep_frame, text="Dash (-)", variable=self.description_separator,
+                       value=' - ').pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(sep_frame, text="Comma (,)", variable=self.description_separator,
+                       value=', ').pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(sep_frame, text="Pipe (|)", variable=self.description_separator,
+                       value=' | ').pack(side=tk.LEFT, padx=5)
+
+    # ==================== STEP 6: ADVANCED OPTIONS ====================
+
+    def _create_step_advanced_options(self):
+        """Create advanced options step."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 6: Advanced Options", padding="20")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame.columnconfigure(0, weight=1)
+
+        ttk.Label(frame, text="Configure optional advanced features:",
+                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 20))
+
+        # Value Inversion
+        inversion_frame = ttk.LabelFrame(frame, text="Value Inversion", padding="10")
+        inversion_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=10)
+
+        ttk.Checkbutton(
+            inversion_frame,
+            text="Invert all transaction values (swap debits and credits)",
+            variable=self.invert_values
+        ).pack(anchor=tk.W, pady=5)
+
+        ttk.Label(inversion_frame,
+                 text="Use this if your CSV shows debits as positive and credits as negative,\n"
+                      "or vice versa. This will multiply all amounts by -1.",
+                 font=('Arial', 8), foreground='gray').pack(anchor=tk.W, pady=5)
+
+        # Date Validation
+        validation_frame = ttk.LabelFrame(frame, text="Transaction Date Validation", padding="10")
+        validation_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=10)
+        validation_frame.columnconfigure(1, weight=1)
+
+        ttk.Checkbutton(
+            validation_frame,
+            text="Enable date validation for credit card statement period",
+            variable=self.enable_date_validation,
+            command=self._toggle_date_inputs
+        ).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=5)
+
+        ttk.Label(validation_frame, text="Start Date:").grid(
+            row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        self.start_date_entry = ttk.Entry(validation_frame, textvariable=self.start_date,
+                                          state='disabled', width=20)
+        self.start_date_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(validation_frame, text="(e.g., 2025-10-01 or 01/10/2025)",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=1, column=2, sticky=tk.W, padx=5, pady=5)
+
+        ttk.Label(validation_frame, text="End Date:").grid(
+            row=2, column=0, sticky=tk.W, padx=5, pady=5)
+        self.end_date_entry = ttk.Entry(validation_frame, textvariable=self.end_date,
+                                        state='disabled', width=20)
+        self.end_date_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(validation_frame, text="(e.g., 2025-10-31 or 31/10/2025)",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=2, column=2, sticky=tk.W, padx=5, pady=5)
+
+        ttk.Label(validation_frame,
+                 text="When enabled, transactions outside the date range will prompt you to:\n"
+                      "• Keep the original date\n"
+                      "• Adjust to the nearest boundary (start or end date)\n"
+                      "• Exclude the transaction from the OFX file",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=3, column=0, columnspan=3, sticky=tk.W, pady=10)
+
+        # Ready to convert
+        ttk.Label(frame, text="✓ Configuration complete! Click 'Convert to OFX' to proceed.",
+                 font=('Arial', 10, 'bold'), foreground='green').grid(
+            row=3, column=0, sticky=tk.W, pady=(20, 0))
+
+    def _toggle_date_inputs(self):
+        """Enable or disable date input fields based on checkbox state."""
+        if self.enable_date_validation.get():
+            self.start_date_entry.configure(state='normal')
+            self.end_date_entry.configure(state='normal')
+        else:
+            self.start_date_entry.configure(state='disabled')
+            self.end_date_entry.configure(state='disabled')
+
+    # ==================== CONVERSION ====================
 
     def _handle_out_of_range_transaction(self, row_idx: int, date_str: str,
                                          status: str, validator: DateValidator,
-                                         description: str) -> Optional[str]:
+                                         description: str) -> Tuple[Optional[str], str]:
         """
         Show dialog to handle an out-of-range transaction.
 
@@ -774,12 +1199,14 @@ class ConverterGUI:
             description: Transaction description
 
         Returns:
-            Adjusted date string, or None to exclude the transaction
+            Tuple of (adjusted_date, action) where:
+            - adjusted_date: New date string or None to exclude
+            - action: 'keep', 'adjust', or 'exclude'
         """
         # Create dialog
         dialog = tk.Toplevel(self.root)
         dialog.title("Out-of-Range Transaction Detected")
-        dialog.geometry("600x300")
+        dialog.geometry("650x350")
         dialog.transient(self.root)
         dialog.grab_set()
 
@@ -844,6 +1271,11 @@ class ConverterGUI:
         buttons_frame = ttk.Frame(main_frame)
         buttons_frame.pack(pady=10)
 
+        def keep_date():
+            result['action'] = 'keep'
+            result['date'] = date_str
+            dialog.destroy()
+
         def adjust_date():
             adjusted_date = validator.adjust_date_to_boundary(date_str)
             result['action'] = 'adjust'
@@ -853,6 +1285,14 @@ class ConverterGUI:
         def exclude_transaction():
             result['action'] = 'exclude'
             dialog.destroy()
+
+        # Keep button (NEW!)
+        keep_btn = ttk.Button(
+            buttons_frame,
+            text="Keep original date",
+            command=keep_date
+        )
+        keep_btn.pack(side=tk.LEFT, padx=5)
 
         # Adjust button
         boundary = "start date" if status == 'before' else "end date"
@@ -871,13 +1311,22 @@ class ConverterGUI:
         )
         exclude_btn.pack(side=tk.LEFT, padx=5)
 
+        # Explanation
+        explanation = ttk.Label(
+            main_frame,
+            text="• Keep: Use the original date as-is\n"
+                 "• Adjust: Change to the nearest valid date\n"
+                 "• Exclude: Remove this transaction from the OFX file",
+            font=('Arial', 8),
+            foreground='gray',
+            justify=tk.LEFT
+        )
+        explanation.pack(pady=10)
+
         # Wait for dialog to close
         dialog.wait_window()
 
-        if result['action'] == 'adjust':
-            return result['date']
-        else:
-            return None
+        return result['date'], result['action']
 
     def _convert(self):
         """Convert CSV to OFX."""
@@ -885,15 +1334,22 @@ class ConverterGUI:
             messagebox.showwarning("Warning", "Please load a CSV file first")
             return
 
-        # Validate required mappings
+        # Validate field mappings
         date_col = self.field_mappings['date'].get()
         amount_col = self.field_mappings['amount'].get()
-        desc_col = self.field_mappings['description'].get()
 
-        if date_col == '-- Not Mapped --' or amount_col == '-- Not Mapped --' \
-           or desc_col == '-- Not Mapped --':
+        if date_col == '-- Not Mapped --' or amount_col == '-- Not Mapped --':
             messagebox.showwarning("Warning",
-                                  "Please map at least Date, Amount, and Description fields")
+                                  "Please map at least Date and Amount fields")
+            return
+
+        # Check description - either regular or composite
+        desc_col = self.field_mappings['description'].get()
+        use_composite = any(var.get() != '-- Not Selected --' for var in self.description_columns)
+
+        if desc_col == '-- Not Mapped --' and not use_composite:
+            messagebox.showwarning("Warning",
+                                  "Please map the Description field or configure composite description")
             return
 
         # Initialize date validator if enabled
@@ -922,7 +1378,10 @@ class ConverterGUI:
                 delimiter=self.delimiter.get(),
                 decimal_separator=self.decimal_separator.get()
             )
-            generator = OFXGenerator()
+            generator = OFXGenerator(invert_values=self.invert_values.get())
+
+            if self.invert_values.get():
+                self._log("Value inversion enabled - all amounts will be inverted")
 
             # Get optional field mappings
             type_col = self.field_mappings['type'].get()
@@ -933,13 +1392,28 @@ class ConverterGUI:
             processed = 0
             excluded = 0
             adjusted = 0
+            kept_out_of_range = 0
 
             # Process each row
             for row_idx, row in enumerate(self.csv_data, 1):
                 try:
                     date = row[date_col]
                     amount = parser.normalize_amount(row[amount_col])
-                    description = row[desc_col]
+
+                    # Get description (composite or single column)
+                    if use_composite:
+                        desc_parts = []
+                        for var in self.description_columns:
+                            col_name = var.get()
+                            if col_name != '-- Not Selected --' and col_name in row:
+                                value = row[col_name].strip()
+                                if value:
+                                    desc_parts.append(value)
+                        description = self.description_separator.get().join(desc_parts)
+                        if not description:
+                            description = "Transaction"
+                    else:
+                        description = row[desc_col]
 
                     # Validate date if validator is enabled
                     if date_validator:
@@ -948,20 +1422,21 @@ class ConverterGUI:
                             self._log(f"Row {row_idx}: Date {date} is out of range ({status})")
 
                             # Show dialog and get user choice
-                            adjusted_date = self._handle_out_of_range_transaction(
+                            adjusted_date, action = self._handle_out_of_range_transaction(
                                 row_idx, date, status, date_validator, description
                             )
 
-                            if adjusted_date is None:
-                                # User chose to exclude
+                            if action == 'exclude':
                                 self._log(f"Row {row_idx}: Transaction excluded by user")
                                 excluded += 1
                                 continue
-                            else:
-                                # User chose to adjust
+                            elif action == 'adjust':
                                 self._log(f"Row {row_idx}: Date adjusted from {date} to {adjusted_date}")
                                 date = adjusted_date
                                 adjusted += 1
+                            elif action == 'keep':
+                                self._log(f"Row {row_idx}: Keeping original date {date}")
+                                kept_out_of_range += 1
 
                     # Get transaction type if mapped
                     if type_col != '-- Not Mapped --' and type_col in row:
@@ -1015,12 +1490,23 @@ class ConverterGUI:
 
             # Build success message with statistics
             success_msg = (f"OFX file created successfully!\n"
-                          f"Location: {output_file}\n"
-                          f"Total rows processed: {total_rows}\n"
-                          f"Transactions included: {processed}")
+                          f"Location: {output_file}\n\n"
+                          f"Statistics:\n"
+                          f"• Total rows processed: {total_rows}\n"
+                          f"• Transactions included: {processed}\n"
+                          f"• Transactions excluded: {excluded}")
 
             if date_validator:
-                success_msg += f"\nDate-adjusted: {adjusted}\nExcluded: {excluded}"
+                success_msg += (f"\n\nDate Validation:\n"
+                              f"• Dates adjusted: {adjusted}\n"
+                              f"• Out-of-range dates kept: {kept_out_of_range}\n"
+                              f"• Excluded by user: {excluded}")
+
+            if self.invert_values.get():
+                success_msg += "\n\n• Value inversion applied to all transactions"
+
+            if use_composite:
+                success_msg += "\n• Composite descriptions created from multiple columns"
 
             messagebox.showinfo("Success", success_msg)
 
@@ -1039,13 +1525,16 @@ class ConverterGUI:
         self.start_date.set('')
         self.end_date.set('')
         self.enable_date_validation.set(False)
+        self.invert_values.set(False)
+        self.description_separator.set(' ')
+        self.field_mappings.clear()
+        self.description_columns.clear()
         self._toggle_date_inputs()
 
-        # Clear mapping UI
-        for widget in self.mapping_frame.winfo_children():
-            widget.destroy()
+        # Go back to first step
+        self._show_step(0)
 
-        self._log("Form cleared")
+        self._log("Form cleared - returned to Step 1")
 
     def _log(self, message: str):
         """

@@ -340,6 +340,71 @@ class TestOFXGenerator(unittest.TestCase):
 
             self.assertIn(f'<CURDEF>{currency}</CURDEF>', content)
 
+    def test_value_inversion_feature(self):
+        """Test value inversion feature (NEW in v2.0)."""
+        generator = OFXGenerator(invert_values=True)
+
+        # Add a debit transaction with negative amount
+        generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+
+        # With inversion: amount should be inverted to positive and type to CREDIT
+        self.assertEqual(generator.transactions[0]['amount'], 100.50)
+        self.assertEqual(generator.transactions[0]['type'], 'CREDIT')
+
+        # Add a credit transaction with positive amount
+        generator.add_transaction(
+            date='2025-10-02',
+            amount=500.00,
+            description='Payment',
+            transaction_type='CREDIT'
+        )
+
+        # With inversion: amount should be negative and type should be DEBIT
+        self.assertEqual(generator.transactions[1]['amount'], -500.00)
+        self.assertEqual(generator.transactions[1]['type'], 'DEBIT')
+
+    def test_value_inversion_with_complete_conversion(self):
+        """Test value inversion in complete OFX generation (NEW in v2.0)."""
+        generator = OFXGenerator(invert_values=True)
+
+        # Add multiple transactions
+        generator.add_transaction('2025-10-01', -100, 'Expense', 'DEBIT')
+        generator.add_transaction('2025-10-02', 200, 'Income', 'CREDIT')
+
+        output_file = os.path.join(self.temp_dir, 'inverted.ofx')
+        generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank'
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check inverted amounts
+        self.assertIn('<TRNAMT>100.00</TRNAMT>', content)  # Was -100, now 100
+        self.assertIn('<TRNAMT>-200.00</TRNAMT>', content)  # Was 200, now -200
+
+    def test_value_inversion_disabled(self):
+        """Test normal operation with inversion disabled (NEW in v2.0)."""
+        generator = OFXGenerator(invert_values=False)
+
+        generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+
+        # Without inversion: should remain unchanged
+        self.assertEqual(generator.transactions[0]['amount'], -100.50)
+        self.assertEqual(generator.transactions[0]['type'], 'DEBIT')
+
 
 class TestDateValidator(unittest.TestCase):
     """Test cases for Date Validator."""
@@ -582,6 +647,139 @@ class TestIntegration(unittest.TestCase):
         self.assertIn('<MEMO>Compra 1</MEMO>', content)
         self.assertIn('<TRNAMT>-100.50</TRNAMT>', content)
         self.assertIn('<TRNAMT>1000.00</TRNAMT>', content)
+
+    def test_composite_description(self):
+        """Test composite description feature (NEW in v2.0)."""
+        # Create test CSV with multiple columns for description
+        csv_content = """date,category,merchant,notes,amount
+2025-10-01,Food,Restaurant ABC,Business lunch,-75.50
+2025-10-02,Transport,Uber,Airport trip,-25.00
+2025-10-03,Salary,Company XYZ,Monthly payment,3000.00"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_composite.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        # Parse CSV
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Generate OFX with composite descriptions
+        generator = OFXGenerator()
+        for row in rows:
+            # Simulate composite description: combine category, merchant, and notes
+            description_parts = []
+            for col in ['category', 'merchant', 'notes']:
+                if row[col].strip():
+                    description_parts.append(row[col].strip())
+            composite_description = ' - '.join(description_parts)
+
+            generator.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=composite_description,
+                transaction_type='DEBIT' if parser.normalize_amount(row['amount']) < 0 else 'CREDIT'
+            )
+
+        output_file = os.path.join(self.temp_dir, 'output_composite.ofx')
+        generator.generate(
+            output_path=output_file,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Verify output
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check composite descriptions
+        self.assertIn('<MEMO>Food - Restaurant ABC - Business lunch</MEMO>', content)
+        self.assertIn('<MEMO>Transport - Uber - Airport trip</MEMO>', content)
+        self.assertIn('<MEMO>Salary - Company XYZ - Monthly payment</MEMO>', content)
+
+    def test_value_inversion_integration(self):
+        """Test value inversion in complete workflow (NEW in v2.0)."""
+        # Create test CSV with positive expenses (should be inverted)
+        csv_content = """date,amount,description
+2025-10-01,100.50,Expense (should be negative)
+2025-10-02,50.25,Expense (should be negative)
+2025-10-03,-1000.00,Income (should be positive)"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_invert.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        # Parse CSV
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Generate OFX with value inversion
+        generator = OFXGenerator(invert_values=True)
+        for row in rows:
+            amount = parser.normalize_amount(row['amount'])
+            generator.add_transaction(
+                date=row['date'],
+                amount=amount,
+                description=row['description'],
+                transaction_type='DEBIT' if amount < 0 else 'CREDIT'
+            )
+
+        output_file = os.path.join(self.temp_dir, 'output_inverted.ofx')
+        generator.generate(
+            output_path=output_file,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Verify output
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check inverted amounts
+        self.assertIn('<TRNAMT>-100.50</TRNAMT>', content)  # Was 100.50
+        self.assertIn('<TRNAMT>-50.25</TRNAMT>', content)   # Was 50.25
+        self.assertIn('<TRNAMT>1000.00</TRNAMT>', content)  # Was -1000.00
+
+    def test_composite_description_with_different_separators(self):
+        """Test composite descriptions with various separators (NEW in v2.0)."""
+        csv_content = """date,col1,col2,col3,amount
+2025-10-01,A,B,C,-100"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_sep.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Test different separators
+        separators = {
+            ' ': 'A B C',
+            ' - ': 'A - B - C',
+            ', ': 'A, B, C',
+            ' | ': 'A | B | C'
+        }
+
+        for sep, expected_desc in separators.items():
+            generator = OFXGenerator()
+            row = rows[0]
+
+            description_parts = [row['col1'], row['col2'], row['col3']]
+            composite_description = sep.join(description_parts)
+
+            generator.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=composite_description
+            )
+
+            output_file = os.path.join(self.temp_dir, f'output_sep_{len(generator.transactions)}.ofx')
+            generator.generate(output_path=output_file, account_id='TEST')
+
+            with open(output_file, 'r') as f:
+                content = f.read()
+
+            self.assertIn(f'<MEMO>{expected_desc}</MEMO>', content)
 
 
 def run_tests():

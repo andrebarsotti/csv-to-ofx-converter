@@ -1,8 +1,8 @@
-# Conversor de CSV para OFX
+# Conversor de CSV para OFX - Edição Aprimorada
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.0** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados para melhor experiência do usuário.
 
 ## ⚠️ Aviso Importante
 
@@ -15,18 +15,37 @@ Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Value
 - Use por sua conta e risco - teste completamente antes de uso em dados importantes
 - Contribuições e melhorias da comunidade são bem-vindas
 
+## ✨ Novidades na Versão 2.0
+
+**Grandes Melhorias na Experiência do Usuário:**
+
+1. **🎯 Interface em Assistente Passo a Passo**: Processo guiado em múltiplas etapas com indicadores de progresso claros
+2. **👀 Visualização de Dados CSV**: Veja seus dados em uma tabela antes de converter
+3. **🔄 Inversão de Valores**: Troque facilmente débitos e créditos quando necessário
+4. **📝 Descrições Compostas**: Combine múltiplas colunas para criar descrições de transações
+5. **✅ Tratamento Aprimorado de Datas**: Mantenha, ajuste ou exclua transações fora do intervalo (nova opção "Manter"!)
+
 ## Funcionalidades
 
-- **Interface Gráfica Intuitiva**: Interface amigável baseada em Tkinter
+### Funcionalidades Principais
+- **Interface em Assistente Passo a Passo**: Processo guiado intuitivo em 6 etapas com acompanhamento visual de progresso
+- **Visualização de Dados CSV**: Visualize dados importados em formato tabular antes da conversão
 - **Suporte Flexível a CSV**:
   - Formato padrão (delimitador vírgula, separador decimal ponto)
   - Formato brasileiro (delimitador ponto-e-vírgula, separador decimal vírgula)
   - Arquivos delimitados por tabulação
 - **Mapeamento Inteligente de Colunas**: Mapeie qualquer coluna CSV para campos OFX
+- **Descrições Compostas**: Combine até 4 colunas para criar descrições ricas de transações
+- **Inversão de Valores**: Opção para inverter todos os valores de transação (trocar débitos e créditos)
 - **Detecção Automática de Tipo**: Infere débito/crédito pelo sinal do valor
 - **Múltiplos Formatos de Data**: Suporta vários formatos de data (DD/MM/AAAA, AAAA-MM-DD, etc.)
 - **Múltiplas Moedas**: Suporte para BRL, USD, EUR, GBP
-- **Validação de Data**: Valide transações contra o período da fatura do cartão de crédito com opções para ajustar ou excluir transações fora do intervalo
+
+### Funcionalidades Avançadas
+- **Validação de Data**: Valide transações contra o período da fatura do cartão de crédito com três opções:
+  - **Manter**: Use a data original como está
+  - **Ajustar**: Mova para o limite válido mais próximo (data inicial ou final)
+  - **Excluir**: Remova a transação da saída
 - **Tratamento de Erros**: Tratamento elegante de erros com log detalhado
 - **Testes Abrangentes**: Suite completa de testes unitários incluída
 
@@ -119,19 +138,23 @@ pip install pyinstaller
 python3 src/csv_to_ofx_converter.py
 ```
 
-Isso abrirá a interface gráfica onde você pode:
-1. Selecionar seu arquivo CSV
-2. Configurar o formato CSV (delimitador e separador decimal)
-3. Definir a configuração OFX (ID da conta, nome do banco, moeda)
-4. Mapear colunas CSV para campos OFX
-5. Converter e salvar o arquivo OFX
+Isso abrirá a **Interface Aprimorada em Assistente** que guia você através de um processo de 6 etapas:
 
-### Guia Passo a Passo
+1. **Seleção de Arquivo** - Selecione seu arquivo CSV
+2. **Formato CSV** - Configure delimitador e separador decimal
+3. **Visualização de Dados** - Veja seus dados em uma tabela (até 100 linhas)
+4. **Configuração OFX** - Defina detalhes da conta e moeda
+5. **Mapeamento de Campos** - Mapeie colunas e configure descrições compostas
+6. **Opções Avançadas** - Inversão de valores e validação de data
 
-#### 1. Selecionar Arquivo CSV
-Clique no botão "Browse..." para selecionar seu arquivo CSV.
+### Guia Passo a Passo do Assistente
 
-#### 2. Configurar Formato CSV
+#### Etapa 1: Seleção de Arquivo
+Clique no botão "Browse..." para selecionar seu arquivo CSV. O arquivo deve ter uma linha de cabeçalho com nomes de colunas.
+
+#### Etapa 2: Configurar Formato CSV
+
+Escolha o formato que corresponde ao seu arquivo CSV:
 
 **Formato Padrão** (internacional):
 - Delimitador: Vírgula (,)
@@ -143,49 +166,136 @@ Clique no botão "Browse..." para selecionar seu arquivo CSV.
 - Decimal: Vírgula (,)
 - Exemplo: `22/10/2025;100,50;Compra`
 
-#### 3. Definir Configuração OFX
+**Formato Tabulação**:
+- Delimitador: Tab
+- Decimal: Ponto (.) ou Vírgula (,)
 
-- **ID da Conta**: Seu identificador de conta (ex: número da conta)
-- **Nome do Banco**: Nome da sua instituição financeira
-- **Moeda**: BRL (Real Brasileiro), USD, EUR ou GBP
+Clique em "Próximo" para continuar.
 
-#### 3b. Habilitar Validação de Data (Opcional)
+#### Etapa 3: Visualização de Dados
 
-Para faturas de cartão de crédito, você pode validar que todas as transações estão dentro do período da fatura:
+**Novo na Versão 2.0!**
 
-1. **Marque a caixa**: "Habilitar validação de data para período da fatura do cartão de crédito"
-2. **Defina a Data Inicial**: Insira o primeiro dia do seu período de fatura (ex: `2025-10-01` ou `01/10/2025`)
-3. **Defina a Data Final**: Insira o último dia do seu período de fatura (ex: `2025-10-31` ou `31/10/2025`)
+Visualize seus dados CSV em um formato de tabela fácil de ler. Esta etapa permite que você:
+- Verifique se o arquivo foi analisado corretamente
+- Confirme se os nomes das colunas correspondem às suas expectativas
+- Revise dados de amostra antes da conversão
+- Use o botão "Recarregar Dados" se precisar alterar configurações de formato
 
-Quando habilitado, o conversor irá:
-- Verificar cada data de transação contra o intervalo especificado
-- Para transações fora do intervalo, solicitar que você escolha:
-  - **Ajustar para limite**: Move a data para o limite válido mais próximo (data inicial ou final)
-  - **Excluir transação**: Remove a transação da saída
+A visualização mostra até 100 linhas para performance. Clique em "Próximo" para continuar.
 
-Isso é útil para garantir consistência da fatura e lidar com transações que podem aparecer no CSV mas não pertencem ao período atual da fatura.
+#### Etapa 4: Configuração OFX
 
-#### 4. Carregar CSV
+Configure as definições do arquivo de saída:
 
-Clique em "Load CSV" para analisar o arquivo. A aplicação exibirá todas as colunas disponíveis.
+- **ID da Conta**: Seu identificador de conta (ex: número da conta) - **Obrigatório**
+- **Nome do Banco**: Nome da sua instituição financeira (padrão: "CSV Import")
+- **Moeda**: Escolha entre:
+  - BRL (Real Brasileiro)
+  - USD (Dólar Americano)
+  - EUR (Euro)
+  - GBP (Libra Esterlina)
 
-#### 5. Mapear Colunas
+Clique em "Próximo" para prosseguir ao mapeamento de campos.
 
-Mapeie suas colunas CSV para campos OFX:
+#### Etapa 5: Mapeamento de Campos
 
-| Campo OFX | Obrigatório | Descrição | Exemplo de Coluna CSV |
-|-----------|-------------|-----------|------------------------|
-| Date | Sim | Data da transação | `data`, `date`, `Data` |
-| Amount | Sim | Valor da transação | `valor`, `amount`, `Valor` |
-| Description | Sim | Descrição da transação | `descricao`, `description`, `memo` |
-| Type | Não | Tipo de transação (DEBIT/CREDIT) | `tipo`, `type` |
-| ID | Não | Identificador único da transação | `id`, `transaction_id` |
+Mapeie suas colunas CSV para os campos de transação OFX:
 
-**Nota**: Se Type não for mapeado, será inferido pelo sinal do valor (negativo = DEBIT, positivo = CREDIT).
+| Campo OFX | Obrigatório | Descrição |
+|-----------|-------------|-----------|
+| Date | Sim | Data da transação |
+| Amount | Sim | Valor da transação (positivo ou negativo) |
+| Description | Não* | Descrição da transação |
+| Type | Não | Tipo de transação: DEBIT ou CREDIT |
+| ID | Não | Identificador único da transação |
 
-#### 6. Converter
+**\*Nota**: Description é obrigatória, mas você pode usar um mapeamento de coluna única OU o recurso de descrição composta (veja abaixo).
 
-Clique em "Convert to OFX" para gerar o arquivo OFX. Escolha onde salvá-lo.
+##### Recurso de Descrição Composta
+
+**Novo na Versão 2.0!**
+
+Combine múltiplas colunas CSV para criar descrições ricas de transações:
+
+1. Selecione até 4 colunas para combinar
+2. Escolha um separador:
+   - Espaço: `Coluna1 Coluna2 Coluna3`
+   - Traço (−): `Coluna1 - Coluna2 - Coluna3`
+   - Vírgula (,): `Coluna1, Coluna2, Coluna3`
+   - Barra (|): `Coluna1 | Coluna2 | Coluna3`
+
+**Exemplo**:
+Se seu CSV tem colunas `categoria`, `estabelecimento` e `observacoes`:
+- Coluna 1: `categoria`
+- Coluna 2: `estabelecimento`
+- Coluna 3: `observacoes`
+- Separador: Traço (-)
+- Resultado: `Alimentação - Restaurante ABC - Almoço de negócios`
+
+Isso é útil para criar descrições detalhadas a partir de múltiplos campos de dados, especialmente comum em exportações bancárias que separam informações de transação em várias colunas.
+
+Clique em "Próximo" para prosseguir às opções avançadas.
+
+#### Etapa 6: Opções Avançadas
+
+Configure recursos avançados opcionais:
+
+##### Inversão de Valores
+
+**Novo na Versão 2.0!**
+
+Marque a caixa "Inverter todos os valores de transação" se:
+- Seu CSV mostra débitos como positivos e créditos como negativos (ou vice-versa)
+- Você precisa inverter o sinal de todos os valores
+
+Isso multiplicará todos os valores de transação por -1 e trocará os tipos DEBIT/CREDIT.
+
+**Exemplo**: Um CSV com `100,50` (positivo) que deveria ser um débito se tornará `-100,50` (DEBIT).
+
+##### Validação de Data de Transação
+
+**Aprimorado na Versão 2.0!**
+
+Para faturas de cartão de crédito, valide que as transações estão dentro do período da fatura:
+
+1. Marque "Habilitar validação de data para período da fatura do cartão de crédito"
+2. Insira a **Data Inicial** (ex: `2025-10-01` ou `01/10/2025`)
+3. Insira a **Data Final** (ex: `2025-10-31` ou `31/10/2025`)
+
+Quando habilitado, para cada transação fora do intervalo de datas, você verá um diálogo com **três opções**:
+
+- **Manter data original**: Use a data como está, mesmo estando fora do intervalo
+- **Ajustar para limite**: Mova a data para o limite válido mais próximo (data inicial ou final)
+- **Excluir transação**: Remova a transação do arquivo OFX
+
+**Benefícios**:
+- Garante precisão do período da fatura
+- Ajuda a identificar transações mal posicionadas
+- Mantém consistência cronológica
+- Fornece controle total sobre casos limítrofes
+
+**Exemplo de Diálogo**:
+```
+Transação #5 está fora do intervalo!
+Data da Transação: 02/11/2025
+Descrição: Restaurante ABC
+Intervalo Válido: 2025-10-01 a 2025-10-31
+Status: Esta transação ocorre APÓS a data final
+
+Como você gostaria de lidar com esta transação?
+[Manter data original] [Ajustar para data final] [Excluir esta transação]
+```
+
+Uma vez configurado, clique em **"Converter para OFX"** para iniciar a conversão!
+
+### Navegação
+
+- **Botão Voltar**: Vá para a etapa anterior
+- **Botão Próximo**: Prossiga para a próxima etapa (valida a etapa atual)
+- **Botão Converter para OFX**: Aparece na última etapa
+- **Botão Limpar Tudo**: Redefine todo o formulário e retorna à Etapa 1
+- **Indicador de progresso**: Mostra a etapa atual e etapas concluídas
 
 ## Exemplos de Formato CSV
 
@@ -205,7 +315,25 @@ data;valor;descricao;tipo
 03/10/2025;1.000,00;Salário;CREDIT
 ```
 
-### Exemplo 3: Formato Mínimo (Sem Coluna de Tipo)
+### Exemplo 3: Formato de Descrição Composta
+```csv
+date,category,merchant,notes,amount
+2025-10-01,Alimentação,Restaurante ABC,Almoço de negócios,-75.50
+2025-10-02,Transporte,Uber,Viagem para aeroporto,-25.00
+2025-10-03,Salário,Empresa XYZ,Pagamento mensal,3000.00
+```
+
+**Mapeamento para Exemplo 3**:
+- Date → `date`
+- Amount → `amount`
+- Descrição Composta:
+  - Coluna 1: `category`
+  - Coluna 2: `merchant`
+  - Coluna 3: `notes`
+  - Separador: Traço (-)
+- Resultado: `Alimentação - Restaurante ABC - Almoço de negócios`
+
+### Exemplo 4: Formato Mínimo (Sem Coluna de Tipo)
 ```csv
 date,amount,description
 2025-10-01,-100.50,Grocery Store
@@ -213,7 +341,7 @@ date,amount,description
 2025-10-03,1000.00,Salary
 ```
 
-### Exemplo 4: Formato de Exportação do Nubank
+### Exemplo 5: Formato de Exportação do Nubank
 ```csv
 date,category,title,amount
 01/10/2025,alimentação,Supermercado ABC,-100,50
@@ -224,12 +352,28 @@ date,category,title,amount
 **Mapeamento de Colunas para Nubank**:
 - Date → `date`
 - Amount → `amount`
-- Description → `title` (ou combine `category` + `title`)
-- Type → Não mapeado (auto-detectado)
+- Opção A: Description → `title`
+- Opção B: Descrição Composta:
+  - Coluna 1: `category`
+  - Coluna 2: `title`
+  - Separador: Traço (-)
 
-### Exemplo 5: Usando Validação de Data
+### Exemplo 6: Usando Inversão de Valores
 
-Quando você tem transações que podem estar fora do período da sua fatura:
+**CSV com valores invertidos:**
+```csv
+date,amount,description
+2025-10-01,100.50,Despesa (deveria ser negativa)
+2025-10-02,50.25,Despesa (deveria ser negativa)
+2025-10-03,-1000.00,Receita (deveria ser positiva)
+```
+
+Habilite "Inverter todos os valores de transação" para corrigir os sinais:
+- `100,50` se torna `-100,50` (DEBIT)
+- `50,25` se torna `-50,25` (DEBIT)
+- `-1000,00` se torna `1000,00` (CREDIT)
+
+### Exemplo 7: Usando Validação de Data
 
 **CSV com datas mistas:**
 ```csv
@@ -242,15 +386,9 @@ date,amount,description
 ```
 
 **Com Validação de Data habilitada (Início: 01/10/2025, Fim: 31/10/2025):**
-- Transação de 28/09/2025: Você será solicitado a ajustar para 01/10/2025 ou excluir
+- Transação de 28/09/2025: Escolha Manter / Ajustar para 01/10/2025 / Excluir
 - Transações de 01/10/2025 a 31/10/2025: Processadas normalmente
-- Transação de 02/11/2025: Você será solicitado a ajustar para 31/10/2025 ou excluir
-
-**Benefícios:**
-- Garante precisão do período da fatura
-- Ajuda a identificar transações mal posicionadas
-- Mantém consistência cronológica
-- Fornece controle sobre casos limítrofes
+- Transação de 02/11/2025: Escolha Manter / Ajustar para 31/10/2025 / Excluir
 
 ## Formatos de Data Suportados
 
@@ -323,7 +461,9 @@ O projeto inclui testes unitários abrangentes cobrindo:
 - Normalização de valores
 - Análise de datas
 - Geração de OFX
+- Inversão de valores
 - Validação de data e tratamento de limites
+- Descrições compostas
 - Tratamento de erros
 - Testes de integração
 
@@ -340,6 +480,7 @@ python3 -m unittest tests.test_converter -v
 ### Executar classe de teste específica:
 ```bash
 python3 -m unittest tests.test_converter.TestCSVParser
+python3 -m unittest tests.test_converter.TestOFXGenerator
 python3 -m unittest tests.test_converter.TestDateValidator
 ```
 
@@ -352,7 +493,7 @@ test_date_validator_initialization (tests.test_converter.TestDateValidator) ... 
 test_is_within_range (tests.test_converter.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 33 tests in 0.XXXs
+Ran 39+ tests in 0.XXXs
 
 OK
 ```
@@ -362,9 +503,10 @@ OK
 A aplicação gera logs detalhados em `csv_to_ofx_converter.log`:
 
 ```
-2025-11-08 12:34:56 - __main__ - INFO - CSVParser initialized: delimiter=',', decimal='.'
+2025-11-08 12:34:56 - __main__ - INFO - GUI initialized with wizard interface
 2025-11-08 12:35:01 - __main__ - INFO - Parsed CSV: 150 rows, 4 columns
-2025-11-08 12:35:10 - __main__ - INFO - OFX file generated: output.ofx (150 transactions)
+2025-11-08 12:35:05 - __main__ - INFO - Value inversion enabled - all amounts will be inverted
+2025-11-08 12:35:10 - __main__ - INFO - OFX file generated: output.ofx (148 transactions)
 ```
 
 ## Solução de Problemas
@@ -394,6 +536,9 @@ sudo dnf install python3-tkinter
 ### Problema: Caracteres aparecem corrompidos (problemas de codificação)
 **Solução**: A aplicação usa codificação UTF-8. Certifique-se de que seu arquivo CSV está salvo em formato UTF-8.
 
+### Problema: Visualização mostra dados incorretos
+**Solução**: Volte à Etapa 2 e verifique as configurações de delimitador e separador decimal. Use o botão "Recarregar Dados" após alterar as configurações.
+
 ## Arquitetura
 
 ### Estrutura do Código
@@ -405,6 +550,7 @@ csv_to_ofx_converter.py
 │   └── normalize_amount()    # Converte valores para float
 │
 ├── OFXGenerator       # Gera arquivos OFX
+│   ├── __init__(invert_values)   # Inicializa com opção de inversão
 │   ├── add_transaction()     # Adiciona transação à fila
 │   ├── _parse_date()         # Analisa e formata datas
 │   └── generate()            # Cria arquivo OFX
@@ -414,51 +560,58 @@ csv_to_ofx_converter.py
 │   ├── get_date_status()     # Determina antes/dentro/depois
 │   └── adjust_date_to_boundary()  # Ajusta datas fora do intervalo
 │
-└── ConverterGUI       # Interface Tkinter GUI
-    ├── _create_widgets()     # Constrói componentes UI
-    ├── _load_csv()           # Carrega e analisa CSV
+└── ConverterGUI       # Interface Tkinter em estilo de assistente
+    ├── _create_widgets()     # Constrói interface do assistente
+    ├── _show_step()          # Exibe etapa específica
+    ├── _create_step_*()      # Cria UI de cada etapa
+    ├── _load_csv_data()      # Carrega e analisa CSV
+    ├── _populate_preview()   # Preenche tabela de visualização
     ├── _convert()            # Realiza conversão
     ├── _handle_out_of_range_transaction()  # Trata problemas de data
     └── _log()                # Exibe mensagens de log
 ```
 
+### Fluxo do Assistente
+
+```
+Etapa 1: Seleção de Arquivo
+    ↓
+Etapa 2: Configuração de Formato CSV
+    ↓
+Etapa 3: Visualização de Dados (NOVO!)
+    ↓ (CSV carregado automaticamente)
+Etapa 4: Configuração OFX
+    ↓
+Etapa 5: Mapeamento de Campos + Descrição Composta (NOVO!)
+    ↓
+Etapa 6: Opções Avançadas (Inversão de Valores + Validação de Data)
+    ↓
+Processo de Conversão
+    ↓
+Arquivo OFX Gerado
+```
+
 ### Fluxo de Dados
 
 ```
-Arquivo CSV → CSVParser → Mapeamento de Campos → Validação de Data → OFXGenerator → Arquivo OFX
-    ↓                        ↓                      ↓                      ↓
-  Cabeçalhos          Mapeamento GUI           DateValidator          Transações
-  Linhas              Entrada do Usuário       (Opcional)             Formatação
-                                               Decisão do Usuário
-```
-
-**Fluxo de Validação de Data** (quando habilitado):
-```
-Data da Transação → DateValidator.is_within_range()
-                        ↓
-                   [Dentro do Intervalo?]
-                    ↙         ↘
-                  Sim          Não
-                   ↓            ↓
-            Adicionar ao OFX    Mostrar Diálogo
-                              ↓
-                      [Escolha do Usuário]
-                       ↙         ↘
-                  Ajustar        Excluir
-                    ↓              ↓
-              Ajustar Data     Pular Transação
-                    ↓
-               Adicionar ao OFX
+Arquivo CSV → CSVParser → Exibição de Visualização → Mapeamento de Campos → Opções Avançadas → OFXGenerator → Arquivo OFX
+    ↓            ↓            ↓                         ↓                    ↓                    ↓
+  Cabeçalhos   Linhas    Treeview               Mapeamento do Usuário    Inversão de Valores  Transações
+               Dados     (Etapa 3)              Descrição Composta       Validação de Data    Formatação
+                                                                         (Manter/Ajustar/Excluir)
 ```
 
 ## Melhores Práticas
 
-1. **Sempre revise seus dados CSV** antes da conversão para garantir qualidade dos dados
+1. **Sempre revise seus dados CSV na visualização** (Etapa 3) antes da conversão
 2. **Teste com um arquivo CSV pequeno** primeiro para verificar se os mapeamentos estão corretos
 3. **Mantenha backups** dos seus arquivos CSV originais
-4. **Verifique os arquivos OFX** no seu software financeiro antes de importar grandes conjuntos de dados
-5. **Use formatos de data consistentes** dentro de um único arquivo CSV
-6. **Verifique os logs** se a conversão falhar ou produzir resultados inesperados
+4. **Use descrições compostas** quando tiver múltiplas colunas relacionadas para combinar
+5. **Use inversão de valores** se seus valores tiverem o sinal errado em vez de editar manualmente o CSV
+6. **Verifique os arquivos OFX** no seu software financeiro antes de importar grandes conjuntos de dados
+7. **Use formatos de data consistentes** dentro de um único arquivo CSV
+8. **Verifique os logs** se a conversão falhar ou produzir resultados inesperados
+9. **Use validação de data** para garantir precisão do período da fatura para cartões de crédito
 
 ## Compatibilidade
 
@@ -484,6 +637,7 @@ Os arquivos OFX gerados são compatíveis com:
 - Suporta formato de extrato de cartão de crédito (CREDITCARDMSGSRSV1)
 - Não suporta contas de investimento ou transações complexas
 - Uma conta por arquivo
+- Visualização limitada às primeiras 100 linhas para performance
 
 ## Melhorias Futuras
 
@@ -497,14 +651,13 @@ Possíveis aprimoramentos para versões futuras:
 6. **Categorias de Transação**: Suportar campos de categoria/classe OFX
 7. **Contas de Investimento**: Suporte para ações, títulos e transações de investimento
 8. **Suporte OFX 2.x**: Adicionar suporte para formato XML OFX mais recente
-9. **Modo de Visualização**: Visualizar saída OFX antes de salvar
-10. **Formatos de Data Personalizados**: Permitir que usuários especifiquem formatos de data personalizados
-11. **Interface de Linha de Comando**: Adicionar CLI para scripts e automação
-12. **Deduplicação de Transações**: Detectar e tratar transações duplicadas
-13. **Transações Divididas**: Suporte para transações divididas/categorizadas
-14. **Suporte Multi-idioma**: Internacionalização (i18n)
-15. **Suporte a Excel**: Importação direta de arquivos .xlsx/.xls
-16. **Ajuste de Data em Lote**: Opção para ajustar todas as datas fora do intervalo de uma vez
+9. **Formatos de Data Personalizados**: Permitir que usuários especifiquem formatos de data personalizados
+10. **Interface de Linha de Comando**: Adicionar CLI para scripts e automação
+11. **Deduplicação de Transações**: Detectar e tratar transações duplicadas
+12. **Transações Divididas**: Suporte para transações divididas/categorizadas
+13. **Suporte Multi-idioma**: Internacionalização (i18n)
+14. **Suporte a Excel**: Importação direta de arquivos .xlsx/.xls
+15. **Ajuste de Data em Lote**: Opção para ajustar todas as datas fora do intervalo de uma vez sem diálogos
 
 ## Contribuindo
 
@@ -540,21 +693,47 @@ Para problemas, questões ou sugestões:
 3. Execute a suite de testes para verificar a instalação
 4. Abra uma issue com informações detalhadas sobre seu problema
 
-## Documentação Adicional
-
-Para mais informações, consulte:
-- **DATE_VALIDATION_GUIDE.md** - Guia detalhado sobre validação de data
-- **CODE_EXAMPLES.md** - Exemplos de código e padrões de uso
-- **IMPLEMENTATION_SUMMARY.md** - Detalhes técnicos da implementação
-
 ---
 
-**Versão**: 1.1.0
+**Versão**: 2.0.0 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.0.0 (Novembro de 2025) - Edição Aprimorada
+- **Grande Atualização**: Redesign completo da UI com interface em assistente passo a passo
+  - Processo guiado em 6 etapas com indicadores visuais de progresso
+  - Navegação clara com botões Voltar/Próximo
+  - Validação de etapa antes de prosseguir
+- **Nova Funcionalidade**: Visualização de Dados CSV
+  - Visualize dados importados em formato tabular (widget Treeview)
+  - Visualização de até 100 linhas antes da conversão
+  - Botão de recarregar dados para alterações de formato
+- **Nova Funcionalidade**: Descrições Compostas
+  - Combine até 4 colunas CSV em descrições de transações
+  - Escolha de separadores: Espaço, Traço, Vírgula, Barra
+  - Perfeito para CSVs com informações de transação divididas
+- **Nova Funcionalidade**: Inversão de Valores
+  - Opção para inverter todos os valores de transação
+  - Troca automaticamente tipos DEBIT/CREDIT
+  - Útil para CSVs com convenções de sinal invertidas
+- **Funcionalidade Aprimorada**: Validação de Data com Opção "Manter"
+  - Adicionada "Manter data original" como terceira opção
+  - Agora oferece: Manter / Ajustar / Excluir
+  - Melhor rastreamento de estatísticas (datas fora do intervalo mantidas)
+- **Melhorias na UI**:
+  - Janela maior (1000x850) para melhor visibilidade
+  - Layout e espaçamento melhorados
+  - Melhores mensagens de erro e validação
+  - Exibição de log de atividades aprimorada
+  - Descrições claras de etapas e texto de ajuda
+- **Documentação**: Reescrita completa do README com:
+  - Instruções detalhadas das etapas do assistente
+  - Exemplos de novos recursos
+  - Diagramas atualizados
+  - Guia de melhores práticas
 
 ### Versão 1.1.0 (Novembro de 2025)
 - **Nova Funcionalidade**: Validação de data de fatura de cartão de crédito
