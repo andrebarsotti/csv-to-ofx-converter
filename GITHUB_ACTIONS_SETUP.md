@@ -82,10 +82,10 @@ Replace placeholder URLs in README files:
 **README.md:**
 ```markdown
 # Change this:
-[Releases page](https://github.com/YOUR_USERNAME/conversor-csv-ofx/releases)
+[Releases page](https://github.com/andrebarsotti/conversor-csv-ofx/releases)
 
 # To your actual URL:
-[Releases page](https://github.com/yourname/conversor-csv-ofx/releases)
+[Releases page](https://github.com/andrebarsotti/conversor-csv-ofx/releases)
 ```
 
 Do the same in `README.pt-BR.md`.
