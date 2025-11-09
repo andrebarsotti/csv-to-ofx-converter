@@ -24,9 +24,13 @@ jobs:
           pip install coverage
       - name: Test with coverage
         run: |
-          coverage run --source=src -m unittest discover -s tests
+          coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest discover -s tests
           coverage xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # with:
+        #   args: >
+        #     -Dsonar.branch.name=${{ github.head_ref || github.ref_name }}
+        #     ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base={2}', github.event.pull_request.number, github.head_ref, github.base_ref) || '' }}

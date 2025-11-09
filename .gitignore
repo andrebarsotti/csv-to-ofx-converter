@@ -87,3 +87,6 @@ csv-to-ofx-converter.exe
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# AI
+.claude
