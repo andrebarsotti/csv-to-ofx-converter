@@ -24,7 +24,7 @@ jobs:
           pip install coverage
       - name: Test with coverage
         run: |
-          coverage run -m unittest discover
+          coverage run --source=src -m unittest discover -s tests
           coverage xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
