@@ -42,6 +42,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Constants for UI labels
+NOT_MAPPED = '-- Not Mapped --'
+NOT_SELECTED = '-- Not Selected --'
+
 
 class CSVParser:
     """
@@ -721,46 +725,63 @@ class ConverterGUI:
 
     def _validate_current_step(self) -> bool:
         """Validate current step before proceeding."""
-        if self.current_step == 0:
-            # File selection
-            if not self.csv_file.get():
-                messagebox.showwarning("Required", "Please select a CSV file")
-                return False
-        elif self.current_step == 1:
-            # CSV format - always valid
-            pass
-        elif self.current_step == 2:
-            # Data preview - load CSV if not already loaded
-            if not self.csv_data:
-                try:
-                    self._load_csv_data()
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to load CSV:\n{e}")
-                    return False
-        elif self.current_step == 3:
-            # OFX config - all fields are optional with defaults
-            pass
-        elif self.current_step == 4:
-            # Field mapping
-            date_col = self.field_mappings.get('date')
-            amount_col = self.field_mappings.get('amount')
+        validators = {
+            0: self._validate_file_selection,
+            2: self._validate_data_preview,
+            4: self._validate_field_mapping,
+        }
 
-            if not date_col or date_col.get() == '-- Not Mapped --':
-                messagebox.showwarning("Required", "Please map the Date field")
-                return False
-            if not amount_col or amount_col.get() == '-- Not Mapped --':
-                messagebox.showwarning("Required", "Please map the Amount field")
-                return False
+        validator = validators.get(self.current_step)
+        if validator:
+            return validator()
+        return True
 
-            # Check description mapping
-            desc_col = self.field_mappings.get('description')
-            if not desc_col or desc_col.get() == '-- Not Mapped --':
-                # Check if composite description is configured
-                if not any(var.get() != '-- Not Selected --' for var in self.description_columns):
-                    messagebox.showwarning("Required",
-                        "Please map the Description field or configure composite description")
-                    return False
+    def _validate_file_selection(self) -> bool:
+        """Validate file selection step."""
+        if not self.csv_file.get():
+            messagebox.showwarning("Required", "Please select a CSV file")
+            return False
+        return True
 
+    def _validate_data_preview(self) -> bool:
+        """Validate data preview step."""
+        if not self.csv_data:
+            try:
+                self._load_csv_data()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load CSV:\n{e}")
+                return False
+        return True
+
+    def _validate_field_mapping(self) -> bool:
+        """Validate field mapping step."""
+        if not self._validate_required_fields():
+            return False
+        if not self._validate_description_mapping():
+            return False
+        return True
+
+    def _validate_required_fields(self) -> bool:
+        """Validate required date and amount fields."""
+        date_col = self.field_mappings.get('date')
+        amount_col = self.field_mappings.get('amount')
+
+        if not date_col or date_col.get() == NOT_MAPPED:
+            messagebox.showwarning("Required", "Please map the Date field")
+            return False
+        if not amount_col or amount_col.get() == NOT_MAPPED:
+            messagebox.showwarning("Required", "Please map the Amount field")
+            return False
+        return True
+
+    def _validate_description_mapping(self) -> bool:
+        """Validate description field or composite description."""
+        desc_col = self.field_mappings.get('description')
+        if not desc_col or desc_col.get() == NOT_MAPPED:
+            if not any(var.get() != NOT_SELECTED for var in self.description_columns):
+                messagebox.showwarning("Required",
+                    "Please map the Description field or configure composite description")
+                return False
         return True
 
     # ==================== STEP 1: FILE SELECTION ====================
@@ -1024,7 +1045,7 @@ class ConverterGUI:
             ('id', 'ID', 'Unique transaction identifier (optional)'),
         ]
 
-        column_options = ['-- Not Mapped --'] + self.csv_headers
+        column_options = [NOT_MAPPED] + self.csv_headers
 
         # Create mapping widgets
         for idx, (field_key, field_label, field_help) in enumerate(ofx_fields, start=1):
@@ -1032,7 +1053,7 @@ class ConverterGUI:
                 row=idx, column=0, sticky=tk.W, padx=5, pady=5)
 
             if field_key not in self.field_mappings:
-                self.field_mappings[field_key] = tk.StringVar(value='-- Not Mapped --')
+                self.field_mappings[field_key] = tk.StringVar(value=NOT_MAPPED)
 
             combo = ttk.Combobox(frame, textvariable=self.field_mappings[field_key],
                                values=column_options, state='readonly', width=30)
@@ -1073,14 +1094,14 @@ class ConverterGUI:
         parent.columnconfigure(1, weight=1)
 
         # Up to 4 column selectors
-        column_options = ['-- Not Selected --'] + self.csv_headers
+        column_options = [NOT_SELECTED] + self.csv_headers
 
         self.description_columns = []
         for i in range(4):
             ttk.Label(parent, text=f"Column {i+1}:", font=('Arial', 9)).grid(
                 row=i, column=0, sticky=tk.W, padx=5, pady=3)
 
-            var = tk.StringVar(value='-- Not Selected --')
+            var = tk.StringVar(value=NOT_SELECTED)
             self.description_columns.append(var)
 
             combo = ttk.Combobox(parent, textvariable=var,
@@ -1233,26 +1254,26 @@ class ConverterGUI:
         details_frame = ttk.Frame(main_frame)
         details_frame.pack(fill=tk.X, pady=10)
 
-        ttk.Label(details_frame, text=f"Transaction Date:", font=('Arial', 10, 'bold')).grid(
+        ttk.Label(details_frame, text="Transaction Date:", font=('Arial', 10, 'bold')).grid(
             row=0, column=0, sticky=tk.W, pady=2)
         ttk.Label(details_frame, text=date_str).grid(row=0, column=1, sticky=tk.W, padx=10, pady=2)
 
-        ttk.Label(details_frame, text=f"Description:", font=('Arial', 10, 'bold')).grid(
+        ttk.Label(details_frame, text="Description:", font=('Arial', 10, 'bold')).grid(
             row=1, column=0, sticky=tk.W, pady=2)
         ttk.Label(details_frame, text=description[:50] + ('...' if len(description) > 50 else '')).grid(
             row=1, column=1, sticky=tk.W, padx=10, pady=2)
 
-        ttk.Label(details_frame, text=f"Valid Range:", font=('Arial', 10, 'bold')).grid(
+        ttk.Label(details_frame, text="Valid Range:", font=('Arial', 10, 'bold')).grid(
             row=2, column=0, sticky=tk.W, pady=2)
         range_text = f"{validator.start_date.strftime('%Y-%m-%d')} to {validator.end_date.strftime('%Y-%m-%d')}"
         ttk.Label(details_frame, text=range_text).grid(row=2, column=1, sticky=tk.W, padx=10, pady=2)
 
         if status == 'before':
-            status_text = f"This transaction occurs BEFORE the start date"
+            status_text = "This transaction occurs BEFORE the start date"
         else:
-            status_text = f"This transaction occurs AFTER the end date"
+            status_text = "This transaction occurs AFTER the end date"
 
-        ttk.Label(details_frame, text=f"Status:", font=('Arial', 10, 'bold')).grid(
+        ttk.Label(details_frame, text="Status:", font=('Arial', 10, 'bold')).grid(
             row=3, column=0, sticky=tk.W, pady=2)
         ttk.Label(details_frame, text=status_text, foreground='orange').grid(
             row=3, column=1, sticky=tk.W, padx=10, pady=2)
@@ -1328,189 +1349,241 @@ class ConverterGUI:
 
     def _convert(self):
         """Convert CSV to OFX."""
-        if not self.csv_data:
-            messagebox.showwarning("Warning", "Please load a CSV file first")
+        if not self._validate_conversion_prerequisites():
             return
 
-        # Validate field mappings
-        date_col = self.field_mappings['date'].get()
-        amount_col = self.field_mappings['amount'].get()
-
-        if date_col == '-- Not Mapped --' or amount_col == '-- Not Mapped --':
-            messagebox.showwarning("Warning",
-                                  "Please map at least Date and Amount fields")
+        date_validator = self._initialize_date_validator()
+        if date_validator is False:
             return
-
-        # Check description - either regular or composite
-        desc_col = self.field_mappings['description'].get()
-        use_composite = any(var.get() != '-- Not Selected --' for var in self.description_columns)
-
-        if desc_col == '-- Not Mapped --' and not use_composite:
-            messagebox.showwarning("Warning",
-                                  "Please map the Description field or configure composite description")
-            return
-
-        # Initialize date validator if enabled
-        date_validator = None
-        if self.enable_date_validation.get():
-            start_date_str = self.start_date.get().strip()
-            end_date_str = self.end_date.get().strip()
-
-            if not start_date_str or not end_date_str:
-                messagebox.showwarning("Warning",
-                                      "Please enter both start and end dates for validation")
-                return
-
-            try:
-                date_validator = DateValidator(start_date_str, end_date_str)
-                self._log(f"Date validation enabled: {start_date_str} to {end_date_str}")
-            except ValueError as e:
-                messagebox.showerror("Error", f"Invalid date range: {e}")
-                return
 
         try:
             self._log("Converting CSV to OFX...")
+            parser, generator = self._create_parser_and_generator()
 
-            # Create parser and generator
-            parser = CSVParser(
-                delimiter=self.delimiter.get(),
-                decimal_separator=self.decimal_separator.get()
-            )
-            generator = OFXGenerator(invert_values=self.invert_values.get())
+            stats = self._process_csv_rows(parser, generator, date_validator)
 
-            if self.invert_values.get():
-                self._log("Value inversion enabled - all amounts will be inverted")
-
-            # Get optional field mappings
-            type_col = self.field_mappings['type'].get()
-            id_col = self.field_mappings['id'].get()
-
-            # Track statistics
-            total_rows = len(self.csv_data)
-            processed = 0
-            excluded = 0
-            adjusted = 0
-            kept_out_of_range = 0
-
-            # Process each row
-            for row_idx, row in enumerate(self.csv_data, 1):
-                try:
-                    date = row[date_col]
-                    amount = parser.normalize_amount(row[amount_col])
-
-                    # Get description (composite or single column)
-                    if use_composite:
-                        desc_parts = []
-                        for var in self.description_columns:
-                            col_name = var.get()
-                            if col_name != '-- Not Selected --' and col_name in row:
-                                value = row[col_name].strip()
-                                if value:
-                                    desc_parts.append(value)
-                        description = self.description_separator.get().join(desc_parts)
-                        if not description:
-                            description = "Transaction"
-                    else:
-                        description = row[desc_col]
-
-                    # Validate date if validator is enabled
-                    if date_validator:
-                        if not date_validator.is_within_range(date):
-                            status = date_validator.get_date_status(date)
-                            self._log(f"Row {row_idx}: Date {date} is out of range ({status})")
-
-                            # Show dialog and get user choice
-                            adjusted_date, action = self._handle_out_of_range_transaction(
-                                row_idx, date, status, date_validator, description
-                            )
-
-                            if action == 'exclude':
-                                self._log(f"Row {row_idx}: Transaction excluded by user")
-                                excluded += 1
-                                continue
-                            elif action == 'adjust':
-                                self._log(f"Row {row_idx}: Date adjusted from {date} to {adjusted_date}")
-                                date = adjusted_date
-                                adjusted += 1
-                            elif action == 'keep':
-                                self._log(f"Row {row_idx}: Keeping original date {date}")
-                                kept_out_of_range += 1
-
-                    # Get transaction type if mapped
-                    if type_col != '-- Not Mapped --' and type_col in row:
-                        trans_type = row[type_col].upper()
-                        # Validate type
-                        if trans_type not in ['DEBIT', 'CREDIT']:
-                            # Try to infer from amount
-                            trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
-                    else:
-                        # Infer from amount
-                        trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
-
-                    # Get transaction ID if mapped
-                    trans_id = None
-                    if id_col != '-- Not Mapped --' and id_col in row:
-                        trans_id = row[id_col]
-
-                    generator.add_transaction(
-                        date=date,
-                        amount=amount,
-                        description=description,
-                        transaction_type=trans_type,
-                        transaction_id=trans_id
-                    )
-                    processed += 1
-
-                except Exception as e:
-                    self._log(f"Warning: Skipping row {row_idx}: {e}")
-                    excluded += 1
-
-            # Ask for output file
-            output_file = filedialog.asksaveasfilename(
-                title="Save OFX File",
-                defaultextension=".ofx",
-                filetypes=[("OFX files", "*.ofx"), ("All files", "*.*")]
-            )
-
+            output_file = self._prompt_for_output_file()
             if not output_file:
-                self._log("Conversion cancelled")
                 return
 
-            # Generate OFX file
-            generator.generate(
-                output_path=output_file,
-                account_id=self.account_id.get() or "UNKNOWN",
-                bank_name=self.bank_name.get(),
-                currency=self.currency.get()
-            )
-
-            self._log(f"OFX file created: {output_file}")
-
-            # Build success message with statistics
-            success_msg = (f"OFX file created successfully!\n"
-                          f"Location: {output_file}\n\n"
-                          f"Statistics:\n"
-                          f"• Total rows processed: {total_rows}\n"
-                          f"• Transactions included: {processed}\n"
-                          f"• Transactions excluded: {excluded}")
-
-            if date_validator:
-                success_msg += (f"\n\nDate Validation:\n"
-                              f"• Dates adjusted: {adjusted}\n"
-                              f"• Out-of-range dates kept: {kept_out_of_range}\n"
-                              f"• Excluded by user: {excluded}")
-
-            if self.invert_values.get():
-                success_msg += "\n\n• Value inversion applied to all transactions"
-
-            if use_composite:
-                success_msg += "\n• Composite descriptions created from multiple columns"
-
-            messagebox.showinfo("Success", success_msg)
+            self._generate_ofx_file(generator, output_file)
+            self._show_conversion_success(output_file, stats, date_validator)
 
         except Exception as e:
             self._log(f"Error during conversion: {e}")
             messagebox.showerror("Error", f"Conversion failed:\n{e}")
+
+    def _validate_conversion_prerequisites(self) -> bool:
+        """Validate prerequisites for conversion."""
+        if not self.csv_data:
+            messagebox.showwarning("Warning", "Please load a CSV file first")
+            return False
+
+        date_col = self.field_mappings['date'].get()
+        amount_col = self.field_mappings['amount'].get()
+
+        if date_col == NOT_MAPPED or amount_col == NOT_MAPPED:
+            messagebox.showwarning("Warning", "Please map at least Date and Amount fields")
+            return False
+
+        desc_col = self.field_mappings['description'].get()
+        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+
+        if desc_col == NOT_MAPPED and not use_composite:
+            messagebox.showwarning("Warning",
+                                  "Please map the Description field or configure composite description")
+            return False
+        return True
+
+    def _initialize_date_validator(self):
+        """Initialize date validator if enabled. Returns validator or False on error."""
+        if not self.enable_date_validation.get():
+            return None
+
+        start_date_str = self.start_date.get().strip()
+        end_date_str = self.end_date.get().strip()
+
+        if not start_date_str or not end_date_str:
+            messagebox.showwarning("Warning",
+                                  "Please enter both start and end dates for validation")
+            return False
+
+        try:
+            validator = DateValidator(start_date_str, end_date_str)
+            self._log(f"Date validation enabled: {start_date_str} to {end_date_str}")
+            return validator
+        except ValueError as e:
+            messagebox.showerror("Error", f"Invalid date range: {e}")
+            return False
+
+    def _create_parser_and_generator(self):
+        """Create CSV parser and OFX generator."""
+        parser = CSVParser(
+            delimiter=self.delimiter.get(),
+            decimal_separator=self.decimal_separator.get()
+        )
+        generator = OFXGenerator(invert_values=self.invert_values.get())
+
+        if self.invert_values.get():
+            self._log("Value inversion enabled - all amounts will be inverted")
+
+        return parser, generator
+
+    def _process_csv_rows(self, parser, generator, date_validator):
+        """Process all CSV rows and return statistics."""
+        date_col = self.field_mappings['date'].get()
+        amount_col = self.field_mappings['amount'].get()
+        desc_col = self.field_mappings['description'].get()
+        type_col = self.field_mappings['type'].get()
+        id_col = self.field_mappings['id'].get()
+        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+
+        stats = {
+            'total_rows': len(self.csv_data),
+            'processed': 0,
+            'excluded': 0,
+            'adjusted': 0,
+            'kept_out_of_range': 0
+        }
+
+        for row_idx, row in enumerate(self.csv_data, 1):
+            try:
+                date = row[date_col]
+                amount = parser.normalize_amount(row[amount_col])
+                description = self._build_description(row, desc_col, use_composite)
+
+                date, date_stats = self._validate_and_adjust_date(
+                    date, row_idx, description, date_validator
+                )
+                if date is None:
+                    stats['excluded'] += 1
+                    continue
+
+                stats['adjusted'] += date_stats.get('adjusted', 0)
+                stats['kept_out_of_range'] += date_stats.get('kept_out_of_range', 0)
+
+                trans_type = self._get_transaction_type(type_col, row, amount)
+                trans_id = self._get_transaction_id(id_col, row)
+
+                generator.add_transaction(
+                    date=date,
+                    amount=amount,
+                    description=description,
+                    transaction_type=trans_type,
+                    transaction_id=trans_id
+                )
+                stats['processed'] += 1
+
+            except Exception as e:
+                self._log(f"Warning: Skipping row {row_idx}: {e}")
+                stats['excluded'] += 1
+
+        return stats
+
+    def _build_description(self, row, desc_col, use_composite):
+        """Build transaction description from single or multiple columns."""
+        if use_composite:
+            desc_parts = []
+            for var in self.description_columns:
+                col_name = var.get()
+                if col_name != NOT_SELECTED and col_name in row:
+                    value = row[col_name].strip()
+                    if value:
+                        desc_parts.append(value)
+            description = self.description_separator.get().join(desc_parts)
+            return description if description else "Transaction"
+        return row[desc_col]
+
+    def _validate_and_adjust_date(self, date, row_idx, description, date_validator):
+        """Validate date and adjust if necessary. Returns (date, stats_dict)."""
+        stats = {'adjusted': 0, 'kept_out_of_range': 0}
+
+        if not date_validator:
+            return date, stats
+
+        if date_validator.is_within_range(date):
+            return date, stats
+
+        status = date_validator.get_date_status(date)
+        self._log(f"Row {row_idx}: Date {date} is out of range ({status})")
+
+        adjusted_date, action = self._handle_out_of_range_transaction(
+            row_idx, date, status, date_validator, description
+        )
+
+        if action == 'exclude':
+            self._log(f"Row {row_idx}: Transaction excluded by user")
+            return None, stats
+        elif action == 'adjust':
+            self._log(f"Row {row_idx}: Date adjusted from {date} to {adjusted_date}")
+            stats['adjusted'] = 1
+            return adjusted_date, stats
+        elif action == 'keep':
+            self._log(f"Row {row_idx}: Keeping original date {date}")
+            stats['kept_out_of_range'] = 1
+            return date, stats
+
+        return date, stats
+
+    def _get_transaction_type(self, type_col, row, amount):
+        """Get transaction type from mapping or infer from amount."""
+        if type_col != NOT_MAPPED and type_col in row:
+            trans_type = row[type_col].upper()
+            if trans_type in ['DEBIT', 'CREDIT']:
+                return trans_type
+        return 'DEBIT' if amount < 0 else 'CREDIT'
+
+    def _get_transaction_id(self, id_col, row):
+        """Get transaction ID from mapping if available."""
+        if id_col != NOT_MAPPED and id_col in row:
+            return row[id_col]
+        return None
+
+    def _prompt_for_output_file(self):
+        """Prompt user for output file location."""
+        output_file = filedialog.asksaveasfilename(
+            title="Save OFX File",
+            defaultextension=".ofx",
+            filetypes=[("OFX files", "*.ofx"), ("All files", "*.*")]
+        )
+        if not output_file:
+            self._log("Conversion cancelled")
+        return output_file
+
+    def _generate_ofx_file(self, generator, output_file):
+        """Generate the OFX file."""
+        generator.generate(
+            output_path=output_file,
+            account_id=self.account_id.get() or "UNKNOWN",
+            bank_name=self.bank_name.get(),
+            currency=self.currency.get()
+        )
+        self._log(f"OFX file created: {output_file}")
+
+    def _show_conversion_success(self, output_file, stats, date_validator):
+        """Show success message with statistics."""
+        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+
+        success_msg = (f"OFX file created successfully!\n"
+                      f"Location: {output_file}\n\n"
+                      f"Statistics:\n"
+                      f"• Total rows processed: {stats['total_rows']}\n"
+                      f"• Transactions included: {stats['processed']}\n"
+                      f"• Transactions excluded: {stats['excluded']}")
+
+        if date_validator:
+            success_msg += (f"\n\nDate Validation:\n"
+                          f"• Dates adjusted: {stats['adjusted']}\n"
+                          f"• Out-of-range dates kept: {stats['kept_out_of_range']}\n"
+                          f"• Excluded by user: {stats['excluded']}")
+
+        if self.invert_values.get():
+            success_msg += "\n\n• Value inversion applied to all transactions"
+
+        if use_composite:
+            success_msg += "\n• Composite descriptions created from multiple columns"
+
+        messagebox.showinfo("Success", success_msg)
 
     def _clear(self):
         """Clear all data and reset form."""
@@ -1553,7 +1626,7 @@ class ConverterGUI:
 def main():
     """Main entry point for the application."""
     root = tk.Tk()
-    app = ConverterGUI(root)
+    ConverterGUI(root)
     root.mainloop()
 
 
