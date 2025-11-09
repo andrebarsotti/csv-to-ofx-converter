@@ -188,7 +188,7 @@ A visualização mostra até 100 linhas para performance. Clique em "Próximo" p
 
 Configure as definições do arquivo de saída:
 
-- **ID da Conta**: Seu identificador de conta (ex: número da conta) - **Obrigatório**
+- **ID da Conta**: Seu identificador de conta (ex: número da conta) - *Opcional* (padrão: "UNKNOWN")
 - **Nome do Banco**: Nome da sua instituição financeira (padrão: "CSV Import")
 - **Moeda**: Escolha entre:
   - BRL (Real Brasileiro)

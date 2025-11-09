@@ -188,7 +188,7 @@ The preview shows up to 100 rows for performance. Click "Next" to continue.
 
 Set up the output file settings:
 
-- **Account ID**: Your account identifier (e.g., account number) - **Required**
+- **Account ID**: Your account identifier (e.g., account number) - *Optional* (default: "UNKNOWN")
 - **Bank Name**: Name of your financial institution (default: "CSV Import")
 - **Currency**: Choose from:
   - BRL (Brazilian Real)

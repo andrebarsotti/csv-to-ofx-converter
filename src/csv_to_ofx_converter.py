@@ -738,10 +738,8 @@ class ConverterGUI:
                     messagebox.showerror("Error", f"Failed to load CSV:\n{e}")
                     return False
         elif self.current_step == 3:
-            # OFX config
-            if not self.account_id.get():
-                messagebox.showwarning("Required", "Please enter an Account ID")
-                return False
+            # OFX config - all fields are optional with defaults
+            pass
         elif self.current_step == 4:
             # Field mapping
             date_col = self.field_mappings.get('date')
@@ -974,7 +972,7 @@ class ConverterGUI:
             row=1, column=0, sticky=tk.W, padx=5, pady=5)
         ttk.Entry(frame, textvariable=self.account_id, width=40).grid(
             row=1, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(frame, text="(Required - Your account number or identifier)",
+        ttk.Label(frame, text="(Optional - Default: 'UNKNOWN')",
                  font=('Arial', 8), foreground='gray').grid(
             row=2, column=1, sticky=tk.W, padx=5)
 
