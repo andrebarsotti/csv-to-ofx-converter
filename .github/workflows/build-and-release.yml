@@ -74,6 +74,12 @@ jobs:
     - name: Display structure of downloaded files
       run: ls -R artifacts/
 
+    - name: Flatten artifacts directory
+      run: |
+        mkdir -p release-files
+        find artifacts -type f -exec cp {} release-files/ \;
+        ls -lh release-files/
+
     - name: Create Release Notes
       run: |
         cat > RELEASE_NOTES.md << EOF
@@ -148,7 +154,7 @@ jobs:
 
     - name: Generate checksums
       run: |
-        cd artifacts && find . -type f -exec sha256sum {} + | tee checksums.txt
+        cd release-files && sha256sum * | tee checksums.txt
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
@@ -158,6 +164,6 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          artifacts/**/*
+          release-files/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

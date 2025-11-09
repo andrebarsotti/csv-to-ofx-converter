@@ -695,12 +695,20 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.0.1 - Enhanced Edition
+**Version**: 2.0.2 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.0.2 (November 2025) - Release Workflow Fix
+- **Bug Fix**: Fixed executable names not showing properly in GitHub releases
+  - Artifacts are now properly flattened before being uploaded to releases
+  - Executable files now appear with correct names in release downloads
+  - Improved artifact handling in CI/CD workflow
+- All 39 tests passing
+- No functional changes - same features as v2.0.1
 
 ### Version 2.0.1 (November 2025) - Bugfix Release
 - **Bug Fix**: Restored Account ID as optional field

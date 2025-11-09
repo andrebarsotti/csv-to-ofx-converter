@@ -695,12 +695,20 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.0.1 - Edição Aprimorada
+**Versão**: 2.0.2 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.0.2 (Novembro de 2025) - Correção do Fluxo de Release
+- **Correção de Bug**: Corrigido problema com nomes de executáveis não aparecendo corretamente nos releases do GitHub
+  - Artefatos agora são corretamente achatados antes de serem enviados para os releases
+  - Arquivos executáveis agora aparecem com nomes corretos nos downloads do release
+  - Melhorado tratamento de artefatos no fluxo de CI/CD
+- Todos os 39 testes passando
+- Sem mudanças funcionais - mesmas funcionalidades da v2.0.1
 
 ### Versão 2.0.1 (Novembro de 2025) - Correção de Bug
 - **Correção de Bug**: Restaurado ID da Conta como campo opcional
