@@ -695,12 +695,21 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.0.0 - Enhanced Edition
+**Version**: 2.0.1 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.0.1 (November 2025) - Bugfix Release
+- **Bug Fix**: Restored Account ID as optional field
+  - Account ID was incorrectly marked as required in v2.0.0
+  - Now optional with default value "UNKNOWN" (same as v1.1.0)
+  - Updated UI help text and documentation
+  - Full backward compatibility restored
+- All 39 tests passing
+- No breaking changes - all v2.0.0 features maintained
 
 ### Version 2.0.0 (November 2025) - Enhanced Edition
 - **Major Update**: Complete UI redesign with step-by-step wizard interface

@@ -695,12 +695,21 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.0.0 - Edição Aprimorada
+**Versão**: 2.0.1 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.0.1 (Novembro de 2025) - Correção de Bug
+- **Correção de Bug**: Restaurado ID da Conta como campo opcional
+  - ID da Conta foi incorretamente marcado como obrigatório na v2.0.0
+  - Agora opcional com valor padrão "UNKNOWN" (mesmo que v1.1.0)
+  - Atualizado texto de ajuda da UI e documentação
+  - Compatibilidade retroativa totalmente restaurada
+- Todos os 39 testes passando
+- Sem mudanças incompatíveis - todas as funcionalidades da v2.0.0 mantidas
 
 ### Versão 2.0.0 (Novembro de 2025) - Edição Aprimorada
 - **Grande Atualização**: Redesign completo da UI com interface em assistente passo a passo
