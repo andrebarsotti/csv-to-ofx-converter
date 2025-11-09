@@ -89,9 +89,9 @@ jobs:
 
         Choose the version for your operating system:
 
-        - **Windows**: `csv-to-ofx-converter-windows-x64.exe`
-        - **macOS**: `csv-to-ofx-converter-macos-x64`
-        - **Linux**: `csv-to-ofx-converter-linux-x64`
+        - **Windows**: ``csv-to-ofx-converter-windows-x64.exe``
+        - **macOS**: ``csv-to-ofx-converter-macos-x64``
+        - **Linux**: ``csv-to-ofx-converter-linux-x64``
 
         ## What's Included
 
@@ -107,21 +107,21 @@ jobs:
         ### Installation
 
         #### Windows
-        1. Download `csv-to-ofx-converter-windows-x64.exe`
+        1. Download ``csv-to-ofx-converter-windows-x64.exe``
         2. Double-click to run
         3. Windows may show a security warning - click "More info" then "Run anyway"
 
         #### macOS
-        1. Download `csv-to-ofx-converter-macos-x64`
+        1. Download ``csv-to-ofx-converter-macos-x64``
         2. Open Terminal and navigate to download folder
-        3. Make executable: `chmod +x csv-to-ofx-converter-macos-x64`
-        4. Run: `./csv-to-ofx-converter-macos-x64`
+        3. Make executable: ``chmod +x csv-to-ofx-converter-macos-x64``
+        4. Run: ``./csv-to-ofx-converter-macos-x64``
         5. If macOS blocks it, go to System Preferences > Security & Privacy and allow
 
         #### Linux
-        1. Download `csv-to-ofx-converter-linux-x64`
-        2. Make executable: `chmod +x csv-to-ofx-converter-linux-x64`
-        3. Run: `./csv-to-ofx-converter-linux-x64`
+        1. Download ``csv-to-ofx-converter-linux-x64``
+        2. Make executable: ``chmod +x csv-to-ofx-converter-linux-x64``
+        3. Run: ``./csv-to-ofx-converter-linux-x64``
 
         ## Documentation
 
@@ -144,7 +144,7 @@ jobs:
 
         For issues or questions:
         - Check the [README](https://github.com/${{ github.repository }}/blob/main/README.md)
-        - Review the log file: `csv_to_ofx_converter.log`
+        - Review the log file: ``csv_to_ofx_converter.log``
         - Open an issue with details
 
         ---
