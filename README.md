@@ -103,7 +103,7 @@ python3 --version
 
 3. **Run the application**:
 ```bash
-python3 src/csv_to_ofx_converter.py
+python3 main.py
 ```
 
 ### Option 3: Build from Source
@@ -135,7 +135,7 @@ pip install pyinstaller
 
 **Method 1 - GUI Application**:
 ```bash
-python3 src/csv_to_ofx_converter.py
+python3 main.py
 ```
 
 This will launch the **Enhanced Wizard Interface** that guides you through a 6-step process:

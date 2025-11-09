@@ -103,7 +103,7 @@ python3 --version
 
 3. **Execute a aplicação**:
 ```bash
-python3 src/csv_to_ofx_converter.py
+python3 main.py
 ```
 
 ### Opção 3: Compilar do Código Fonte
