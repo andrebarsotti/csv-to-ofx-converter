@@ -154,7 +154,7 @@ class ConverterGUI:
 
             # Arrow (except after last step)
             if idx < len(self.steps) - 1:
-                arrow = ttk.Label(self.progress_frame, text="→", font=('Arial', 12))
+                arrow = ttk.Label(self.progress_frame, text=">", font=('Arial', 12))
                 arrow.grid(row=0, column=idx * 2 + 1, padx=5)
 
     def _update_progress_indicator(self):
@@ -175,10 +175,10 @@ class ConverterGUI:
         nav_frame = ttk.Frame(parent)
         nav_frame.grid(row=row, column=0, pady=10)
 
-        self.back_btn = ttk.Button(nav_frame, text="← Back", command=self._go_back)
+        self.back_btn = ttk.Button(nav_frame, text="< Back", command=self._go_back)
         self.back_btn.pack(side=tk.LEFT, padx=5)
 
-        self.next_btn = ttk.Button(nav_frame, text="Next →", command=self._go_next)
+        self.next_btn = ttk.Button(nav_frame, text="Next >", command=self._go_next)
         self.next_btn.pack(side=tk.LEFT, padx=5)
 
         self.convert_btn = ttk.Button(nav_frame, text="Convert to OFX", command=self._convert)
@@ -391,8 +391,8 @@ class ConverterGUI:
         # Info text
         info_text = ("These settings determine how the CSV file is parsed.\n"
                     "Common combinations:\n"
-                    "• Standard: Comma delimiter + Dot decimal (1,234.56)\n"
-                    "• Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
+                    "- Standard: Comma delimiter + Dot decimal (1,234.56)\n"
+                    "- Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
         ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
                  wraplength=600, justify=tk.LEFT).grid(
             row=3, column=0, columnspan=2, sticky=tk.W, pady=20)
@@ -712,14 +712,14 @@ class ConverterGUI:
 
         ttk.Label(validation_frame,
                  text="When enabled, transactions outside the date range will prompt you to:\n"
-                      "• Keep the original date\n"
-                      "• Adjust to the nearest boundary (start or end date)\n"
-                      "• Exclude the transaction from the OFX file",
+                      "- Keep the original date\n"
+                      "- Adjust to the nearest boundary (start or end date)\n"
+                      "- Exclude the transaction from the OFX file",
                  font=('Arial', 8), foreground='gray').grid(
             row=3, column=0, columnspan=3, sticky=tk.W, pady=10)
 
         # Ready to convert
-        ttk.Label(frame, text="✓ Configuration complete! Click 'Convert to OFX' to proceed.",
+        ttk.Label(frame, text="[OK] Configuration complete! Click 'Convert to OFX' to proceed.",
                  font=('Arial', 10, 'bold'), foreground='green').grid(
             row=3, column=0, sticky=tk.W, pady=(20, 0))
 
@@ -863,9 +863,9 @@ class ConverterGUI:
         # Explanation
         explanation = ttk.Label(
             main_frame,
-            text="• Keep: Use the original date as-is\n"
-                 "• Adjust: Change to the nearest valid date\n"
-                 "• Exclude: Remove this transaction from the OFX file",
+            text="- Keep: Use the original date as-is\n"
+                 "- Adjust: Change to the nearest valid date\n"
+                 "- Exclude: Remove this transaction from the OFX file",
             font=('Arial', 8),
             foreground='gray',
             justify=tk.LEFT
@@ -1079,3 +1079,102 @@ class ConverterGUI:
         if not output_file:
             self._log("Conversion cancelled")
         return output_file
+
+    def _log(self, message: str):
+        """
+        Add a message to the activity log.
+
+        Args:
+            message: Message to log
+        """
+        from datetime import datetime
+        self.log_text.configure(state='normal')
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        self.log_text.insert(tk.END, f"[{timestamp}] {message}\n")
+        self.log_text.see(tk.END)  # Scroll to the end
+        self.log_text.configure(state='disabled')
+
+    def _clear(self):
+        """Clear all form data and reset to initial state."""
+        # Clear all variables
+        self.csv_file.set('')
+        self.delimiter.set(',')
+        self.decimal_separator.set('.')
+        self.account_id.set('')
+        self.bank_name.set('CSV Import')
+        self.currency.set('BRL')
+        self.start_date.set('')
+        self.end_date.set('')
+        self.enable_date_validation.set(False)
+        self.invert_values.set(False)
+
+        # Clear composite description
+        self.description_columns.clear()
+        self.description_separator.set(' ')
+
+        # Clear data
+        self.csv_headers.clear()
+        self.csv_data.clear()
+        self.field_mappings.clear()
+
+        # Reset to first step
+        self._show_step(0)
+
+        # Clear log
+        self.log_text.configure(state='normal')
+        self.log_text.delete(1.0, tk.END)
+        self.log_text.configure(state='disabled')
+
+        self._log("All fields cleared - ready for new conversion")
+        logger.info("Form cleared and reset to initial state")
+
+    def _generate_ofx_file(self, generator, output_file: str):
+        """
+        Generate the OFX file using the generator.
+
+        Args:
+            generator: OFXGenerator instance with transactions
+            output_file: Path to save the OFX file
+        """
+        generator.generate(
+            output_path=output_file,
+            account_id=self.account_id.get(),
+            bank_name=self.bank_name.get(),
+            currency=self.currency.get()
+        )
+        self._log(f"OFX file saved: {output_file}")
+        logger.info(f"OFX file saved: {output_file}")
+
+    def _show_conversion_success(self, output_file: str, stats: dict, date_validator):
+        """
+        Show conversion success message with statistics.
+
+        Args:
+            output_file: Path to the generated OFX file
+            stats: Dictionary with conversion statistics
+            date_validator: DateValidator instance (or None if not used)
+        """
+        # Build statistics message
+        msg_parts = [
+            f"Conversion completed successfully!",
+            f"",
+            f"Output file: {output_file}",
+            f"",
+            f"Statistics:",
+            f"  - Total rows processed: {stats['total_rows']}",
+            f"  - Transactions exported: {stats['processed']}",
+        ]
+
+        if stats['excluded'] > 0:
+            msg_parts.append(f"  - Transactions excluded: {stats['excluded']}")
+
+        if date_validator and stats['adjusted'] > 0:
+            msg_parts.append(f"  - Dates adjusted: {stats['adjusted']}")
+
+        if date_validator and stats['kept_out_of_range'] > 0:
+            msg_parts.append(f"  - Out-of-range dates kept: {stats['kept_out_of_range']}")
+
+        message = "\n".join(msg_parts)
+        self._log("Conversion completed successfully!")
+        messagebox.showinfo("Success", message)
+        logger.info(f"Conversion completed: {stats}")

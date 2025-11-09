@@ -7,7 +7,7 @@ This file controls how PyInstaller builds the standalone executable.
 block_cipher = None
 
 a = Analysis(
-    ['src/csv_to_ofx_converter.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[
