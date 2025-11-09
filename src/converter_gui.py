@@ -1156,11 +1156,11 @@ class ConverterGUI:
         """
         # Build statistics message
         msg_parts = [
-            f"Conversion completed successfully!",
-            f"",
+            "Conversion completed successfully!",
+            "",
             f"Output file: {output_file}",
-            f"",
-            f"Statistics:",
+            "",
+            "Statistics:",
             f"  - Total rows processed: {stats['total_rows']}",
             f"  - Transactions exported: {stats['processed']}",
         ]
