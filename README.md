@@ -695,12 +695,38 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.0.2 - Enhanced Edition
+**Version**: 2.0.3 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.0.3 (November 2025) - Code Quality and Refactoring
+- **Code Quality**: Integrated SonarCloud for continuous code quality monitoring
+  - Added SonarQube workflow for automated code analysis
+  - Configured code coverage testing
+  - Addressed multiple code quality issues identified by SonarCloud
+  - Fixed potential security vulnerabilities
+- **Refactoring**: Major code reorganization for better maintainability
+  - Split monolithic code into separate modules:
+    - `csv_parser.py`: CSV parsing functionality
+    - `ofx_generator.py`: OFX file generation
+    - `date_validator.py`: Date validation logic
+    - `converter_gui.py`: GUI implementation
+    - `constants.py`: Shared constants
+  - Added comprehensive module docstrings and type hints
+  - Improved error handling and logging
+- **Bug Fixes**:
+  - Resolved import errors and Unicode character issues
+  - Fixed executable names in release workflow
+  - Improved success message formatting
+- **Cleanup**:
+  - Removed outdated implementation summaries
+  - Removed Claude settings from version control
+  - Cleaned up redundant and commented-out code
+- All tests passing
+- Better code organization and maintainability
 
 ### Version 2.0.2 (November 2025) - Release Workflow Fix
 - **Bug Fix**: Fixed executable names not showing properly in GitHub releases

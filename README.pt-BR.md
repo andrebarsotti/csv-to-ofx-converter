@@ -695,12 +695,38 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.0.2 - Edição Aprimorada
+**Versão**: 2.0.3 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.0.3 (Novembro de 2025) - Qualidade de Código e Refatoração
+- **Qualidade de Código**: Integrado SonarCloud para monitoramento contínuo da qualidade do código
+  - Adicionado workflow do SonarQube para análise automática de código
+  - Configurado teste de cobertura de código
+  - Resolvidos múltiplos problemas de qualidade de código identificados pelo SonarCloud
+  - Corrigidas potenciais vulnerabilidades de segurança
+- **Refatoração**: Grande reorganização do código para melhor manutenibilidade
+  - Dividido código monolítico em módulos separados:
+    - `csv_parser.py`: Funcionalidade de análise de CSV
+    - `ofx_generator.py`: Geração de arquivos OFX
+    - `date_validator.py`: Lógica de validação de data
+    - `converter_gui.py`: Implementação da GUI
+    - `constants.py`: Constantes compartilhadas
+  - Adicionadas docstrings abrangentes de módulos e anotações de tipo
+  - Melhorado tratamento de erros e logging
+- **Correções de Bug**:
+  - Resolvidos erros de importação e problemas com caracteres Unicode
+  - Corrigidos nomes de executáveis no workflow de release
+  - Melhorada formatação da mensagem de sucesso
+- **Limpeza**:
+  - Removidos resumos de implementação desatualizados
+  - Removidas configurações do Claude do controle de versão
+  - Limpeza de código redundante e comentado
+- Todos os testes passando
+- Melhor organização e manutenibilidade do código
 
 ### Versão 2.0.2 (Novembro de 2025) - Correção do Fluxo de Release
 - **Correção de Bug**: Corrigido problema com nomes de executáveis não aparecendo corretamente nos releases do GitHub
