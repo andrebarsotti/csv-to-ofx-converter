@@ -703,6 +703,7 @@ For issues, questions, or suggestions:
 ## Changelog
 
 ### Version 2.0.3 (November 2025) - Code Quality and Refactoring
+
 - **Code Quality**: Integrated SonarCloud for continuous code quality monitoring
   - Added SonarQube workflow for automated code analysis
   - Configured code coverage testing
@@ -719,21 +720,14 @@ For issues, questions, or suggestions:
   - Improved error handling and logging
 - **Bug Fixes**:
   - Resolved import errors and Unicode character issues
-  - Fixed executable names in release workflow
-  - Improved success message formatting
+  - Fixed executable names in release workflow (artifacts now properly flattened)
+  - Improved success message formatting in conversion completion
 - **Cleanup**:
   - Removed outdated implementation summaries
   - Removed Claude settings from version control
   - Cleaned up redundant and commented-out code
 - All tests passing
 - Better code organization and maintainability
-
-### Version 2.0.2 (November 2025) - Release Workflow Fix
-- **Bug Fix**: Fixed executable names not showing properly in GitHub releases
-  - Artifacts are now properly flattened before being uploaded to releases
-  - Executable files now appear with correct names in release downloads
-  - Improved artifact handling in CI/CD workflow
-- All 39 tests passing
 - No functional changes - same features as v2.0.1
 
 ### Version 2.0.1 (November 2025) - Bugfix Release

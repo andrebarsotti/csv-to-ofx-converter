@@ -703,6 +703,7 @@ Para problemas, questões ou sugestões:
 ## Histórico de Mudanças
 
 ### Versão 2.0.3 (Novembro de 2025) - Qualidade de Código e Refatoração
+
 - **Qualidade de Código**: Integrado SonarCloud para monitoramento contínuo da qualidade do código
   - Adicionado workflow do SonarQube para análise automática de código
   - Configurado teste de cobertura de código
@@ -719,21 +720,14 @@ Para problemas, questões ou sugestões:
   - Melhorado tratamento de erros e logging
 - **Correções de Bug**:
   - Resolvidos erros de importação e problemas com caracteres Unicode
-  - Corrigidos nomes de executáveis no workflow de release
-  - Melhorada formatação da mensagem de sucesso
+  - Corrigidos nomes de executáveis no workflow de release (artefatos agora corretamente achatados)
+  - Melhorada formatação da mensagem de sucesso na conclusão da conversão
 - **Limpeza**:
   - Removidos resumos de implementação desatualizados
   - Removidas configurações do Claude do controle de versão
   - Limpeza de código redundante e comentado
 - Todos os testes passando
 - Melhor organização e manutenibilidade do código
-
-### Versão 2.0.2 (Novembro de 2025) - Correção do Fluxo de Release
-- **Correção de Bug**: Corrigido problema com nomes de executáveis não aparecendo corretamente nos releases do GitHub
-  - Artefatos agora são corretamente achatados antes de serem enviados para os releases
-  - Arquivos executáveis agora aparecem com nomes corretos nos downloads do release
-  - Melhorado tratamento de artefatos no fluxo de CI/CD
-- Todos os 39 testes passando
 - Sem mudanças funcionais - mesmas funcionalidades da v2.0.1
 
 ### Versão 2.0.1 (Novembro de 2025) - Correção de Bug
