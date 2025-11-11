@@ -24,16 +24,26 @@ python3 main.py
 ### Testing
 
 ```bash
-# Run all tests
-python3 -m unittest tests.test_converter
+# Run all tests (recommended - discovers all test files)
+python3 -m unittest discover tests
 
 # Run with verbose output
-python3 -m unittest tests.test_converter -v
+python3 -m unittest discover tests -v
+
+# Run specific test modules
+python3 -m unittest tests.test_csv_parser
+python3 -m unittest tests.test_ofx_generator
+python3 -m unittest tests.test_date_validator
+python3 -m unittest tests.test_integration
 
 # Run specific test classes
-python3 -m unittest tests.test_converter.TestCSVParser
-python3 -m unittest tests.test_converter.TestOFXGenerator
-python3 -m unittest tests.test_converter.TestDateValidator
+python3 -m unittest tests.test_csv_parser.TestCSVParser
+python3 -m unittest tests.test_ofx_generator.TestOFXGenerator
+python3 -m unittest tests.test_date_validator.TestDateValidator
+python3 -m unittest tests.test_integration.TestIntegration
+
+# Alternative: Run using convenience script
+python3 tests/run_all_tests.py
 ```
 
 ### Building Executables
@@ -68,7 +78,12 @@ src/
   converter_gui.py         # ConverterGUI class - Tkinter wizard interface
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
 tests/
-  test_converter.py        # Comprehensive test suite (39+ tests)
+  __init__.py              # Test package initialization
+  test_csv_parser.py       # CSV parser tests (8 tests)
+  test_ofx_generator.py    # OFX generator tests (20 tests)
+  test_date_validator.py   # Date validator tests (11 tests)
+  test_integration.py      # Integration tests (5 tests)
+  run_all_tests.py         # Convenience script to run all tests
 ```
 
 ### Key Classes and Responsibilities
@@ -158,27 +173,41 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite covers:
+Test suite is organized into separate modules (39 tests total):
+
+**test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
 - Amount normalization with various edge cases
-- Date parsing in multiple formats
+- BOM handling and error cases
+
+**test_ofx_generator.py** (20 tests):
 - OFX generation and transaction formatting
+- Date parsing in multiple formats
 - Value inversion logic
+- Transaction sorting and auto-correction
+- Multiple currency support
+
+**test_date_validator.py** (11 tests):
 - Date validation (before/within/after range)
-- Composite descriptions
-- Error handling (missing files, invalid data)
-- Integration tests for full conversion workflow
+- Date adjustment to boundaries
+- Edge cases (year boundaries, leap years)
+
+**test_integration.py** (5 tests):
+- Complete end-to-end conversion workflows
+- Composite descriptions with various separators
+- Value inversion in full workflow
 
 **Test Patterns**:
-- Uses `unittest` framework
+- Uses `unittest` framework with test discovery
 - Creates temporary files in `setUp()`, cleans in `tearDown()`
 - Tests both positive cases and error conditions
+- Each test class in its own file for better maintainability
 
 ## Common Patterns
 
 **When adding new date formats**:
 1. Add format string to `date_formats` list in both `OFXGenerator._parse_date()` and `DateValidator._parse_date_to_datetime()`
-2. Add test case in `test_converter.py`
+2. Add test case in `test_ofx_generator.py` or `test_date_validator.py` as appropriate
 
 **When modifying GUI steps**:
 - GUI step methods are named `_create_step_1()`, `_create_step_2()`, etc.
@@ -208,4 +237,35 @@ Test suite covers:
 - Use descriptive variable and function names.
 - Keep the code modular and easy to maintain.
 - Separate classes in diferent files.
-- Maintain consistency with the project’s existing structure and GUI framework.
+- Maintain consistency with the project's existing structure and GUI framework.
+
+## Documentation Requirements
+
+**IMPORTANT**: When making changes to the codebase, ALWAYS update the relevant documentation files:
+
+1. **CLAUDE.md** - This file:
+   - Update module structure if files are added/removed/renamed
+   - Update test commands if test organization changes
+   - Add new sections for new features or patterns
+   - Keep test counts accurate
+
+2. **README.md** (English):
+   - Update usage instructions for user-facing changes
+   - Update test commands if test structure changes
+   - Add examples for new features
+   - Keep feature list up to date
+
+3. **README.pt-BR.md** (Portuguese):
+   - Mirror all changes from README.md
+   - Maintain translation consistency
+   - Ensure examples are culturally appropriate
+
+4. **Code Comments and Docstrings**:
+   - Update docstrings when function signatures change
+   - Keep inline comments accurate
+   - Document non-obvious logic
+
+**When adding tests**:
+- Place in the appropriate test module (test_csv_parser.py, test_ofx_generator.py, etc.)
+- Update test counts in documentation
+- Ensure test discovery works: `python3 -m unittest discover tests`

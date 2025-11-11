@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Unit Tests for CSV to OFX Converter
-====================================
-Comprehensive test suite for the CSV to OFX converter application.
+Run All Tests - CSV to OFX Converter
+=====================================
+Convenience script to run all tests in the test suite.
 
-This file maintains backwards compatibility by importing all test classes
-and providing the original run_tests() function. Individual test classes
-have been split into separate modules for better maintainability:
+This file provides backwards compatibility with the original test_converter.py
+by importing all test classes and providing the run_tests() function.
 
-- test_csv_parser.py: Tests for CSV parsing
-- test_ofx_generator.py: Tests for OFX generation
-- test_date_validator.py: Tests for date validation
-- test_integration.py: Integration tests for complete workflows
+Individual test classes have been split into separate modules:
+- test_csv_parser.py: Tests for CSV parsing (8 tests)
+- test_ofx_generator.py: Tests for OFX generation (20 tests)
+- test_date_validator.py: Tests for date validation (11 tests)
+- test_integration.py: Integration tests for complete workflows (5 tests)
 
-You can still run tests using:
-- python3 -m unittest tests.test_converter (runs all tests via this file)
-- python3 -m unittest discover tests (discovers all test files)
-- python3 tests/test_converter.py (runs using the run_tests() function)
+Usage:
+- python3 tests/run_all_tests.py (runs using the run_tests() function)
+- python3 -m unittest discover tests (discovers and runs all test files)
+
+Note: This file is named run_all_tests.py (not test_*.py) to avoid
+being discovered twice by unittest discovery.
 """
 
 import unittest

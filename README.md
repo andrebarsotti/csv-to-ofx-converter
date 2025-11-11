@@ -456,44 +456,53 @@ VERSION:102
 
 ## Running Tests
 
-The project includes comprehensive unit tests covering:
-- CSV parsing with different formats
-- Amount normalization
-- Date parsing
-- OFX generation
-- Value inversion
-- Date validation and boundary handling
-- Composite descriptions
-- Error handling
-- Integration tests
+The project includes comprehensive unit tests (39 tests) organized in separate modules:
+- **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
+- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
+- **test_date_validator.py**: Date validation and boundary handling (11 tests)
+- **test_integration.py**: Complete end-to-end workflows and composite descriptions (5 tests)
 
-### Run all tests:
+### Run all tests (recommended):
 ```bash
-python3 -m unittest tests.test_converter
+python3 -m unittest discover tests
 ```
 
 ### Run with verbose output:
 ```bash
-python3 -m unittest tests.test_converter -v
+python3 -m unittest discover tests -v
+```
+
+### Run specific test module:
+```bash
+python3 -m unittest tests.test_csv_parser
+python3 -m unittest tests.test_ofx_generator
+python3 -m unittest tests.test_date_validator
+python3 -m unittest tests.test_integration
 ```
 
 ### Run specific test class:
 ```bash
-python3 -m unittest tests.test_converter.TestCSVParser
-python3 -m unittest tests.test_converter.TestOFXGenerator
-python3 -m unittest tests.test_converter.TestDateValidator
+python3 -m unittest tests.test_csv_parser.TestCSVParser
+python3 -m unittest tests.test_ofx_generator.TestOFXGenerator
+python3 -m unittest tests.test_date_validator.TestDateValidator
+python3 -m unittest tests.test_integration.TestIntegration
+```
+
+### Alternative - run using convenience script:
+```bash
+python3 tests/run_all_tests.py
 ```
 
 ### Expected output:
 ```
-test_add_credit_transaction (tests.test_converter.TestOFXGenerator) ... ok
-test_add_transaction (tests.test_converter.TestOFXGenerator) ... ok
-test_brazilian_csv_parsing (tests.test_converter.TestCSVParser) ... ok
-test_date_validator_initialization (tests.test_converter.TestDateValidator) ... ok
-test_is_within_range (tests.test_converter.TestDateValidator) ... ok
+test_add_credit_transaction (tests.test_ofx_generator.TestOFXGenerator) ... ok
+test_add_transaction (tests.test_ofx_generator.TestOFXGenerator) ... ok
+test_brazilian_csv_parsing (tests.test_csv_parser.TestCSVParser) ... ok
+test_date_validator_initialization (tests.test_date_validator.TestDateValidator) ... ok
+test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 33+ tests in 0.XXXs
+Ran 39 tests in 0.XXXs
 
 OK
 ```
