@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -711,12 +711,25 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.1.0 - Edição Aprimorada
+**Versão**: 2.1.1 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.1.1 (Novembro de 2025) - Correção de Bug
+
+- **Correção de Bug**: Corrigido análise de valores negativos com símbolos de moeda
+  - Agora trata corretamente formatos como `-R$ 2.105,00` (negativo antes da moeda)
+  - Suporta negativo depois da moeda: `R$ -2.105,00`
+  - Adicionado suporte para notação com parênteses: `(R$ 100,50)` = `-100.50`
+  - Funciona com formatos brasileiro (vírgula decimal) e padrão (ponto decimal)
+- **Testes**: Adicionados 10 novos casos de teste para formatos de valores negativos
+  - Testes para negativo com símbolos de moeda em várias posições
+  - Testes para notação com parênteses (comum em contabilidade)
+  - Todos os 44 testes passando
+- **Melhoria**: Mensagens de erro aprimoradas para análise de valores
 
 ### Versão 2.1.0 (Novembro de 2025) - Funcionalidades de Gerenciamento de Saldos
 

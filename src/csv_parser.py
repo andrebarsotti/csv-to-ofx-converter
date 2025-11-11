@@ -96,8 +96,12 @@ class CSVParser:
         if not amount_str:
             return 0.0
 
-        # Remove currency symbols and spaces
-        clean_str = amount_str.strip().replace('R$', '').replace('$', '').strip()
+        # Preserve negative sign (check for - anywhere or parentheses)
+        original_str = amount_str.strip()
+        is_negative = '-' in original_str or original_str.startswith('(')
+
+        # Remove currency symbols, spaces, parentheses, and negative signs
+        clean_str = original_str.replace('R$', '').replace('$', '').replace('(', '').replace(')', '').replace('-', '').strip()
 
         # Handle Brazilian format: 1.234,56 -> 1234.56
         if self.decimal_separator == ',':
@@ -107,7 +111,8 @@ class CSVParser:
             clean_str = clean_str.replace(',', '')
 
         try:
-            return float(clean_str)
+            value = float(clean_str)
+            return -value if is_negative else value
         except ValueError as e:
             logger.error(f"Cannot parse amount '{amount_str}': {e}")
             raise ValueError(f"Invalid amount format: {amount_str}")

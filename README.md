@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -711,12 +711,25 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.1.0 - Enhanced Edition
+**Version**: 2.1.1 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.1.1 (November 2025) - Bug Fix Release
+
+- **Bug Fix**: Fixed amount parsing for negative values with currency symbols
+  - Now correctly handles formats like `-R$ 2.105,00` (negative before currency)
+  - Supports negative after currency: `R$ -2.105,00`
+  - Added support for parentheses notation: `(R$ 100,50)` = `-100.50`
+  - Works with both Brazilian (comma decimal) and standard (dot decimal) formats
+- **Testing**: Added 10 new test cases for negative amount formats
+  - Tests for negative with currency symbols in various positions
+  - Tests for parentheses notation (common in accounting)
+  - All 44 tests passing
+- **Improvement**: Enhanced error messages for amount parsing
 
 ### Version 2.1.0 (November 2025) - Balance Management Features
 

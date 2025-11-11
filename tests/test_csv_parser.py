@@ -71,6 +71,13 @@ class TestCSVParser(unittest.TestCase):
         self.assertEqual(parser.normalize_amount('1,234.56'), 1234.56)
         self.assertEqual(parser.normalize_amount('R$ 100.50'), 100.50)
         self.assertEqual(parser.normalize_amount('$100.50'), 100.50)
+        # Test negative amounts with currency symbols
+        self.assertEqual(parser.normalize_amount('-$100.50'), -100.50)
+        self.assertEqual(parser.normalize_amount('$-100.50'), -100.50)
+        self.assertEqual(parser.normalize_amount('-R$ 1,234.56'), -1234.56)
+        # Test parentheses for negative amounts
+        self.assertEqual(parser.normalize_amount('($100.50)'), -100.50)
+        self.assertEqual(parser.normalize_amount('(100.50)'), -100.50)
 
     def test_normalize_amount_brazilian_format(self):
         """Test amount normalization for Brazilian format."""
@@ -80,6 +87,13 @@ class TestCSVParser(unittest.TestCase):
         self.assertEqual(parser.normalize_amount('-50,25'), -50.25)
         self.assertEqual(parser.normalize_amount('1.234,56'), 1234.56)
         self.assertEqual(parser.normalize_amount('R$ 1.234,56'), 1234.56)
+        # Test negative amounts with currency symbols
+        self.assertEqual(parser.normalize_amount('-R$ 2.105,00'), -2105.00)
+        self.assertEqual(parser.normalize_amount('-R$ 100,50'), -100.50)
+        self.assertEqual(parser.normalize_amount('R$ -100,50'), -100.50)
+        # Test parentheses for negative amounts (common in accounting)
+        self.assertEqual(parser.normalize_amount('(R$ 100,50)'), -100.50)
+        self.assertEqual(parser.normalize_amount('(100,50)'), -100.50)
 
     def test_normalize_amount_edge_cases(self):
         """Test amount normalization edge cases."""

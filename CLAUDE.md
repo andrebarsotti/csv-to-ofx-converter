@@ -92,6 +92,8 @@ tests/
 - Parses CSV files with configurable delimiter and decimal separator
 - Method `parse_file()` returns tuple of (headers, rows)
 - Method `normalize_amount()` converts string amounts to floats, handling Brazilian format (1.234,56) and standard format (1,234.56)
+- Supports negative amounts with currency symbols in any position: `-R$ 100,00`, `R$ -100,00`
+- Supports parentheses notation for negative amounts: `(R$ 100,00)` = `-100.00`
 - Handles UTF-8 and BOM encoding
 
 **OFXGenerator** (`src/ofx_generator.py`):
@@ -173,11 +175,12 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (39 tests total):
+Test suite is organized into separate modules (44 tests total):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
-- Amount normalization with various edge cases
+- Amount normalization with various edge cases including negative values with currency symbols
+- Support for parentheses notation for negative amounts
 - BOM handling and error cases
 
 **test_ofx_generator.py** (20 tests):
@@ -279,7 +282,7 @@ Before creating a release, ensure all of the following are complete:
 
 1. **Code Quality & Testing**:
    - All tests passing: `python3 -m unittest discover tests -v`
-   - Verify 39 tests run successfully (not 78 due to duplicate discovery)
+   - Verify 44 tests run successfully
    - Test individual modules work correctly
    - Code follows PEP8 standards
    - No debugging code or print statements
@@ -394,7 +397,7 @@ Changes:
 - Documentation: Updates to docs
 
 Testing:
-- All 39 tests passing
+- All 44 tests passing
 - Tested on [platforms]
 - Compatible with [software versions]
 ```
