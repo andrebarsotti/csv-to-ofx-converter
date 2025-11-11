@@ -117,7 +117,8 @@ class OFXGenerator:
         return f"{parsed_date.strftime('%Y%m%d')}000000[-3:BRT]"
 
     def generate(self, output_path: str, account_id: str = "UNKNOWN",
-                bank_name: str = "CSV Import", currency: str = "BRL"):
+                bank_name: str = "CSV Import", currency: str = "BRL",
+                initial_balance: float = 0.0, final_balance: Optional[float] = None):
         """
         Generate OFX file with all added transactions.
 
@@ -126,6 +127,8 @@ class OFXGenerator:
             account_id: Account identifier
             bank_name: Name of the financial institution
             currency: Currency code (default: BRL for Brazilian Real)
+            initial_balance: Starting balance (default: 0.0)
+            final_balance: Ending balance (if None, will be calculated from transactions)
 
         Raises:
             ValueError: If no transactions have been added
@@ -140,8 +143,10 @@ class OFXGenerator:
         start_date = self.transactions[0]['date']
         end_date = self.transactions[-1]['date']
 
-        # Calculate balance
-        balance = sum(t['amount'] for t in self.transactions)
+        # Calculate or use provided final balance
+        if final_balance is None:
+            transaction_total = sum(t['amount'] for t in self.transactions)
+            final_balance = initial_balance + transaction_total
 
         # Generate current timestamp
         now = datetime.now()
@@ -150,18 +155,20 @@ class OFXGenerator:
         # Build OFX content
         ofx_content = self._build_ofx_content(
             timestamp, bank_name, account_id, currency,
-            start_date, end_date, balance
+            start_date, end_date, initial_balance, final_balance
         )
 
         # Write to file
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(ofx_content)
 
-        logger.info(f"OFX file generated: {output_path} ({len(self.transactions)} transactions)")
+        logger.info(f"OFX file generated: {output_path} ({len(self.transactions)} transactions, "
+                   f"initial={initial_balance:.2f}, final={final_balance:.2f})")
 
     def _build_ofx_content(self, timestamp: str, bank_name: str,
                           account_id: str, currency: str,
-                          start_date: str, end_date: str, balance: float) -> str:
+                          start_date: str, end_date: str,
+                          initial_balance: float, final_balance: float) -> str:
         """
         Build complete OFX file content.
 
@@ -172,7 +179,8 @@ class OFXGenerator:
             currency: Currency code
             start_date: Start date of statement
             end_date: End date of statement
-            balance: Final balance
+            initial_balance: Starting balance
+            final_balance: Ending balance
 
         Returns:
             Complete OFX file content as string
@@ -231,13 +239,17 @@ class OFXGenerator:
                 "</STMTTRN>",
             ])
 
-        # Close tags
+        # Close tags and add balance information
         lines.extend([
             "</BANKTRANLIST>",
             "<LEDGERBAL>",
-            f"<BALAMT>{balance:.2f}</BALAMT>",
+            f"<BALAMT>{final_balance:.2f}</BALAMT>",
             f"<DTASOF>{end_date}</DTASOF>",
             "</LEDGERBAL>",
+            "<AVAILBAL>",
+            f"<BALAMT>{initial_balance:.2f}</BALAMT>",
+            f"<DTASOF>{start_date}</DTASOF>",
+            "</AVAILBAL>",
             "</CCSTMTRS>",
             "</CCSTMTTRNRS>",
             "</CREDITCARDMSGSRSV1>",

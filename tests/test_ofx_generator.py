@@ -285,6 +285,149 @@ class TestOFXGenerator(unittest.TestCase):
         self.assertEqual(generator.transactions[0]['amount'], -100.50)
         self.assertEqual(generator.transactions[0]['type'], 'DEBIT')
 
+    def test_initial_balance_in_ofx_output(self):
+        """Test that initial balance appears in OFX output (NEW in v3.0)."""
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+
+        output_file = os.path.join(self.temp_dir, 'initial_balance.ofx')
+        self.generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank',
+            initial_balance=1000.00
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check that initial balance appears in AVAILBAL section
+        self.assertIn('<AVAILBAL>', content)
+        self.assertIn('<BALAMT>1000.00</BALAMT>', content)
+
+    def test_auto_calculated_final_balance(self):
+        """Test automatic calculation of final balance (NEW in v3.0)."""
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+        self.generator.add_transaction(
+            date='2025-10-02',
+            amount=500.00,
+            description='Deposit',
+            transaction_type='CREDIT'
+        )
+
+        output_file = os.path.join(self.temp_dir, 'auto_balance.ofx')
+        initial = 1000.00
+        # Expected: 1000 - 100.50 + 500 = 1399.50
+        self.generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank',
+            initial_balance=initial,
+            final_balance=None  # Auto-calculate
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check calculated final balance in LEDGERBAL
+        self.assertIn('<LEDGERBAL>', content)
+        # The final balance should be 1399.50
+        self.assertIn('<BALAMT>1399.50</BALAMT>', content)
+
+    def test_manual_final_balance(self):
+        """Test manually specified final balance (NEW in v3.0)."""
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+
+        output_file = os.path.join(self.temp_dir, 'manual_balance.ofx')
+        manual_final = 2500.00
+        self.generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank',
+            initial_balance=1000.00,
+            final_balance=manual_final
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Check manual final balance appears in output
+        self.assertIn(f'<BALAMT>{manual_final:.2f}</BALAMT>', content)
+
+    def test_zero_initial_balance_default(self):
+        """Test default initial balance of 0.0 (NEW in v3.0)."""
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=100.00,
+            description='Deposit',
+            transaction_type='CREDIT'
+        )
+
+        output_file = os.path.join(self.temp_dir, 'zero_initial.ofx')
+        self.generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank'
+            # No initial_balance specified, should default to 0.00
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Should have initial balance of 0.00
+        lines = content.split('\n')
+        availbal_section = []
+        in_availbal = False
+        for line in lines:
+            if '<AVAILBAL>' in line:
+                in_availbal = True
+            if in_availbal:
+                availbal_section.append(line)
+            if '</AVAILBAL>' in line:
+                break
+
+        availbal_text = '\n'.join(availbal_section)
+        self.assertIn('<BALAMT>0.00</BALAMT>', availbal_text)
+
+    def test_negative_initial_balance(self):
+        """Test handling of negative initial balance (NEW in v3.0)."""
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-50.00,
+            description='Fee',
+            transaction_type='DEBIT'
+        )
+
+        output_file = os.path.join(self.temp_dir, 'negative_initial.ofx')
+        self.generator.generate(
+            output_path=output_file,
+            account_id='TEST',
+            bank_name='Test Bank',
+            initial_balance=-100.00  # Negative starting balance
+        )
+
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        # Should handle negative initial balance
+        self.assertIn('<BALAMT>-100.00</BALAMT>', content)
+        # Final should be -100 - 50 = -150
+        self.assertIn('<BALAMT>-150.00</BALAMT>', content)
+
 
 if __name__ == '__main__':
     unittest.main()

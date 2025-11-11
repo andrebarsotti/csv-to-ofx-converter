@@ -50,6 +50,9 @@ class ConverterGUI:
         self.root = root
         self.root.title("CSV to OFX Converter - Enhanced Edition")
         self.root.geometry("1000x850")
+        self.root.minsize(900, 700)  # Set minimum window size
+        # Allow window resizing
+        self.root.resizable(True, True)
 
         # Variables
         self.csv_file = tk.StringVar()
@@ -62,6 +65,9 @@ class ConverterGUI:
         self.end_date = tk.StringVar(value='')
         self.enable_date_validation = tk.BooleanVar(value=False)
         self.invert_values = tk.BooleanVar(value=False)
+        self.initial_balance = tk.StringVar(value='0.00')
+        self.final_balance = tk.StringVar(value='0.00')
+        self.auto_calculate_final_balance = tk.BooleanVar(value=True)
 
         # Composite description variables
         self.description_columns = []  # List of selected column variables
@@ -80,7 +86,8 @@ class ConverterGUI:
             "Data Preview",
             "OFX Configuration",
             "Field Mapping",
-            "Advanced Options"
+            "Advanced Options",
+            "Balance Preview"
         ]
 
         # Build UI
@@ -219,6 +226,8 @@ class ConverterGUI:
             self._create_step_field_mapping()
         elif step_num == 5:
             self._create_step_advanced_options()
+        elif step_num == 6:
+            self._create_step_balance_preview()
 
         # Update navigation buttons
         self._update_navigation_buttons()
@@ -547,6 +556,15 @@ class ConverterGUI:
                  font=('Arial', 8), foreground='gray').grid(
             row=6, column=1, sticky=tk.W, padx=5)
 
+        # Initial Balance
+        ttk.Label(frame, text="Initial Balance:", font=('Arial', 10, 'bold')).grid(
+            row=7, column=0, sticky=tk.W, padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.initial_balance, width=20).grid(
+            row=7, column=1, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(frame, text="(Optional - Starting balance for the statement, e.g., 1000.50)",
+                 font=('Arial', 8), foreground='gray').grid(
+            row=8, column=1, sticky=tk.W, padx=5)
+
     # ==================== STEP 5: FIELD MAPPING ====================
 
     def _create_step_field_mapping(self):
@@ -718,8 +736,8 @@ class ConverterGUI:
                  font=('Arial', 8), foreground='gray').grid(
             row=3, column=0, columnspan=3, sticky=tk.W, pady=10)
 
-        # Ready to convert
-        ttk.Label(frame, text="[OK] Configuration complete! Click 'Convert to OFX' to proceed.",
+        # Ready to proceed
+        ttk.Label(frame, text="[OK] Configuration complete! Click 'Next' to preview balances.",
                  font=('Arial', 10, 'bold'), foreground='green').grid(
             row=3, column=0, sticky=tk.W, pady=(20, 0))
 
@@ -731,6 +749,249 @@ class ConverterGUI:
         else:
             self.start_date_entry.configure(state='disabled')
             self.end_date_entry.configure(state='disabled')
+
+    # ==================== STEP 7: BALANCE PREVIEW ====================
+
+    def _create_step_balance_preview(self):
+        """Create balance preview step showing transactions and calculated balances."""
+        frame = ttk.LabelFrame(self.step_container, text="Step 7: Balance Preview & Confirmation",
+                              padding="10")
+        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=10, pady=10)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(2, weight=1)  # Make transaction preview row expandable
+
+        ttk.Label(frame, text="Review transactions and balances before exporting:",
+                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+
+        # Calculate balance information
+        try:
+            balance_info = self._calculate_balance_preview()
+        except Exception as e:
+            ttk.Label(frame, text=f"Error calculating balances: {e}",
+                     foreground='red', font=('Arial', 10, 'bold')).grid(
+                row=1, column=0, sticky=tk.W, pady=20)
+            return
+
+        # Balance summary frame (compact layout)
+        summary_frame = ttk.LabelFrame(frame, text="Balance Summary", padding="5")
+        summary_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+        summary_frame.columnconfigure(1, weight=1)
+
+        # Initial Balance
+        ttk.Label(summary_frame, text="Initial Balance:", font=('Arial', 10, 'bold')).grid(
+            row=0, column=0, sticky=tk.W, padx=5, pady=2)
+        ttk.Label(summary_frame, text=f"{balance_info['initial_balance']:.2f}",
+                 font=('Arial', 10)).grid(row=0, column=1, sticky=tk.W, padx=5, pady=2)
+
+        # Total Credits
+        ttk.Label(summary_frame, text="Total Credits (+):", font=('Arial', 10, 'bold')).grid(
+            row=1, column=0, sticky=tk.W, padx=5, pady=2)
+        ttk.Label(summary_frame, text=f"{balance_info['total_credits']:.2f}",
+                 font=('Arial', 10), foreground='green').grid(
+            row=1, column=1, sticky=tk.W, padx=5, pady=2)
+
+        # Total Debits
+        ttk.Label(summary_frame, text="Total Debits (-):", font=('Arial', 10, 'bold')).grid(
+            row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        ttk.Label(summary_frame, text=f"{balance_info['total_debits']:.2f}",
+                 font=('Arial', 10), foreground='red').grid(
+            row=2, column=1, sticky=tk.W, padx=5, pady=2)
+
+        # Calculated Final Balance
+        ttk.Label(summary_frame, text="Calculated Final Balance:", font=('Arial', 10, 'bold')).grid(
+            row=3, column=0, sticky=tk.W, padx=5, pady=2)
+        self.calculated_balance_label = ttk.Label(
+            summary_frame,
+            text=f"{balance_info['calculated_final_balance']:.2f}",
+            font=('Arial', 11, 'bold'),
+            foreground='blue'
+        )
+        self.calculated_balance_label.grid(row=3, column=1, sticky=tk.W, padx=5, pady=2)
+
+        ttk.Separator(summary_frame, orient='horizontal').grid(
+            row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+
+        # Final Balance Mode Selection
+        mode_frame = ttk.Frame(summary_frame)
+        mode_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+
+        ttk.Checkbutton(
+            mode_frame,
+            text="Automatically use calculated final balance",
+            variable=self.auto_calculate_final_balance,
+            command=self._toggle_final_balance_mode
+        ).pack(anchor=tk.W, pady=2)
+
+        # Manual Final Balance Entry
+        manual_frame = ttk.Frame(summary_frame)
+        manual_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
+
+        ttk.Label(manual_frame, text="Manual Final Balance:", font=('Arial', 10, 'bold')).pack(
+            side=tk.LEFT, padx=5)
+        # Set initial state based on auto_calculate_final_balance value
+        initial_state = 'disabled' if self.auto_calculate_final_balance.get() else 'normal'
+        self.final_balance_entry = ttk.Entry(manual_frame, textvariable=self.final_balance,
+                                             width=20, state=initial_state)
+        self.final_balance_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Label(manual_frame, text="(Uncheck above to edit manually)",
+                 font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
+
+        # Transaction count
+        ttk.Label(summary_frame, text=f"Total Transactions: {balance_info['transaction_count']}",
+                 font=('Arial', 9), foreground='gray').grid(
+            row=7, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
+
+        # Transaction preview (scrollable list)
+        preview_frame = ttk.LabelFrame(frame, text="Transaction Preview (First 20)", padding="5")
+        preview_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        preview_frame.columnconfigure(0, weight=1)
+        preview_frame.rowconfigure(0, weight=1)
+
+        # Create treeview
+        tree_container = ttk.Frame(preview_frame)
+        tree_container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        tree_container.columnconfigure(0, weight=1)
+        tree_container.rowconfigure(0, weight=1)
+
+        vsb = ttk.Scrollbar(tree_container, orient="vertical")
+        hsb = ttk.Scrollbar(tree_container, orient="horizontal")
+
+        self.balance_preview_tree = ttk.Treeview(
+            tree_container,
+            columns=('date', 'description', 'amount', 'type'),
+            show='headings',
+            yscrollcommand=vsb.set,
+            xscrollcommand=hsb.set,
+            height=10
+        )
+        vsb.configure(command=self.balance_preview_tree.yview)
+        hsb.configure(command=self.balance_preview_tree.xview)
+
+        self.balance_preview_tree.heading('date', text='Date')
+        self.balance_preview_tree.heading('description', text='Description')
+        self.balance_preview_tree.heading('amount', text='Amount')
+        self.balance_preview_tree.heading('type', text='Type')
+
+        self.balance_preview_tree.column('date', width=120, anchor=tk.W)
+        self.balance_preview_tree.column('description', width=300, anchor=tk.W)
+        self.balance_preview_tree.column('amount', width=100, anchor=tk.E)
+        self.balance_preview_tree.column('type', width=80, anchor=tk.CENTER)
+
+        self.balance_preview_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
+
+        # Populate transaction preview
+        for trans in balance_info['transactions'][:20]:
+            self.balance_preview_tree.insert('', tk.END, values=(
+                trans['date'],
+                trans['description'][:50],
+                f"{trans['amount']:.2f}",
+                trans['type']
+            ))
+
+        # Initialize final balance
+        self._update_final_balance_display(balance_info['calculated_final_balance'])
+
+        # Confirmation message
+        ttk.Label(frame, text="[OK] Review complete! Click 'Convert to OFX' to generate the file.",
+                 font=('Arial', 10, 'bold'), foreground='green').grid(
+            row=3, column=0, sticky=tk.W, pady=(10, 0))
+
+    def _calculate_balance_preview(self) -> Dict:
+        """
+        Calculate balance information for preview.
+
+        Returns:
+            Dictionary with balance calculations and transaction list
+        """
+        # Parse initial balance
+        try:
+            initial_balance = float(self.initial_balance.get().strip() or '0.00')
+        except ValueError:
+            initial_balance = 0.00
+
+        # Get field mappings
+        date_col = self.field_mappings['date'].get()
+        amount_col = self.field_mappings['amount'].get()
+        desc_col = self.field_mappings['description'].get()
+        type_col = self.field_mappings['type'].get()
+        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+
+        # Create parser
+        parser = CSVParser(
+            delimiter=self.delimiter.get(),
+            decimal_separator=self.decimal_separator.get()
+        )
+
+        transactions = []
+        total_credits = 0.0
+        total_debits = 0.0
+
+        # Process each row
+        for row in self.csv_data:
+            try:
+                date = row[date_col]
+                amount = parser.normalize_amount(row[amount_col])
+                description = self._build_description(row, desc_col, use_composite)
+
+                # Apply value inversion if enabled
+                if self.invert_values.get():
+                    amount = -amount
+
+                # Determine transaction type
+                if type_col != NOT_MAPPED and type_col in row:
+                    trans_type = row[type_col].upper()
+                    if trans_type not in ['DEBIT', 'CREDIT']:
+                        trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
+                else:
+                    trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
+
+                # Calculate totals
+                if amount >= 0:
+                    total_credits += amount
+                else:
+                    total_debits += abs(amount)
+
+                transactions.append({
+                    'date': date,
+                    'description': description,
+                    'amount': amount,
+                    'type': trans_type
+                })
+
+            except Exception as e:
+                self._log(f"Warning: Error processing row for preview: {e}")
+                continue
+
+        # Calculate final balance
+        calculated_final_balance = initial_balance + total_credits - total_debits
+
+        return {
+            'initial_balance': initial_balance,
+            'total_credits': total_credits,
+            'total_debits': total_debits,
+            'calculated_final_balance': calculated_final_balance,
+            'transaction_count': len(transactions),
+            'transactions': transactions
+        }
+
+    def _toggle_final_balance_mode(self):
+        """Toggle between automatic and manual final balance mode."""
+        if self.auto_calculate_final_balance.get():
+            self.final_balance_entry.configure(state='disabled')
+            # Update to calculated value
+            try:
+                balance_info = self._calculate_balance_preview()
+                self._update_final_balance_display(balance_info['calculated_final_balance'])
+            except Exception:
+                pass
+        else:
+            self.final_balance_entry.configure(state='normal')
+
+    def _update_final_balance_display(self, calculated_balance: float):
+        """Update the final balance display with calculated or manual value."""
+        self.final_balance.set(f"{calculated_balance:.2f}")
 
     # ==================== CONVERSION ====================
 
@@ -1107,6 +1368,9 @@ class ConverterGUI:
         self.end_date.set('')
         self.enable_date_validation.set(False)
         self.invert_values.set(False)
+        self.initial_balance.set('0.00')
+        self.auto_calculate_final_balance.set(True)
+        self.final_balance.set('0.00')
 
         # Clear composite description
         self.description_columns.clear()
@@ -1136,11 +1400,30 @@ class ConverterGUI:
             generator: OFXGenerator instance with transactions
             output_file: Path to save the OFX file
         """
+        # Parse initial balance
+        try:
+            initial_balance = float(self.initial_balance.get().strip() or '0.00')
+        except ValueError:
+            initial_balance = 0.00
+            self._log("Warning: Invalid initial balance, using 0.00")
+
+        # Parse final balance (if manual mode)
+        final_balance = None
+        if not self.auto_calculate_final_balance.get():
+            try:
+                final_balance = float(self.final_balance.get().strip())
+                self._log(f"Using manual final balance: {final_balance:.2f}")
+            except ValueError:
+                self._log("Warning: Invalid final balance, will calculate automatically")
+                final_balance = None
+
         generator.generate(
             output_path=output_file,
             account_id=self.account_id.get(),
             bank_name=self.bank_name.get(),
-            currency=self.currency.get()
+            currency=self.currency.get(),
+            initial_balance=initial_balance,
+            final_balance=final_balance
         )
         self._log(f"OFX file saved: {output_file}")
         logger.info(f"OFX file saved: {output_file}")
