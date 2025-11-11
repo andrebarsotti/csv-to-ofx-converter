@@ -269,3 +269,154 @@ Test suite is organized into separate modules (39 tests total):
 - Place in the appropriate test module (test_csv_parser.py, test_ofx_generator.py, etc.)
 - Update test counts in documentation
 - Ensure test discovery works: `python3 -m unittest discover tests`
+## Release Process
+
+**IMPORTANT**: Follow the comprehensive checklist in `RELEASE_CHECKLIST.md` for all releases.
+
+### Pre-Release Verification
+
+Before creating a release, ensure all of the following are complete:
+
+1. **Code Quality & Testing**:
+   - All tests passing: `python3 -m unittest discover tests -v`
+   - Verify 39 tests run successfully (not 78 due to duplicate discovery)
+   - Test individual modules work correctly
+   - Code follows PEP8 standards
+   - No debugging code or print statements
+
+2. **Documentation Updates**:
+   - **CLAUDE.md**: Update module structure, test counts, new features
+   - **README.md**: Update version, changelog, examples, last updated date
+   - **README.pt-BR.md**: Mirror all changes from README.md in Portuguese
+   - **RELEASE_CHECKLIST.md**: Update if release process changed
+   - All code comments and docstrings are accurate
+
+3. **Version Management**:
+   - Decide version number using semantic versioning:
+     - **Patch** (1.0.X): Bug fixes only
+     - **Minor** (1.X.0): New features, backward compatible
+     - **Major** (X.0.0): Breaking changes
+   - Update version in README.md and README.pt-BR.md
+   - Update changelog in both README files
+
+4. **Functional Testing**:
+   - Test with sample CSV files (both Brazilian and standard formats)
+   - Test date validation feature
+   - Verify OFX output in financial software
+   - Test error handling
+   - Test GUI on target platform if possible
+
+5. **Build Testing**:
+   - Local build succeeds: `./build.sh` (Linux/macOS) or `build.bat` (Windows)
+   - Executable runs without errors
+   - Executable size is reasonable (< 50MB)
+   - GUI elements render correctly
+
+### Release Steps
+
+1. **Prepare Repository**:
+   ```bash
+   # Ensure everything is committed and up to date
+   git status  # Should be clean
+   git pull origin main
+   ```
+
+2. **Create and Push Tag**:
+   ```bash
+   # Create annotated tag with version
+   git tag -a v1.x.x -m "Release version 1.x.x: Brief description"
+
+   # Push tag to trigger GitHub Actions workflow
+   git push origin v1.x.x
+   ```
+
+3. **Monitor Build**:
+   - Go to GitHub Actions: `https://github.com/YOUR_USERNAME/csv-to-ofx-converter/actions`
+   - Watch workflow execution for all platforms:
+     - Ubuntu (Linux x64)
+     - Windows (x64)
+     - macOS (x64)
+   - Verify all jobs complete successfully
+   - Check for errors in logs
+
+4. **Verify Release**:
+   - Check Release page for new release
+   - Verify all executables are attached:
+     - `csv-to-ofx-converter-linux-x64`
+     - `csv-to-ofx-converter-windows-x64.exe`
+     - `csv-to-ofx-converter-macos-x64`
+   - Verify checksums file is attached
+   - Verify release notes are complete
+   - Test download links work
+
+5. **Post-Release Testing**:
+   - Download and test each platform's executable
+   - Verify SHA256 checksums match
+   - Test functionality on actual system
+
+### Rollback Procedure
+
+If issues are discovered after release:
+
+```bash
+# Delete the release on GitHub (via web interface)
+
+# Delete local tag
+git tag -d v1.x.x
+
+# Delete remote tag
+git push origin :refs/tags/v1.x.x
+
+# Fix issues, commit, and create new tag
+git tag -a v1.x.y -m "Release version 1.x.y: Bug fixes"
+git push origin v1.x.y
+```
+
+### Important Files for Releases
+
+1. **RELEASE_CHECKLIST.md**: Complete step-by-step checklist
+2. **README.md**: Version number, changelog, last updated date
+3. **README.pt-BR.md**: Version number, changelog (Portuguese)
+4. **CLAUDE.md**: Technical documentation updates
+5. **.github/workflows/build-and-release.yml**: Automated build workflow
+
+### Release Notes Template
+
+Include in git tag message and GitHub release:
+
+```markdown
+Release version X.Y.Z: Brief title
+
+Changes:
+- New Feature: Description of feature
+- Bug Fix: Description of fix
+- Improvement: Description of improvement
+- Documentation: Updates to docs
+
+Testing:
+- All 39 tests passing
+- Tested on [platforms]
+- Compatible with [software versions]
+```
+
+### Quick Release Reference
+
+```bash
+# 1. Run tests
+python3 -m unittest discover tests -v
+
+# 2. Update documentation (README.md, README.pt-BR.md, CLAUDE.md)
+
+# 3. Commit changes
+git add -A
+git commit -m "chore: Prepare release v1.x.x"
+git push origin main
+
+# 4. Create and push tag
+git tag -a v1.x.x -m "Release v1.x.x: Description"
+git push origin v1.x.x
+
+# 5. Monitor GitHub Actions and verify release
+```
+
+**Remember**: Always consult `RELEASE_CHECKLIST.md` for the complete and detailed release process.

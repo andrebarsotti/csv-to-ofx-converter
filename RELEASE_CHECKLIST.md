@@ -6,11 +6,13 @@ Use this checklist when preparing a new release of CSV to OFX Converter.
 
 ### 1. Code Quality
 
-- [ ] All tests passing: `python3 -m unittest tests.test_converter -v`
+- [ ] All tests passing: `python3 -m unittest discover tests -v`
+- [ ] Verify test count is correct (39 tests total)
 - [ ] Code follows PEP8 standards
 - [ ] No debugging code or print statements left in
 - [ ] Log messages are appropriate and helpful
 - [ ] All TODOs addressed or documented
+- [ ] Documentation updated (CLAUDE.md, README.md, README.pt-BR.md)
 
 ### 2. Version Update
 
@@ -263,8 +265,15 @@ Add to CHANGELOG section in README:
 # Clean build
 rm -rf build dist __pycache__ *.spec.bak
 
-# Test
-python3 -m unittest tests.test_converter -v
+# Test (recommended)
+python3 -m unittest discover tests -v
+
+# Alternative test methods
+python3 tests/run_all_tests.py
+python3 -m unittest tests.test_csv_parser
+python3 -m unittest tests.test_ofx_generator
+python3 -m unittest tests.test_date_validator
+python3 -m unittest tests.test_integration
 ```
 
 ### Git Commands
