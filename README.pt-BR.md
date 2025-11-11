@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.0** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados para melhor experiência do usuário.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -15,15 +15,22 @@ Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Value
 - Use por sua conta e risco - teste completamente antes de uso em dados importantes
 - Contribuições e melhorias da comunidade são bem-vindas
 
-## ✨ Novidades na Versão 2.0
+## ✨ Novidades na Versão 2.1
 
-**Grandes Melhorias na Experiência do Usuário:**
+**Funcionalidades de Gerenciamento de Saldos:**
+
+1. **💰 Saldo Inicial**: Especifique o saldo inicial para seu extrato (opcional)
+2. **📊 Visualização de Saldos**: Nova Etapa 7 mostrando resumo completo de saldos antes da exportação
+3. **🔢 Saldo Manual/Automático**: Alterne entre cálculo automático e manual do saldo final
+4. **📱 Layout Responsivo**: Janela agora redimensionável com melhor utilização do espaço
+
+**Funcionalidades Principais Anteriores (Versão 2.0):**
 
 1. **🎯 Interface em Assistente Passo a Passo**: Processo guiado em múltiplas etapas com indicadores de progresso claros
 2. **👀 Visualização de Dados CSV**: Veja seus dados em uma tabela antes de converter
 3. **🔄 Inversão de Valores**: Troque facilmente débitos e créditos quando necessário
 4. **📝 Descrições Compostas**: Combine múltiplas colunas para criar descrições de transações
-5. **✅ Tratamento Aprimorado de Datas**: Mantenha, ajuste ou exclua transações fora do intervalo (nova opção "Manter"!)
+5. **✅ Tratamento Aprimorado de Datas**: Mantenha, ajuste ou exclua transações fora do intervalo
 
 ## Funcionalidades
 
@@ -704,12 +711,52 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.0.3 - Edição Aprimorada
+**Versão**: 2.1.0 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.1.0 (Novembro de 2025) - Funcionalidades de Gerenciamento de Saldos
+
+- **Nova Funcionalidade**: Suporte a Saldo Inicial
+  - Adicionar campo opcional de saldo inicial na Configuração OFX (Etapa 4)
+  - Padrão 0,00 se não fornecido
+  - Suporta valores positivos e negativos
+  - Incluído na saída OFX (seção AVAILBAL)
+- **Nova Funcionalidade**: Tela de Visualização de Saldos (Etapa 7)
+  - Resumo completo de saldos antes da exportação:
+    - Saldo Inicial
+    - Total de Créditos (exibido em verde)
+    - Total de Débitos (exibido em vermelho)
+    - Saldo Final Calculado (exibido em azul)
+    - Contagem de Transações
+  - Visualização das primeiras 20 transações em tabela rolável
+  - Todos os cálculos respeitam configuração de inversão de valores
+- **Nova Funcionalidade**: Alternância de Saldo Final Manual/Automático
+  - Modo automático (padrão): Calcula saldo final automaticamente
+  - Modo manual: Permite entrada de saldo final personalizado
+  - Atualizações de UI em tempo real ao alternar modos
+  - Campo de entrada adequadamente desabilitado/habilitado baseado no modo
+- **Melhoria**: Layout Responsivo
+  - Janela agora redimensionável com tamanho mínimo de 900x700
+  - Espaçamento otimizado para melhor utilização do espaço
+  - Visualização de transações expande verticalmente com a janela
+  - Resumo de saldos permanece compacto
+- **Técnico**: Saída OFX Aprimorada
+  - Ambos saldos inicial e final incluídos no OFX gerado
+  - Saldo final na seção LEDGERBAL
+  - Saldo inicial na seção AVAILBAL
+  - Cálculo automático: saldo_inicial + soma(transações)
+- **Testes**: 44 testes passando (6 novos testes para funcionalidades de saldo)
+  - test_initial_balance_in_ofx_output
+  - test_auto_calculated_final_balance
+  - test_manual_final_balance
+  - test_zero_initial_balance_default
+  - test_negative_initial_balance
+- 100% de compatibilidade retroativa mantida
+- Todas as funcionalidades anteriores totalmente funcionais
 
 ### Versão 2.0.3 (Novembro de 2025) - Qualidade de Código e Refatoração
 

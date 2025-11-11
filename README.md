@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.0** features a completely redesigned wizard-style interface with advanced features for enhanced user experience.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -15,15 +15,22 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
 - Use at your own risk - test thoroughly before using with important data
 - Community contributions and improvements are welcome
 
-## ✨ What's New in Version 2.0
+## ✨ What's New in Version 2.1
 
-**Major User Experience Improvements:**
+**Balance Management Features:**
+
+1. **💰 Initial Balance**: Specify the starting balance for your statement (optional)
+2. **📊 Balance Preview**: New Step 7 showing comprehensive balance summary before export
+3. **🔢 Manual/Auto Balance**: Toggle between automatic and manual final balance calculation
+4. **📱 Responsive Layout**: Window now resizable with optimized space utilization
+
+**Previous Major Features (Version 2.0):**
 
 1. **🎯 Step-by-Step Wizard Interface**: Guided multi-step process with clear progress indicators
 2. **👀 CSV Data Preview**: View your data in a table before converting
 3. **🔄 Value Inversion**: Easily swap debits and credits if needed
 4. **📝 Composite Descriptions**: Combine multiple columns to create transaction descriptions
-5. **✅ Enhanced Date Handling**: Keep, adjust, or exclude out-of-range transactions (new "Keep" option!)
+5. **✅ Enhanced Date Handling**: Keep, adjust, or exclude out-of-range transactions
 
 ## Features
 
@@ -704,12 +711,52 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.0.3 - Enhanced Edition
+**Version**: 2.1.0 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.1.0 (November 2025) - Balance Management Features
+
+- **New Feature**: Initial Balance Support
+  - Add optional initial balance field in OFX Configuration (Step 4)
+  - Defaults to 0.00 if not provided
+  - Supports positive and negative values
+  - Included in OFX output (AVAILBAL section)
+- **New Feature**: Balance Preview Screen (Step 7)
+  - Comprehensive balance summary before export:
+    - Initial Balance
+    - Total Credits (displayed in green)
+    - Total Debits (displayed in red)
+    - Calculated Final Balance (displayed in blue)
+    - Transaction Count
+  - Preview first 20 transactions in scrollable table
+  - All calculations respect value inversion setting
+- **New Feature**: Manual/Auto Final Balance Toggle
+  - Auto mode (default): Calculates final balance automatically
+  - Manual mode: Allows custom final balance entry
+  - Real-time UI updates when toggling modes
+  - Entry field properly disabled/enabled based on mode
+- **Enhancement**: Responsive Layout
+  - Window now resizable with 900x700 minimum size
+  - Optimized padding for better space utilization
+  - Transaction preview expands vertically with window
+  - Balance summary stays compact
+- **Technical**: OFX Output Enhanced
+  - Both initial and final balances included in generated OFX
+  - Final balance in LEDGERBAL section
+  - Initial balance in AVAILBAL section
+  - Auto-calculation: initial_balance + sum(transactions)
+- **Testing**: 44 tests passing (6 new tests for balance features)
+  - test_initial_balance_in_ofx_output
+  - test_auto_calculated_final_balance
+  - test_manual_final_balance
+  - test_zero_initial_balance_default
+  - test_negative_initial_balance
+- 100% backward compatibility maintained
+- All previous features fully functional
 
 ### Version 2.0.3 (November 2025) - Code Quality and Refactoring
 
