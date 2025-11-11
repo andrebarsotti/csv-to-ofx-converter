@@ -201,3 +201,11 @@ Test suite covers:
 - **Encoding**: All CSV files read as UTF-8 with BOM handling
 - **Account Type**: Currently only supports credit card statements. Does not support checking/savings accounts (BANKMSGSRSV1) or investment accounts.
 - **GUI Design**: Wizard follows step-by-step pattern with clear Back/Next navigation. Each step validates before allowing progression.
+
+## Coding Style
+
+- Follow PEP8 guidelines.
+- Use descriptive variable and function names.
+- Keep the code modular and easy to maintain.
+- Separate classes in diferent files.
+- Maintain consistency with the project’s existing structure and GUI framework.
