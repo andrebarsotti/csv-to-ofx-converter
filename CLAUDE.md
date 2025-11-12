@@ -34,12 +34,14 @@ python3 -m unittest discover tests -v
 python3 -m unittest tests.test_csv_parser
 python3 -m unittest tests.test_ofx_generator
 python3 -m unittest tests.test_date_validator
+python3 -m unittest tests.test_transaction_utils
 python3 -m unittest tests.test_integration
 
 # Run specific test classes
 python3 -m unittest tests.test_csv_parser.TestCSVParser
 python3 -m unittest tests.test_ofx_generator.TestOFXGenerator
 python3 -m unittest tests.test_date_validator.TestDateValidator
+python3 -m unittest tests.test_transaction_utils.TestBuildTransactionDescription
 python3 -m unittest tests.test_integration.TestIntegration
 
 # Alternative: Run using convenience script
@@ -76,12 +78,14 @@ src/
   ofx_generator.py         # OFXGenerator class - generates OFX files
   date_validator.py        # DateValidator class - validates transaction dates
   converter_gui.py         # ConverterGUI class - Tkinter wizard interface
+  transaction_utils.py     # Utility functions for transaction processing (no UI dependencies)
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
 tests/
   __init__.py              # Test package initialization
   test_csv_parser.py       # CSV parser tests (8 tests)
   test_ofx_generator.py    # OFX generator tests (20 tests)
-  test_date_validator.py   # Date validator tests (11 tests)
+  test_date_validator.py   # Date validator tests (12 tests)
+  test_transaction_utils.py # Transaction utilities tests (50 tests)
   test_integration.py      # Integration tests (5 tests)
   run_all_tests.py         # Convenience script to run all tests
 ```
@@ -111,6 +115,15 @@ tests/
 - Method `get_date_status()` returns 'before', 'within', or 'after'
 - Method `adjust_date_to_boundary()` moves out-of-range dates to nearest boundary
 - Supports multiple date formats (YYYY-MM-DD, DD/MM/YYYY, etc.)
+
+**TransactionUtils** (`src/transaction_utils.py`):
+- Pure utility functions with no UI dependencies (fully testable)
+- Function `build_transaction_description()` creates single or composite descriptions from CSV columns
+- Function `determine_transaction_type()` determines DEBIT/CREDIT from column value or amount sign
+- Function `extract_transaction_id()` extracts transaction ID from mapped column
+- Function `calculate_balance_summary()` computes balance totals from transaction list
+- Function `validate_field_mappings()` validates required field mappings
+- Function `parse_balance_value()` safely parses balance strings to floats with defaults
 
 **ConverterGUI** (`src/converter_gui.py`):
 - Multi-step wizard interface (7 steps)
@@ -176,7 +189,7 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (44 tests total):
+Test suite is organized into separate modules (95 tests total):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
@@ -184,7 +197,7 @@ Test suite is organized into separate modules (44 tests total):
 - Support for parentheses notation for negative amounts
 - BOM handling and error cases
 
-**test_ofx_generator.py** (19 tests):
+**test_ofx_generator.py** (20 tests):
 - OFX generation and transaction formatting
 - Date parsing in multiple formats
 - Value inversion logic
@@ -196,6 +209,15 @@ Test suite is organized into separate modules (44 tests total):
 - Date adjustment to boundaries
 - Edge cases (year boundaries, leap years)
 
+**test_transaction_utils.py** (50 tests):
+- Building transaction descriptions (single column and composite)
+- Determining transaction types from columns or amounts
+- Extracting transaction IDs from row data
+- Calculating balance summaries from transaction lists
+- Validating field mappings
+- Parsing balance values with fallback defaults
+- Tests cover edge cases, empty values, and error handling
+
 **test_integration.py** (5 tests):
 - Complete end-to-end conversion workflows
 - Composite descriptions with various separators
@@ -206,6 +228,7 @@ Test suite is organized into separate modules (44 tests total):
 - Creates temporary files in `setUp()`, cleans in `tearDown()`
 - Tests both positive cases and error conditions
 - Each test class in its own file for better maintainability
+- Utility functions tested independently without UI dependencies
 
 ## Common Patterns
 
@@ -225,6 +248,13 @@ Test suite is organized into separate modules (44 tests total):
 - Add field to OFX template in `generate()`
 - Update GUI field mapping UI (Step 5)
 - Add tests for new field
+
+**When extracting functions from GUI**:
+- Create pure utility functions without UI dependencies in `transaction_utils.py`
+- Functions should accept all needed data as parameters (no `self` access)
+- Write comprehensive unit tests for each utility function
+- Update GUI code to import and use the utility functions
+- Ensure all tests pass after refactoring
 
 ## Important Notes
 
@@ -283,7 +313,7 @@ Before creating a release, ensure all of the following are complete:
 
 1. **Code Quality & Testing**:
    - All tests passing: `python3 -m unittest discover tests -v`
-   - Verify 44 tests run successfully
+   - Verify 95 tests run successfully
    - Test individual modules work correctly
    - Code follows PEP8 standards
    - No debugging code or print statements
@@ -398,7 +428,7 @@ Changes:
 - Documentation: Updates to docs
 
 Testing:
-- All 44 tests passing
+- All 95 tests passing
 - Tested on [platforms]
 - Compatible with [software versions]
 ```

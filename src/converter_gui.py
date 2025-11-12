@@ -25,6 +25,12 @@ from .constants import NOT_MAPPED, NOT_SELECTED
 from .csv_parser import CSVParser
 from .ofx_generator import OFXGenerator
 from .date_validator import DateValidator
+from .transaction_utils import (
+    build_transaction_description,
+    determine_transaction_type,
+    extract_transaction_id,
+    parse_balance_value
+)
 
 logger = logging.getLogger(__name__)
 class ConverterGUI:
@@ -905,11 +911,8 @@ class ConverterGUI:
         Returns:
             Dictionary with balance calculations and transaction list
         """
-        # Parse initial balance
-        try:
-            initial_balance = float(self.initial_balance.get().strip() or '0.00')
-        except ValueError:
-            initial_balance = 0.00
+        # Parse initial balance using utility function
+        initial_balance = parse_balance_value(self.initial_balance.get(), default=0.0)
 
         # Get field mappings
         date_col = self.field_mappings['date'].get()
@@ -1273,17 +1276,16 @@ class ConverterGUI:
 
     def _build_description(self, row, desc_col, use_composite):
         """Build transaction description from single or multiple columns."""
-        if use_composite:
-            desc_parts = []
-            for var in self.description_columns:
-                col_name = var.get()
-                if col_name != NOT_SELECTED and col_name in row:
-                    value = row[col_name].strip()
-                    if value:
-                        desc_parts.append(value)
-            description = self.description_separator.get().join(desc_parts)
-            return description if description else "Transaction"
-        return row[desc_col]
+        # Extract column names from StringVar objects
+        description_columns = [var.get() for var in self.description_columns]
+
+        return build_transaction_description(
+            row=row,
+            desc_col=desc_col,
+            description_columns=description_columns,
+            separator=self.description_separator.get(),
+            use_composite=use_composite
+        )
 
     def _validate_and_adjust_date(self, date, row_idx, description, date_validator):
         """Validate date and adjust if necessary. Returns (date, stats_dict)."""
@@ -1318,17 +1320,11 @@ class ConverterGUI:
 
     def _get_transaction_type(self, type_col, row, amount):
         """Get transaction type from mapping or infer from amount."""
-        if type_col != NOT_MAPPED and type_col in row:
-            trans_type = row[type_col].upper()
-            if trans_type in ['DEBIT', 'CREDIT']:
-                return trans_type
-        return 'DEBIT' if amount < 0 else 'CREDIT'
+        return determine_transaction_type(type_col, row, amount)
 
     def _get_transaction_id(self, id_col, row):
         """Get transaction ID from mapping if available."""
-        if id_col != NOT_MAPPED and id_col in row:
-            return row[id_col]
-        return None
+        return extract_transaction_id(id_col, row)
 
     def _prompt_for_output_file(self):
         """Prompt user for output file location."""
@@ -1400,22 +1396,19 @@ class ConverterGUI:
             generator: OFXGenerator instance with transactions
             output_file: Path to save the OFX file
         """
-        # Parse initial balance
-        try:
-            initial_balance = float(self.initial_balance.get().strip() or '0.00')
-        except ValueError:
-            initial_balance = 0.00
+        # Parse initial balance using utility function
+        initial_balance = parse_balance_value(self.initial_balance.get(), default=0.0)
+        if initial_balance == 0.0 and self.initial_balance.get().strip() not in ['', '0', '0.0', '0.00']:
             self._log("Warning: Invalid initial balance, using 0.00")
 
         # Parse final balance (if manual mode)
         final_balance = None
         if not self.auto_calculate_final_balance.get():
-            try:
-                final_balance = float(self.final_balance.get().strip())
+            final_balance = parse_balance_value(self.final_balance.get(), default=None)
+            if final_balance is not None:
                 self._log(f"Using manual final balance: {final_balance:.2f}")
-            except ValueError:
+            else:
                 self._log("Warning: Invalid final balance, will calculate automatically")
-                final_balance = None
 
         generator.generate(
             output_path=output_file,
