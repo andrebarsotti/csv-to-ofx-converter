@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CSV to OFX Converter - A Python application that converts CSV files to OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. Features a Tkinter-based wizard interface with 6 steps guiding users through CSV import, data preview, field mapping, and conversion.
+CSV to OFX Converter - A Python application that converts CSV files to OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. Features a Tkinter-based wizard interface with 7 steps guiding users through CSV import, data preview, field mapping, balance preview, and conversion.
 
 **Key characteristics:**
 - Pure Python 3.7+ with standard library only (no external dependencies for runtime)
@@ -113,14 +113,15 @@ tests/
 - Supports multiple date formats (YYYY-MM-DD, DD/MM/YYYY, etc.)
 
 **ConverterGUI** (`src/converter_gui.py`):
-- Multi-step wizard interface (6 steps)
+- Multi-step wizard interface (7 steps)
 - Uses Tkinter ttk widgets for modern appearance
 - Step 1: File selection
 - Step 2: CSV format configuration (delimiter, decimal separator)
 - Step 3: Data preview (Treeview showing first 100 rows)
-- Step 4: OFX configuration (account ID, bank name, currency)
+- Step 4: OFX configuration (account ID, bank name, currency, initial balance)
 - Step 5: Field mapping with composite description support (combine up to 4 columns)
 - Step 6: Advanced options (value inversion, date validation with Keep/Adjust/Exclude)
+- Step 7: Balance preview & confirmation (shows balance summary and transaction preview)
 - Logs conversion progress to GUI text widget
 
 ### Data Flow
@@ -183,14 +184,14 @@ Test suite is organized into separate modules (44 tests total):
 - Support for parentheses notation for negative amounts
 - BOM handling and error cases
 
-**test_ofx_generator.py** (20 tests):
+**test_ofx_generator.py** (19 tests):
 - OFX generation and transaction formatting
 - Date parsing in multiple formats
 - Value inversion logic
 - Transaction sorting and auto-correction
 - Multiple currency support
 
-**test_date_validator.py** (11 tests):
+**test_date_validator.py** (12 tests):
 - Date validation (before/within/after range)
 - Date adjustment to boundaries
 - Edge cases (year boundaries, leap years)

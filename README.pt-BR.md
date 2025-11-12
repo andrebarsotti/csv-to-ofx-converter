@@ -35,7 +35,7 @@ Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Value
 ## Funcionalidades
 
 ### Funcionalidades Principais
-- **Interface em Assistente Passo a Passo**: Processo guiado intuitivo em 6 etapas com acompanhamento visual de progresso
+- **Interface em Assistente Passo a Passo**: Processo guiado intuitivo em 7 etapas com acompanhamento visual de progresso
 - **Visualização de Dados CSV**: Visualize dados importados em formato tabular antes da conversão
 - **Suporte Flexível a CSV**:
   - Formato padrão (delimitador vírgula, separador decimal ponto)
@@ -145,14 +145,15 @@ pip install pyinstaller
 python3 src/csv_to_ofx_converter.py
 ```
 
-Isso abrirá a **Interface Aprimorada em Assistente** que guia você através de um processo de 6 etapas:
+Isso abrirá a **Interface Aprimorada em Assistente** que guia você através de um processo de 7 etapas:
 
 1. **Seleção de Arquivo** - Selecione seu arquivo CSV
 2. **Formato CSV** - Configure delimitador e separador decimal
 3. **Visualização de Dados** - Veja seus dados em uma tabela (até 100 linhas)
-4. **Configuração OFX** - Defina detalhes da conta e moeda
+4. **Configuração OFX** - Defina detalhes da conta, moeda e saldo inicial
 5. **Mapeamento de Campos** - Mapeie colunas e configure descrições compostas
 6. **Opções Avançadas** - Inversão de valores e validação de data
+7. **Visualização de Saldos** - Revise saldos e transações antes da exportação
 
 ### Guia Passo a Passo do Assistente
 
@@ -202,6 +203,9 @@ Configure as definições do arquivo de saída:
   - USD (Dólar Americano)
   - EUR (Euro)
   - GBP (Libra Esterlina)
+- **Saldo Inicial**: Saldo inicial do seu extrato - *Opcional* (padrão: 0,00)
+  - Suporta valores positivos e negativos
+  - Usado para calcular o saldo final automaticamente
 
 Clique em "Próximo" para prosseguir ao mapeamento de campos.
 
@@ -294,7 +298,62 @@ Como você gostaria de lidar com esta transação?
 [Manter data original] [Ajustar para data final] [Excluir esta transação]
 ```
 
-Uma vez configurado, clique em **"Converter para OFX"** para iniciar a conversão!
+Uma vez configurado, clique em **"Próximo"** para prosseguir à etapa de visualização de saldos.
+
+#### Etapa 7: Visualização de Saldos e Confirmação
+
+**Novo na Versão 2.1.0!**
+
+Antes de gerar o arquivo OFX, revise um resumo completo de saldos e visualização de transações:
+
+##### Resumo de Saldos
+
+A seção de resumo de saldos exibe:
+
+- **Saldo Inicial**: O saldo inicial que você especificou na Etapa 4 (padrão: 0,00)
+- **Total de Créditos**: Soma de todas as transações positivas (exibido em verde)
+- **Total de Débitos**: Soma de todas as transações negativas (exibido em vermelho)
+- **Saldo Final**: Saldo final calculado ou inserido manualmente (exibido em azul)
+- **Contagem de Transações**: Número total de transações a serem exportadas
+
+**Importante**: Todos os cálculos respeitam automaticamente a configuração de inversão de valores da Etapa 6.
+
+##### Modos de Saldo Final
+
+Você pode escolher entre dois modos para o saldo final:
+
+**Modo Auto-Cálculo (Padrão)**:
+- Calcula automaticamente: Saldo Inicial + Soma de todas as transações
+- Campo de saldo final desabilitado (somente leitura)
+- Garante precisão matemática
+
+**Modo Entrada Manual**:
+- Insira seu próprio valor de saldo final
+- Útil quando você precisa corresponder a um saldo de extrato específico
+- Ative desmarcando "Calcular saldo final automaticamente"
+
+##### Visualização de Transações
+
+Visualize as primeiras 20 transações em uma tabela rolável mostrando:
+- Número da transação
+- Data
+- Tipo (DEBIT/CREDIT)
+- Valor
+- Descrição
+
+Esta visualização ajuda você a verificar:
+- Formatos de data estão corretos
+- Tipos de transação estão atribuídos corretamente
+- Valores têm sinais corretos
+- Descrições estão formatadas como esperado
+- Inversão de valores está funcionando corretamente (se habilitada)
+
+##### Finalizando
+
+Após revisar o resumo de saldos e a visualização de transações:
+- Clique em **"Converter para OFX"** para gerar o arquivo OFX final
+- Um diálogo de salvar arquivo aparecerá para escolher o local de saída
+- O log exibirá estatísticas de conversão e confirmará o sucesso
 
 ### Navegação
 
@@ -463,10 +522,10 @@ VERSION:102
 
 ## Executando os Testes
 
-O projeto inclui testes unitários abrangentes (39 testes) organizados em módulos separados:
+O projeto inclui testes unitários abrangentes (44 testes) organizados em módulos separados:
 - **test_csv_parser.py**: Análise de CSV com diferentes formatos e normalização de valores (8 testes)
-- **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (20 testes)
-- **test_date_validator.py**: Validação de data e tratamento de limites (11 testes)
+- **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (19 testes)
+- **test_date_validator.py**: Validação de data e tratamento de limites (12 testes)
 - **test_integration.py**: Fluxos completos de ponta a ponta e descrições compostas (5 testes)
 
 ### Executar todos os testes (recomendado):
@@ -509,7 +568,7 @@ test_date_validator_initialization (tests.test_date_validator.TestDateValidator)
 test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 39 tests in 0.XXXs
+Ran 44 tests in 0.XXXs
 
 OK
 ```
@@ -596,11 +655,13 @@ Etapa 2: Configuração de Formato CSV
     ↓
 Etapa 3: Visualização de Dados (NOVO!)
     ↓ (CSV carregado automaticamente)
-Etapa 4: Configuração OFX
+Etapa 4: Configuração OFX + Saldo Inicial
     ↓
 Etapa 5: Mapeamento de Campos + Descrição Composta (NOVO!)
     ↓
 Etapa 6: Opções Avançadas (Inversão de Valores + Validação de Data)
+    ↓
+Etapa 7: Visualização de Saldos e Confirmação (NOVO na v2.1!)
     ↓
 Processo de Conversão
     ↓
@@ -805,12 +866,12 @@ Para problemas, questões ou sugestões:
   - Agora opcional com valor padrão "UNKNOWN" (mesmo que v1.1.0)
   - Atualizado texto de ajuda da UI e documentação
   - Compatibilidade retroativa totalmente restaurada
-- Todos os 39 testes passando
+- Todos os 44 testes passando
 - Sem mudanças incompatíveis - todas as funcionalidades da v2.0.0 mantidas
 
 ### Versão 2.0.0 (Novembro de 2025) - Edição Aprimorada
 - **Grande Atualização**: Redesign completo da UI com interface em assistente passo a passo
-  - Processo guiado em 6 etapas com indicadores visuais de progresso
+  - Processo guiado em 7 etapas com indicadores visuais de progresso
   - Navegação clara com botões Voltar/Próximo
   - Validação de etapa antes de prosseguir
 - **Nova Funcionalidade**: Visualização de Dados CSV

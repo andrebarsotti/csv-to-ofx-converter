@@ -35,7 +35,7 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
 ## Features
 
 ### Core Features
-- **Step-by-Step Wizard Interface**: Intuitive 6-step guided process with visual progress tracking
+- **Step-by-Step Wizard Interface**: Intuitive 7-step guided process with visual progress tracking
 - **CSV Data Preview**: View imported data in a tabular format before conversion
 - **Flexible CSV Support**:
   - Standard format (comma delimiter, dot decimal separator)
@@ -145,14 +145,15 @@ pip install pyinstaller
 python3 main.py
 ```
 
-This will launch the **Enhanced Wizard Interface** that guides you through a 6-step process:
+This will launch the **Enhanced Wizard Interface** that guides you through a 7-step process:
 
 1. **File Selection** - Select your CSV file
 2. **CSV Format** - Configure delimiter and decimal separator
 3. **Data Preview** - View your data in a table (up to 100 rows)
-4. **OFX Configuration** - Set account details and currency
+4. **OFX Configuration** - Set account details, currency, and initial balance
 5. **Field Mapping** - Map columns and configure composite descriptions
 6. **Advanced Options** - Value inversion and date validation
+7. **Balance Preview** - Review balances and transactions before export
 
 ### Wizard Step-by-Step Guide
 
@@ -202,6 +203,9 @@ Set up the output file settings:
   - USD (US Dollar)
   - EUR (Euro)
   - GBP (British Pound)
+- **Initial Balance**: Starting balance for your statement - *Optional* (default: 0.00)
+  - Supports positive and negative values
+  - Used to calculate final balance automatically
 
 Click "Next" to proceed to field mapping.
 
@@ -294,7 +298,62 @@ How would you like to handle this transaction?
 [Keep original date] [Adjust to end date] [Exclude this transaction]
 ```
 
-Once configured, click **"Convert to OFX"** to start the conversion!
+Once configured, click **"Next"** to proceed to the balance preview step.
+
+#### Step 7: Balance Preview & Confirmation
+
+**New in Version 2.1.0!**
+
+Before generating the OFX file, review a comprehensive balance summary and transaction preview:
+
+##### Balance Summary
+
+The balance summary section displays:
+
+- **Initial Balance**: The starting balance you specified in Step 4 (default: 0.00)
+- **Total Credits**: Sum of all positive transactions (displayed in green)
+- **Total Debits**: Sum of all negative transactions (displayed in red)
+- **Final Balance**: Calculated or manually entered final balance (displayed in blue)
+- **Transaction Count**: Total number of transactions to be exported
+
+**Important**: All calculations automatically respect the value inversion setting from Step 6.
+
+##### Final Balance Modes
+
+You can choose between two modes for the final balance:
+
+**Auto-Calculate Mode (Default)**:
+- Automatically calculates: Initial Balance + Sum of all transactions
+- Final balance field is disabled (read-only)
+- Ensures mathematical accuracy
+
+**Manual Entry Mode**:
+- Enter your own final balance value
+- Useful when you need to match a specific statement balance
+- Enable by unchecking "Auto-calculate final balance"
+
+##### Transaction Preview
+
+View the first 20 transactions in a scrollable table showing:
+- Transaction number
+- Date
+- Type (DEBIT/CREDIT)
+- Amount
+- Description
+
+This preview helps you verify:
+- Date formats are correct
+- Transaction types are properly assigned
+- Amounts have correct signs
+- Descriptions are formatted as expected
+- Value inversion is working correctly (if enabled)
+
+##### Finalizing
+
+Once you've reviewed the balance summary and transaction preview:
+- Click **"Convert to OFX"** to generate the final OFX file
+- A file save dialog will appear to choose the output location
+- The log will display conversion statistics and confirm success
 
 ### Navigation
 
@@ -463,10 +522,10 @@ VERSION:102
 
 ## Running Tests
 
-The project includes comprehensive unit tests (39 tests) organized in separate modules:
+The project includes comprehensive unit tests (44 tests) organized in separate modules:
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
-- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
-- **test_date_validator.py**: Date validation and boundary handling (11 tests)
+- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (19 tests)
+- **test_date_validator.py**: Date validation and boundary handling (12 tests)
 - **test_integration.py**: Complete end-to-end workflows and composite descriptions (5 tests)
 
 ### Run all tests (recommended):
@@ -509,7 +568,7 @@ test_date_validator_initialization (tests.test_date_validator.TestDateValidator)
 test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 39 tests in 0.XXXs
+Ran 44 tests in 0.XXXs
 
 OK
 ```
@@ -596,11 +655,13 @@ Step 2: CSV Format Configuration
     ↓
 Step 3: Data Preview (NEW!)
     ↓ (CSV loaded automatically)
-Step 4: OFX Configuration
+Step 4: OFX Configuration + Initial Balance
     ↓
 Step 5: Field Mapping + Composite Description (NEW!)
     ↓
 Step 6: Advanced Options (Value Inversion + Date Validation)
+    ↓
+Step 7: Balance Preview & Confirmation (NEW in v2.1!)
     ↓
 Conversion Process
     ↓
@@ -805,12 +866,12 @@ For issues, questions, or suggestions:
   - Now optional with default value "UNKNOWN" (same as v1.1.0)
   - Updated UI help text and documentation
   - Full backward compatibility restored
-- All 39 tests passing
+- All 44 tests passing
 - No breaking changes - all v2.0.0 features maintained
 
 ### Version 2.0.0 (November 2025) - Enhanced Edition
 - **Major Update**: Complete UI redesign with step-by-step wizard interface
-  - 6-step guided process with visual progress indicators
+  - 7-step guided process with visual progress indicators
   - Clear navigation with Back/Next buttons
   - Step validation before proceeding
 - **New Feature**: CSV Data Preview

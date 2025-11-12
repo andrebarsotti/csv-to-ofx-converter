@@ -7,7 +7,7 @@ Use this checklist when preparing a new release of CSV to OFX Converter.
 ### 1. Code Quality
 
 - [ ] All tests passing: `python3 -m unittest discover tests -v`
-- [ ] Verify test count is correct (39 tests total)
+- [ ] Verify test count is correct (44 tests total)
 - [ ] Code follows PEP8 standards
 - [ ] No debugging code or print statements left in
 - [ ] Log messages are appropriate and helpful
