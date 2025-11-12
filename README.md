@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1.2** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -522,10 +522,11 @@ VERSION:102
 
 ## Running Tests
 
-The project includes comprehensive unit tests (44 tests) organized in separate modules:
+The project includes comprehensive unit tests (94 tests) organized in separate modules:
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
-- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (19 tests)
+- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
 - **test_date_validator.py**: Date validation and boundary handling (12 tests)
+- **test_transaction_utils.py**: Transaction utility functions (50 tests)
 - **test_integration.py**: Complete end-to-end workflows and composite descriptions (5 tests)
 
 ### Run all tests (recommended):
@@ -568,7 +569,7 @@ test_date_validator_initialization (tests.test_date_validator.TestDateValidator)
 test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 44 tests in 0.XXXs
+Ran 94 tests in 0.XXXs
 
 OK
 ```
@@ -772,12 +773,32 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.1.1 - Enhanced Edition
+**Version**: 2.1.2 - Enhanced Edition
 **Last Updated**: November 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 2.1.2 (November 2025) - Code Quality Release
+
+- **Code Quality**: Fixed SonarQube code quality issues in converter_gui
+  - Improved code organization and maintainability
+  - Better separation of concerns
+  - Enhanced error handling patterns
+- **Refactoring**: Extracted transaction utilities to separate module
+  - Created new `transaction_utils.py` module with pure utility functions
+  - Functions have no UI dependencies, making them fully testable
+  - Improved code modularity and reusability
+  - Added comprehensive test coverage for utilities
+- **Testing**: Enhanced test suite organization
+  - Added `test_transaction_utils.py` with 50 comprehensive tests
+  - Total test count now at 94 tests (previously documented as 44)
+  - All tests passing with improved coverage
+  - Better test structure and maintainability
+- **Documentation**: Updated documentation to reflect current architecture
+  - Accurate test counts and command references
+  - Updated module structure descriptions
 
 ### Version 2.1.1 (November 2025) - Bug Fix Release
 

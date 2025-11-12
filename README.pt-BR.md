@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1.2** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -522,10 +522,11 @@ VERSION:102
 
 ## Executando os Testes
 
-O projeto inclui testes unitários abrangentes (44 testes) organizados em módulos separados:
+O projeto inclui testes unitários abrangentes (94 testes) organizados em módulos separados:
 - **test_csv_parser.py**: Análise de CSV com diferentes formatos e normalização de valores (8 testes)
-- **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (19 testes)
+- **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (20 testes)
 - **test_date_validator.py**: Validação de data e tratamento de limites (12 testes)
+- **test_transaction_utils.py**: Funções utilitárias de transação (50 testes)
 - **test_integration.py**: Fluxos completos de ponta a ponta e descrições compostas (5 testes)
 
 ### Executar todos os testes (recomendado):
@@ -772,12 +773,32 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.1.1 - Edição Aprimorada
+**Versão**: 2.1.2 - Edição Aprimorada
 **Última Atualização**: Novembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 2.1.2 (Novembro de 2025) - Versão de Qualidade de Código
+
+- **Qualidade de Código**: Corrigidos problemas de qualidade de código do SonarQube no converter_gui
+  - Melhor organização e manutenibilidade do código
+  - Melhor separação de responsabilidades
+  - Padrões aprimorados de tratamento de erros
+- **Refatoração**: Extraídas utilitários de transação para módulo separado
+  - Criado novo módulo `transaction_utils.py` com funções utilitárias puras
+  - Funções sem dependências de UI, tornando-as totalmente testáveis
+  - Melhor modularidade e reusabilidade do código
+  - Adicionada cobertura abrangente de testes para utilitários
+- **Testes**: Melhor organização da suíte de testes
+  - Adicionado `test_transaction_utils.py` com 50 testes abrangentes
+  - Total de testes agora em 94 (anteriormente documentado como 44)
+  - Todos os testes passando com cobertura melhorada
+  - Melhor estrutura e manutenibilidade dos testes
+- **Documentação**: Atualizada documentação para refletir arquitetura atual
+  - Contagens de testes e referências de comandos precisas
+  - Descrições de estrutura de módulos atualizadas
 
 ### Versão 2.1.1 (Novembro de 2025) - Correção de Bug
 
