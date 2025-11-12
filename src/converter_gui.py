@@ -933,39 +933,16 @@ class ConverterGUI:
 
         # Process each row
         for row in self.csv_data:
-            try:
-                date = row[date_col]
-                amount = parser.normalize_amount(row[amount_col])
-                description = self._build_description(row, desc_col, use_composite)
-
-                # Apply value inversion if enabled
-                if self.invert_values.get():
-                    amount = -amount
-
-                # Determine transaction type
-                if type_col != NOT_MAPPED and type_col in row:
-                    trans_type = row[type_col].upper()
-                    if trans_type not in ['DEBIT', 'CREDIT']:
-                        trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
+            transaction = self._process_preview_row(
+                row, parser, date_col, amount_col, desc_col, type_col, use_composite
+            )
+            if transaction:
+                transactions.append(transaction)
+                # Update totals
+                if transaction['amount'] >= 0:
+                    total_credits += transaction['amount']
                 else:
-                    trans_type = 'DEBIT' if amount < 0 else 'CREDIT'
-
-                # Calculate totals
-                if amount >= 0:
-                    total_credits += amount
-                else:
-                    total_debits += abs(amount)
-
-                transactions.append({
-                    'date': date,
-                    'description': description,
-                    'amount': amount,
-                    'type': trans_type
-                })
-
-            except Exception as e:
-                self._log(f"Warning: Error processing row for preview: {e}")
-                continue
+                    total_debits += abs(transaction['amount'])
 
         # Calculate final balance
         calculated_final_balance = initial_balance + total_credits - total_debits
@@ -978,6 +955,54 @@ class ConverterGUI:
             'transaction_count': len(transactions),
             'transactions': transactions
         }
+
+    def _process_preview_row(
+        self,
+        row: Dict[str, str],
+        parser: 'CSVParser',
+        date_col: str,
+        amount_col: str,
+        desc_col: str,
+        type_col: str,
+        use_composite: bool
+    ) -> Optional[Dict]:
+        """
+        Process a single row for balance preview.
+
+        Args:
+            row: CSV row data
+            parser: CSVParser instance
+            date_col: Date column name
+            amount_col: Amount column name
+            desc_col: Description column name
+            type_col: Type column name
+            use_composite: Whether to use composite description
+
+        Returns:
+            Transaction dictionary or None if processing fails
+        """
+        try:
+            date = row[date_col]
+            amount = parser.normalize_amount(row[amount_col])
+            description = self._build_description(row, desc_col, use_composite)
+
+            # Apply value inversion if enabled
+            if self.invert_values.get():
+                amount = -amount
+
+            # Determine transaction type using utility function
+            trans_type = determine_transaction_type(type_col, row, amount)
+
+            return {
+                'date': date,
+                'description': description,
+                'amount': amount,
+                'type': trans_type
+            }
+
+        except Exception as e:
+            self._log(f"Warning: Error processing row for preview: {e}")
+            return None
 
     def _toggle_final_balance_mode(self):
         """Toggle between automatic and manual final balance mode."""
@@ -1396,17 +1421,32 @@ class ConverterGUI:
             generator: OFXGenerator instance with transactions
             output_file: Path to save the OFX file
         """
-        # Parse initial balance using utility function
-        initial_balance = parse_balance_value(self.initial_balance.get(), default=0.0)
-        if initial_balance == 0.0 and self.initial_balance.get().strip() not in ['', '0', '0.0', '0.00']:
-            self._log("Warning: Invalid initial balance, using 0.00")
+        # Parse initial balance with validation
+        # Strategy: Check string value first to distinguish between:
+        #   1. Intentional zero/empty input (valid)
+        #   2. Non-zero input that failed to parse (invalid - should warn)
+        # This avoids direct floating point equality checks while maintaining exact logic
+        initial_balance_str = self.initial_balance.get().strip()
+        if initial_balance_str and initial_balance_str not in ['0', '0.0', '0.00']:
+            # Non-empty, non-zero input - attempt parsing
+            initial_balance = parse_balance_value(initial_balance_str, default=0.0)
+            if abs(initial_balance) < 1e-9:
+                # Parse returned ~zero for non-zero input - parsing failed
+                self._log("Warning: Invalid initial balance, using 0.00")
+        else:
+            # Empty or explicitly zero input - use 0.0 (valid)
+            initial_balance = 0.0
 
         # Parse final balance (if manual mode)
         final_balance = None
         if not self.auto_calculate_final_balance.get():
-            final_balance = parse_balance_value(self.final_balance.get(), default=None)
-            if final_balance is not None:
-                self._log(f"Using manual final balance: {final_balance:.2f}")
+            final_balance_str = self.final_balance.get().strip()
+            if final_balance_str:
+                try:
+                    final_balance = float(final_balance_str)
+                    self._log(f"Using manual final balance: {final_balance:.2f}")
+                except ValueError:
+                    self._log("Warning: Invalid final balance, will calculate automatically")
             else:
                 self._log("Warning: Invalid final balance, will calculate automatically")
 
