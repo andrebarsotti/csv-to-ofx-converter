@@ -15,7 +15,9 @@
         "njpwerner.autodocstring",
         "eamodio.gitlens",
         "GitHub.copilot",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "SonarSource.sonarlint-vscode",
+        "Anthropic.claude-code"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
