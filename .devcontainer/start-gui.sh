@@ -11,7 +11,7 @@ pkill -9 fluxbox 2>/dev/null
 
 # Start Xvfb (virtual framebuffer)
 echo "Starting Xvfb..."
-Xvfb :1 -screen 0 1280x720x24 &
+Xvfb :1 -screen 0 1600x900x24 &
 sleep 2
 
 # Start window manager
