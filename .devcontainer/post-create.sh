@@ -9,11 +9,6 @@ echo "CSV to OFX Converter - Post-Create Setup"
 echo "========================================="
 echo ""
 
-# Set permissions for start-gui script
-echo "Setting up GUI services..."
-chmod +x /usr/local/bin/start-gui.sh
-chmod +x .devcontainer/start-gui.sh
-
 # Create log directory
 echo "Creating log directory..."
 mkdir -p logs
