@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/devcontainers/python:3.11-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies for Tkinter and GUI support
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --fix-missing \
     # Python Tkinter dependencies
     python3-tk \
     tk-dev \
@@ -34,7 +34,7 @@ RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 # Install Node.js 24.x LTS (Krypton) - required for Claude Code and development tools
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-    apt-get install -y nodejs && \
+    apt-get install -y --fix-missing nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
