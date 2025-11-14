@@ -42,6 +42,12 @@ COPY requirements-dev.txt /tmp/requirements-dev.txt
 RUN pip install --no-cache-dir -r /tmp/requirements-dev.txt && \
     rm /tmp/requirements-dev.txt
 
+# Install Claude Code CLI
+# Note: Claude Code will be installed during post-create for the vscode user
+# This ensures proper permissions and user-specific configuration
+RUN curl -fsSL https://claude.ai/install.sh -o /tmp/install-claude.sh && \
+    chmod +x /tmp/install-claude.sh
+
 # Set display for GUI applications
 ENV DISPLAY=:1
 

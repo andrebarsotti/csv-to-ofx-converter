@@ -12,6 +12,7 @@ Este diretório contém a configuração do container de desenvolvimento para Gi
 
 ### Ferramentas de Desenvolvimento
 - **PyInstaller** - Para construir executáveis standalone
+- **Claude Code CLI** - Assistente de codificação com IA
 - **Flake8** - Linting de código
 - **Black** - Formatação de código
 - **Pylint** - Análise de código
@@ -85,6 +86,54 @@ flake8 src/ tests/
 
 # Construir executável (Linux)
 ./build.sh
+```
+
+### 4. Usando Claude Code CLI
+
+Claude Code é um assistente de codificação com IA que vem pré-instalado neste ambiente.
+
+```bash
+# Iniciar Claude Code
+claude
+
+# Verificar versão
+claude --version
+
+# Atualizar Claude Code
+claude update
+
+# Executar diagnósticos
+claude doctor
+```
+
+#### Configuração Inicial
+
+Na primeira execução, Claude Code solicitará autenticação. Você tem três opções:
+
+1. **Claude Console** (Padrão) - Requer cobrança em console.anthropic.com
+2. **Assinatura Claude App** - Use plano Pro/Max existente de claude.ai
+3. **Enterprise** - Amazon Bedrock ou Google Vertex AI
+
+Siga as instruções para completar a autenticação.
+
+#### Usando Claude Code
+
+Uma vez autenticado, você pode:
+- Fazer perguntas sobre o código
+- Solicitar alterações e refatorações
+- Gerar testes e documentação
+- Depurar problemas
+- Obter explicações de código complexo
+
+Exemplos de comandos:
+```bash
+# Iniciar sessão interativa
+claude
+
+# Depois digite suas solicitações, por exemplo:
+# "Explique como funciona o parser CSV"
+# "Adicione tratamento de erros ao validador de datas"
+# "Gere testes para os utilitários de transação"
 ```
 
 ## Arquivos Neste Diretório

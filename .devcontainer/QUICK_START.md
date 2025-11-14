@@ -76,6 +76,36 @@ mypy src/
 .devcontainer/verify-setup.sh
 ```
 
+### Use Claude Code (AI Assistant)
+
+```bash
+# Start Claude Code
+claude
+
+# Check version
+claude --version
+
+# Update
+claude update
+
+# Diagnostics
+claude doctor
+```
+
+**First-time setup:** You'll be prompted to authenticate:
+- Option 1: Claude Console (requires billing)
+- Option 2: Claude App subscription (Pro/Max)
+- Option 3: Enterprise (Bedrock/Vertex AI)
+
+**Example usage:**
+```bash
+claude
+# Then ask questions or request changes:
+# "Explain the CSV parser implementation"
+# "Add error handling to date validation"
+# "Generate unit tests for transaction utils"
+```
+
 ---
 
 ## 🖥️ Accessing the GUI

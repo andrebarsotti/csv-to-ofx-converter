@@ -56,6 +56,31 @@ pip show pyinstaller >/dev/null 2>&1 && echo "✓ PyInstaller installed" || echo
 pip show black >/dev/null 2>&1 && echo "✓ Black installed" || echo "✗ Black missing"
 pip show flake8 >/dev/null 2>&1 && echo "✓ Flake8 installed" || echo "✗ Flake8 missing"
 
+# Install Claude Code CLI
+echo ""
+echo "Installing Claude Code CLI..."
+if [ -f "/tmp/install-claude.sh" ]; then
+    bash /tmp/install-claude.sh 2>&1 | grep -v "^$" || true
+    rm /tmp/install-claude.sh 2>/dev/null || true
+    echo "Claude Code CLI installation completed!"
+else
+    echo "Installing Claude Code CLI from web..."
+    curl -fsSL https://claude.ai/install.sh | bash || {
+        echo "WARNING: Claude Code installation failed. You can install it manually later."
+    }
+fi
+
+# Verify Claude Code installation
+echo ""
+echo "Verifying Claude Code installation..."
+if command -v claude >/dev/null 2>&1; then
+    echo "✓ Claude Code installed successfully"
+    claude --version 2>/dev/null || echo "  Version info unavailable"
+else
+    echo "✗ Claude Code not found in PATH"
+    echo "  You may need to restart your terminal or run: source ~/.bashrc"
+fi
+
 # Run tests to verify everything works
 echo ""
 echo "Running test suite..."
@@ -84,6 +109,14 @@ echo "  Run application:     python3 main.py"
 echo "  Run tests:           python3 -m unittest discover tests -v"
 echo "  Build executable:    ./build.sh"
 echo "  Start GUI services:  start-gui.sh"
+echo "  Use Claude Code:     claude"
+echo ""
+echo "Claude Code Commands:"
+echo "  Start Claude:        claude"
+echo "  Check installation:  claude --version"
+echo "  Update Claude:       claude update"
+echo "  Diagnostics:         claude doctor"
+echo "  Note: First run will prompt for authentication"
 echo ""
 echo "To use the GUI in Codespaces:"
 echo "  1. Run: start-gui.sh"

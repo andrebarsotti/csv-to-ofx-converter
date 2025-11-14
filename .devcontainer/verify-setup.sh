@@ -167,6 +167,14 @@ else
     warning "black not installed"
 fi
 
+if command -v claude > /dev/null 2>&1; then
+    success "Claude Code CLI available"
+    CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
+    echo "  Version: $CLAUDE_VERSION"
+else
+    warning "Claude Code CLI not installed"
+fi
+
 # Summary
 echo ""
 echo "========================================="

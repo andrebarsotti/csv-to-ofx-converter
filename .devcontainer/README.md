@@ -12,6 +12,7 @@ This directory contains the development container configuration for GitHub Codes
 
 ### Development Tools
 - **PyInstaller** - For building standalone executables
+- **Claude Code CLI** - AI-powered coding assistant
 - **Flake8** - Code linting
 - **Black** - Code formatting
 - **Pylint** - Code analysis
@@ -85,6 +86,54 @@ flake8 src/ tests/
 
 # Build executable (Linux)
 ./build.sh
+```
+
+### 4. Using Claude Code CLI
+
+Claude Code is an AI-powered coding assistant that's pre-installed in this environment.
+
+```bash
+# Start Claude Code
+claude
+
+# Check version
+claude --version
+
+# Update Claude Code
+claude update
+
+# Run diagnostics
+claude doctor
+```
+
+#### First-Time Setup
+
+On first run, Claude Code will prompt for authentication. You have three options:
+
+1. **Claude Console** (Default) - Requires billing at console.anthropic.com
+2. **Claude App Subscription** - Use existing Pro/Max plan from claude.ai
+3. **Enterprise** - Amazon Bedrock or Google Vertex AI
+
+Follow the prompts to complete authentication.
+
+#### Using Claude Code
+
+Once authenticated, you can:
+- Ask questions about the codebase
+- Request code changes and refactoring
+- Generate tests and documentation
+- Debug issues
+- Get explanations of complex code
+
+Example commands:
+```bash
+# Start interactive session
+claude
+
+# Then type your requests, for example:
+# "Explain how the CSV parser works"
+# "Add error handling to the date validator"
+# "Generate tests for the transaction utils"
 ```
 
 ## Files in This Directory
