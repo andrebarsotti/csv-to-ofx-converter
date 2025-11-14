@@ -1,0 +1,8 @@
+# Ensure shell scripts always use LF line endings
+*.sh text eol=lf
+
+# Ensure JSON files use LF
+*.json text eol=lf
+
+# Ensure Markdown files use LF
+*.md text eol=lf
