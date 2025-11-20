@@ -136,7 +136,9 @@ class OFXGenerator:
         if not self.transactions:
             raise ValueError("No transactions to export")
 
-        # Sort transactions by date
+        # Sort transactions by date (already in OFX format YYYYMMDD, so string sort works)
+        # Note: Transactions should already be added in sorted order from preview,
+        # but we sort here as a safeguard
         self.transactions.sort(key=lambda x: x['date'])
 
         # Get date range

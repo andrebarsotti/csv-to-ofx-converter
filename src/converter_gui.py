@@ -220,15 +220,16 @@ class ConverterGUI:
         self.convert_btn.pack(side=tk.LEFT, padx=5)
         self.convert_btn.pack_forget()  # Hidden initially
 
-        ttk.Button(nav_frame, text="Clear All", command=self._clear).pack(side=tk.LEFT, padx=5)
+        self.clear_btn = ttk.Button(nav_frame, text="Clear All", command=self._clear)
+        self.clear_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_log_section(self, parent: ttk.Frame, row: int):
         """Create log display section."""
-        frame = ttk.LabelFrame(parent, text="Activity Log", padding="5")
-        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=5)
+        frame = ttk.LabelFrame(parent, text="Activity Log", padding="2")
+        frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=2)
         frame.columnconfigure(0, weight=1)
 
-        self.log_text = scrolledtext.ScrolledText(frame, height=6, state='disabled')
+        self.log_text = scrolledtext.ScrolledText(frame, height=3, state='disabled', wrap=tk.WORD)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
 
     def _show_step(self, step_num: int):
@@ -269,12 +270,13 @@ class ConverterGUI:
             self.back_btn.configure(state='normal')
 
         # Next button and Convert button
+        # Always maintain correct order: Back, Next/Convert, Clear All
         if self.current_step < len(self.steps) - 1:
-            self.next_btn.pack(side=tk.LEFT, padx=5)
             self.convert_btn.pack_forget()
+            self.next_btn.pack(side=tk.LEFT, padx=5, before=self.clear_btn)
         else:
             self.next_btn.pack_forget()
-            self.convert_btn.pack(side=tk.LEFT, padx=5)
+            self.convert_btn.pack(side=tk.LEFT, padx=5, before=self.clear_btn)
 
     def _go_back(self):
         """Go to previous step."""
@@ -737,7 +739,7 @@ class ConverterGUI:
                                           state='disabled', width=20)
         self.start_date_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
         # Add date format validation for start_date (DD/MM/YYYY)
-        self.start_date.trace_add('write', lambda *a: self._validate_and_format_date(self.start_date))
+        self.start_date_entry.bind('<KeyRelease>', lambda e: self._format_date_entry(self.start_date_entry))
         ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 01/10/2025)",
                  font=('Arial', 8), foreground='gray').grid(
             row=1, column=2, sticky=tk.W, padx=5, pady=5)
@@ -748,7 +750,7 @@ class ConverterGUI:
                                         state='disabled', width=20)
         self.end_date_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
         # Add date format validation for end_date (DD/MM/YYYY)
-        self.end_date.trace_add('write', lambda *a: self._validate_and_format_date(self.end_date))
+        self.end_date_entry.bind('<KeyRelease>', lambda e: self._format_date_entry(self.end_date_entry))
         ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 31/10/2025)",
                  font=('Arial', 8), foreground='gray').grid(
             row=2, column=2, sticky=tk.W, padx=5, pady=5)
@@ -786,7 +788,7 @@ class ConverterGUI:
                               padding="10")
         frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=10, pady=10)
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(2, weight=1)  # Make transaction preview row expandable
+        frame.rowconfigure(3, weight=1)  # Make transaction preview row expandable
 
         ttk.Label(frame, text="Review transactions and balances before exporting:",
                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
@@ -794,6 +796,8 @@ class ConverterGUI:
         # Calculate balance information
         try:
             balance_info = self._calculate_balance_preview()
+            # Cache for context menu access
+            self._cached_balance_info = balance_info
         except Exception as e:
             ttk.Label(frame, text=f"Error calculating balances: {e}",
                      foreground='red', font=('Arial', 10, 'bold')).grid(
@@ -902,8 +906,7 @@ class ConverterGUI:
             columns=('date', 'description', 'amount', 'type'),
             show='headings',
             yscrollcommand=vsb.set,
-            xscrollcommand=hsb.set,
-            height=10
+            xscrollcommand=hsb.set
         )
         vsb.configure(command=self.balance_preview_tree.yview)
         hsb.configure(command=self.balance_preview_tree.xview)
@@ -922,22 +925,36 @@ class ConverterGUI:
         vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
         hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
+        # Configure tags for date validation status
+        self.balance_preview_tree.tag_configure('date_before', background='#ffcccc')  # Light red
+        self.balance_preview_tree.tag_configure('date_after', background='#ffe6cc')   # Light orange
+
         # Bind context menu for deleting transactions
         self.balance_preview_tree.bind("<Button-3>", self._show_transaction_context_menu)
 
         # Populate transaction preview
         self.transaction_tree_items.clear()  # Clear previous mappings
-        for row_idx, trans in enumerate(balance_info['transactions']):
-            # Skip deleted transactions
-            if row_idx in self.deleted_transactions:
+        for trans in balance_info['transactions']:
+            # Get the original row index from transaction data
+            row_idx = trans.get('row_idx')
+
+            # Skip if no row_idx (shouldn't happen, but be safe)
+            if row_idx is None:
                 continue
+
+            # Determine tag based on date status
+            tags = []
+            if trans.get('date_status') == 'before':
+                tags.append('date_before')
+            elif trans.get('date_status') == 'after':
+                tags.append('date_after')
 
             item_id = self.balance_preview_tree.insert('', tk.END, values=(
                 trans['date'],
                 trans['description'][:50],
                 f"{trans['amount']:.2f}",
                 trans['type']
-            ))
+            ), tags=tags)
             # Store mapping of row_idx to tree item ID
             self.transaction_tree_items[row_idx] = item_id
 
@@ -959,6 +976,8 @@ class ConverterGUI:
         try:
             # Recalculate balance information
             balance_info = self._calculate_balance_preview()
+            # Cache for context menu access
+            self._cached_balance_info = balance_info
 
             # Update labels
             self.total_credits_label.configure(
@@ -1017,6 +1036,8 @@ class ConverterGUI:
                 row, parser, date_col, amount_col, desc_col, type_col, use_composite
             )
             if transaction:
+                # Add original row index to transaction for later reference
+                transaction['row_idx'] = row_idx
                 transactions.append(transaction)
                 # Update totals
                 if transaction['amount'] >= 0:
@@ -1076,11 +1097,26 @@ class ConverterGUI:
             # Determine transaction type using utility function
             trans_type = determine_transaction_type(type_col, row, amount)
 
+            # Check date validation status if enabled
+            date_status = 'valid'
+            if self.enable_date_validation.get():
+                start_date_str = self.start_date.get().strip()
+                end_date_str = self.end_date.get().strip()
+                if start_date_str and end_date_str:
+                    try:
+                        from .date_validator import DateValidator
+                        validator = DateValidator(start_date_str, end_date_str)
+                        if not validator.is_within_range(date):
+                            date_status = validator.get_date_status(date)
+                    except:
+                        pass  # If validation fails, treat as valid
+
             return {
                 'date': date,
                 'description': description,
                 'amount': amount,
-                'type': trans_type
+                'type': trans_type,
+                'date_status': date_status
             }
 
         except Exception as e:
@@ -1151,53 +1187,63 @@ class ConverterGUI:
         pattern = r'^-?\d*\.?\d*$'
         return bool(re.match(pattern, value_if_allowed))
 
-    def _validate_and_format_date(self, var: tk.StringVar, *args):
+    def _format_date_entry(self, entry_widget):
         """
         Auto-format date input with slashes in DD/MM/YYYY format.
 
         Removes non-digit, non-slash characters and auto-inserts slashes.
         Limits to DD/MM/YYYY format (Brazilian/European standard).
+        Maintains cursor position correctly.
 
         Args:
-            var: StringVar associated with the date entry field
-            *args: Additional args from variable trace (ignored)
+            entry_widget: ttk.Entry widget to format
         """
-        value = var.get()
+        # Get current value and cursor position
+        current_value = entry_widget.get()
+        cursor_pos = entry_widget.index(tk.INSERT)
 
         # Remove any non-digit, non-slash characters
-        cleaned = ''.join(c for c in value if c.isdigit() or c == '/')
+        digits_only = ''.join(c for c in current_value if c.isdigit())
 
-        # Auto-insert slashes after day (2 digits) and month (2 digits)
-        if len(cleaned) == 2 and '/' not in cleaned:
-            cleaned += '/'
-        elif len(cleaned) == 5 and cleaned.count('/') == 1:
-            cleaned += '/'
+        # Limit to 8 digits (DDMMYYYY)
+        digits_only = digits_only[:8]
 
-        # Limit to DD/MM/YYYY format
-        parts = cleaned.split('/')
-        if len(parts) >= 1:
-            parts[0] = parts[0][:2]  # Day max 2 digits
-        if len(parts) >= 2:
-            parts[1] = parts[1][:2]  # Month max 2 digits
-        if len(parts) >= 3:
-            parts[2] = parts[2][:4]  # Year max 4 digits
-            parts = parts[:3]  # Remove any extra parts
+        # Build formatted string based on number of digits
+        # DD/MM/YYYY format
+        if len(digits_only) <= 2:
+            # Just day digits
+            formatted = digits_only
+        elif len(digits_only) <= 4:
+            # Day + month digits
+            formatted = digits_only[:2] + '/' + digits_only[2:]
+        else:
+            # Day + month + year digits
+            formatted = digits_only[:2] + '/' + digits_only[2:4] + '/' + digits_only[4:]
 
-        formatted = '/'.join(parts)
+        # Only update if different
+        if formatted != current_value:
+            # Calculate new cursor position
+            # Count how many digits are before the cursor in the old value
+            digits_before_cursor = len([c for c in current_value[:cursor_pos] if c.isdigit()])
 
-        # Only update if different to avoid recursion
-        if formatted != value:
-            # Temporarily disable trace to avoid recursion
-            trace_id = var.trace_info()
-            if trace_id:
-                for trace in trace_id:
-                    if trace[1] == 'write':
-                        var.trace_remove('write', trace[2])
+            # Find the position in the new formatted string that corresponds to the same number of digits
+            new_cursor_pos = 0
+            digit_count = 0
+            for i, char in enumerate(formatted):
+                if char.isdigit():
+                    digit_count += 1
+                if digit_count >= digits_before_cursor:
+                    new_cursor_pos = i + 1
+                    break
+            else:
+                new_cursor_pos = len(formatted)
 
-            var.set(formatted)
+            # Update the entry
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, formatted)
 
-            # Re-enable trace
-            var.trace_add('write', lambda *a: self._validate_and_format_date(var))
+            # Restore cursor position
+            entry_widget.icursor(new_cursor_pos)
 
     def _toggle_final_balance_mode(self):
         """Toggle between automatic and manual final balance mode."""
@@ -1218,31 +1264,133 @@ class ConverterGUI:
 
     def _show_transaction_context_menu(self, event):
         """
-        Show context menu for transaction operations (delete, restore).
+        Show context menu for transaction operations (delete, restore, date actions).
 
         Args:
             event: Right-click event containing mouse position
         """
+        # Close any existing menu
+        if hasattr(self, '_context_menu') and self._context_menu:
+            try:
+                self._context_menu.unpost()
+                self._context_menu.destroy()
+            except:
+                pass
+
         # Check if any items are selected
         selected = self.balance_preview_tree.selection()
 
         # Create context menu
-        menu = tk.Menu(self.root, tearoff=0)
+        self._context_menu = tk.Menu(self.root, tearoff=0)
+        menu_has_items = False
 
-        if selected:
-            menu.add_command(
-                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
-                command=self._delete_selected_transactions
+        # Find the row index and date status for selected item (for single selection)
+        selected_row_idx = None
+        date_status = None
+        if len(selected) == 1:
+            item_id = selected[0]
+            # Find the row_idx for this tree item
+            for row_idx, tree_item_id in self.transaction_tree_items.items():
+                if tree_item_id == item_id:
+                    selected_row_idx = row_idx
+                    # Get the transaction data to check date status
+                    if hasattr(self, '_cached_balance_info'):
+                        for trans in self._cached_balance_info.get('transactions', []):
+                            if trans.get('row_idx') == row_idx:
+                                date_status = trans.get('date_status', 'valid')
+                                break
+                    break
+
+        # Add date action options first if there's a date issue
+        has_date_actions = False
+        if selected_row_idx is not None and date_status in ('before', 'after'):
+            current_action = self.date_action_decisions.get(selected_row_idx, 'adjust')
+
+            # Get the date action setting
+            date_action = self.date_action.get() if hasattr(self, 'date_action') else 'adjust'
+
+            self._context_menu.add_command(
+                label="📅 Date Actions",
+                state='disabled'
             )
+            self._context_menu.add_separator()
+
+            self._context_menu.add_command(
+                label=f"{'✓ ' if current_action == 'keep' else ''}Keep Original Date",
+                command=lambda: self._set_date_action_and_close(selected_row_idx, 'keep')
+            )
+            self._context_menu.add_command(
+                label=f"{'✓ ' if current_action == 'adjust' else ''}Adjust to Boundary",
+                command=lambda: self._set_date_action_and_close(selected_row_idx, 'adjust')
+            )
+            self._context_menu.add_command(
+                label=f"{'✓ ' if current_action == 'exclude' else ''}Exclude Transaction",
+                command=lambda: self._set_date_action_and_close(selected_row_idx, 'exclude')
+            )
+            self._context_menu.add_separator()
+            menu_has_items = True
+            has_date_actions = True
+
+        # Add delete/restore options (skip if date actions already shown to avoid duplication)
+        if selected and not has_date_actions:
+            self._context_menu.add_command(
+                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
+                command=lambda: self._delete_selected_and_close_menu()
+            )
+            menu_has_items = True
 
         if self.deleted_transactions:
-            menu.add_command(
+            self._context_menu.add_command(
                 label=f"Restore All Deleted ({len(self.deleted_transactions)} transaction{'s' if len(self.deleted_transactions) > 1 else ''})",
-                command=self._restore_all_transactions
+                command=lambda: self._restore_all_and_close_menu()
             )
+            menu_has_items = True
 
-        if selected or self.deleted_transactions:
-            menu.post(event.x_root, event.y_root)
+        if menu_has_items:
+            self._context_menu.post(event.x_root, event.y_root)
+            # Bind to close menu when clicking elsewhere
+            self._context_menu.bind("<FocusOut>", lambda e: self._context_menu.unpost())
+            self.root.bind("<Button-1>", self._close_context_menu, add="+")
+
+    def _close_context_menu(self, event=None):
+        """Close context menu if it exists."""
+        if hasattr(self, '_context_menu') and self._context_menu:
+            try:
+                self._context_menu.unpost()
+            except:
+                pass
+
+    def _set_date_action_and_close(self, row_idx: int, action: str):
+        """
+        Set date action for a specific transaction and close menu.
+
+        Args:
+            row_idx: Row index of the transaction
+            action: Date action to apply ('keep', 'adjust', 'exclude')
+        """
+        self.date_action_decisions[row_idx] = action
+        self._log(f"Date action set to '{action}' for transaction at row {row_idx}")
+        self._close_context_menu()
+
+        # If action is 'exclude', also mark as deleted and remove from tree
+        if action == 'exclude':
+            self.deleted_transactions.add(row_idx)
+            # Remove the transaction from the tree view
+            tree_item_id = self.transaction_tree_items.get(row_idx)
+            if tree_item_id:
+                self.balance_preview_tree.delete(tree_item_id)
+            # Recalculate balances without recreating the entire step
+            self._recalculate_balance_preview()
+
+    def _delete_selected_and_close_menu(self):
+        """Delete selected transactions and close menu."""
+        self._delete_selected_transactions()
+        self._close_context_menu()
+
+    def _restore_all_and_close_menu(self):
+        """Restore all transactions and close menu."""
+        self._restore_all_transactions()
+        self._close_context_menu()
 
     def _delete_selected_transactions(self):
         """
@@ -1547,7 +1695,7 @@ class ConverterGUI:
                 description = self._build_description(row, desc_col, use_composite)
 
                 date, date_stats = self._validate_and_adjust_date(
-                    date, row_idx + 1, description, date_validator
+                    date, row_idx, description, date_validator
                 )
                 if date is None:
                     stats['excluded'] += 1
@@ -1591,10 +1739,21 @@ class ConverterGUI:
         """
         Validate date and adjust if necessary. Returns (date, stats_dict).
 
-        NEW BEHAVIOR (Improvement #3):
-        - Dates BEFORE start_date: automatically adjusted to start_date (default action)
+        Checks if user has made a decision via context menu (date_action_decisions).
+        If yes, applies that decision. If no, applies default behavior:
+        - Dates BEFORE start_date: automatically adjusted to start_date
         - Dates AFTER end_date: kept as-is with warning
-        - No interactive dialogs during conversion
+
+        Args:
+            date: Transaction date string
+            row_idx: Row index (0-based) in csv_data
+            description: Transaction description
+            date_validator: DateValidator instance or None
+
+        Returns:
+            Tuple of (date_string, stats_dict) where:
+            - date_string: Adjusted date or None to exclude transaction
+            - stats_dict: Dictionary with 'adjusted' and 'kept_out_of_range' counts
         """
         stats = {'adjusted': 0, 'kept_out_of_range': 0}
 
@@ -1606,19 +1765,40 @@ class ConverterGUI:
 
         status = date_validator.get_date_status(date)
 
-        # Apply automatic actions based on date status
-        if status == 'before':
-            # Default action for dates before start: adjust to boundary
-            adjusted_date = date_validator.adjust_date_to_boundary(date)
-            self._log(f"Row {row_idx}: Date {date} adjusted to {adjusted_date} (before start date)")
-            stats['adjusted'] = 1
-            return adjusted_date, stats
+        # Check if user has already made a decision for this transaction
+        user_action = self.date_action_decisions.get(row_idx)
 
-        elif status == 'after':
-            # Default action for dates after end: keep with warning
-            self._log(f"Row {row_idx}: Date {date} is after end date (kept as-is)")
-            stats['kept_out_of_range'] = 1
-            return date, stats
+        if user_action:
+            # Apply user's decision
+            if user_action == 'exclude':
+                # Exclude transaction (return None)
+                self._log(f"Row {row_idx + 1}: Transaction excluded (user decision)")
+                return None, stats
+            elif user_action == 'keep':
+                # Keep original date
+                self._log(f"Row {row_idx + 1}: Keeping original date {date} (user decision)")
+                stats['kept_out_of_range'] = 1
+                return date, stats
+            elif user_action == 'adjust':
+                # Adjust to boundary
+                adjusted_date = date_validator.adjust_date_to_boundary(date)
+                self._log(f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (user decision)")
+                stats['adjusted'] = 1
+                return adjusted_date, stats
+        else:
+            # Apply automatic default actions based on date status
+            if status == 'before':
+                # Default action for dates before start: adjust to boundary
+                adjusted_date = date_validator.adjust_date_to_boundary(date)
+                self._log(f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (before start date)")
+                stats['adjusted'] = 1
+                return adjusted_date, stats
+
+            elif status == 'after':
+                # Default action for dates after end: keep with warning
+                self._log(f"Row {row_idx + 1}: Date {date} is after end date (kept as-is)")
+                stats['kept_out_of_range'] = 1
+                return date, stats
 
         return date, stats
 
