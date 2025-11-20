@@ -59,6 +59,8 @@ class ConverterGUI:
         self.root.minsize(900, 700)  # Set minimum window size
         # Allow window resizing
         self.root.resizable(True, True)
+        # Start maximized
+        self.root.state('zoomed')
 
         # Variables
         self.csv_file = tk.StringVar()
