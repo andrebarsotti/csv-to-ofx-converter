@@ -780,6 +780,67 @@ Para problemas, questões ou sugestões:
 
 ## Histórico de Mudanças
 
+### Versão 3.0.0 (Novembro de 2025) - Melhorias Importantes de Usabilidade e Fluxo de Trabalho
+
+- **Melhoria Importante**: Visualização e Gerenciamento de Saldos Aprimorados (Etapa 7)
+  - **Saldo Inicial Relocado**: Movido da Etapa 4 para Etapa 7 para melhor fluxo de trabalho
+  - **Recálculo de Saldo em Tempo Real**: Recalcula automaticamente o saldo final quando o saldo inicial muda
+  - **Visualizar Todas as Transações**: Preview agora mostra TODAS as transações (ilimitado), não apenas as primeiras 20
+  - **Lista de Transações Ordenável**: Transações sempre exibidas em ordem cronológica (mais antiga para mais nova)
+  - **Gerenciamento Interativo de Transações**: Excluir qualquer transação diretamente do preview
+  - **Resumo de Saldos Aprimorado**: Visualização mais clara de saldo inicial, créditos, débitos e saldo final
+
+- **Melhoria Importante**: Fluxo de Trabalho de Validação de Data Proativa
+  - **Ações de Data Baseadas no Preview**: Lidar com datas fora do intervalo na Etapa 7 preview em vez de durante a conversão
+  - **Menu de Contexto para Ações de Data**: Clique com botão direito em transações para escolher Manter/Ajustar/Excluir
+  - **Padrões Inteligentes**: Transações antes da data inicial automaticamente padronizam para "Ajustar ao limite"
+  - **Indicadores Visuais**: Marcação clara de transações com problemas de data no preview
+  - **Sem Interrupções**: Processo de conversão suave sem prompts de diálogo
+  - **Controle Total**: Revisar e decidir todas as ações de data antes de exportar
+
+- **Melhoria Importante**: Exclusão Interativa de Transações
+  - **Excluir do Preview**: Excluir qualquer transação via menu de contexto na Etapa 7
+  - **Feedback Visual**: Transações excluídas removidas imediatamente da visualização
+  - **Atualizações de Saldo**: Recálculo automático de totais após exclusões
+  - **Opção de Restaurar**: Capacidade de restaurar transações excluídas antes da exportação final
+  - **Exportação Limpa**: Apenas transações selecionadas incluídas no arquivo OFX final
+
+- **Melhoria**: Validação de Entrada Aprimorada
+  - **Campos Somente Numéricos**: Campos de saldo (inicial, final manual) aceitam apenas números durante a digitação
+  - **Validação em Tempo Real**: Caracteres inválidos rejeitados imediatamente, não após submissão
+  - **Aplicação de Formato de Data**: Campos de data (intervalo de validação) aceitam apenas formato DD/MM/AAAA
+  - **Auto-formatação**: Inserção automática de barras em campos de data conforme você digita
+  - **Inteligência de Cursor**: Posicionamento adequado do cursor durante auto-formatação
+  - **Amigável ao Usuário**: Não é necessário corrigir erros de formatação após entrada
+
+- **Correção de Bug**: Auto-formatação de entrada de datas funciona corretamente
+  - Corrigido problema crítico onde digitar datas exigia inserir dígitos duas vezes após as barras
+  - Formatação de data completamente reescrita com rastreamento adequado da posição do cursor
+  - Agora formata corretamente DD/MM/AAAA sem confusão (ex: "12/10" não se torna mais "12/01")
+
+- **Correção de Bug**: Botões de navegação mantêm posição correta
+  - Corrigido bug de reposicionamento de botões que ocorria após Etapa 7 ou ao usar Limpar Tudo
+  - Botões agora aparecem consistentemente na ordem: Voltar → Avançar/Converter → Limpar Tudo
+
+- **Correção de Bug**: Melhorias no menu de contexto
+  - Removidas opções duplicadas de exclusão (não mais "Excluir" + "Deletar Selecionados")
+  - Menu fecha adequadamente ao clicar fora
+  - Melhor feedback visual para seleções
+
+- **Nova Funcionalidade**: Suporte a DPI Awareness no Windows
+  - Configuração automática de DPI awareness para displays Windows de alta resolução
+  - Suporta DPI por monitor (Windows 8.1+) e DPI de sistema (Windows 7/8.0)
+  - Previne texto borrado em telas de alto DPI (escala 125%, 150%, 200%)
+  - Garante maximização correta da janela em monitores 4K
+  - Sem impacto em sistemas Linux/macOS (seguro multiplataforma)
+
+- **Testes**: Todos os 94 testes passando
+  - Cobertura abrangente de testes para todas as funcionalidades
+  - Compatibilidade multiplataforma verificada
+  - Nenhuma regressão introduzida
+
+**Importante**: Esta versão importante melhora significativamente o fluxo de trabalho do usuário com validação proativa de datas, preview ilimitado de transações e melhor gerenciamento de saldos. Atualização altamente recomendada.
+
 ### Versão 2.1.2 (Novembro de 2025) - Versão de Qualidade de Código
 
 - **Qualidade de Código**: Corrigidos problemas de qualidade de código do SonarQube no converter_gui

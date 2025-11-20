@@ -780,6 +780,67 @@ For issues, questions, or suggestions:
 
 ## Changelog
 
+### Version 3.0.0 (November 2025) - Major Usability and Workflow Improvements
+
+- **Major Enhancement**: Improved Balance Preview and Management (Step 7)
+  - **Relocated Initial Balance**: Moved from Step 4 to Step 7 for better workflow
+  - **Real-time Balance Recalculation**: Automatically recalculates final balance when initial balance changes
+  - **View All Transactions**: Preview now shows ALL transactions (unlimited), not just first 20
+  - **Sortable Transaction List**: Transactions always displayed in chronological order (oldest to newest)
+  - **Interactive Transaction Management**: Delete any transaction directly from the preview
+  - **Enhanced Balance Summary**: Clearer visualization of initial, credits, debits, and final balance
+
+- **Major Enhancement**: Proactive Date Validation Workflow
+  - **Preview-Based Date Actions**: Handle out-of-range dates in Step 7 preview instead of during conversion
+  - **Context Menu for Date Actions**: Right-click transactions to choose Keep/Adjust/Exclude
+  - **Smart Defaults**: Transactions before start date automatically default to "Adjust to boundary"
+  - **Visual Indicators**: Clear marking of transactions with date issues in preview
+  - **No Interruptions**: Smooth conversion process without dialog prompts
+  - **Full Control**: Review and decide all date actions before exporting
+
+- **Major Enhancement**: Interactive Transaction Exclusion
+  - **Delete from Preview**: Exclude any transaction via context menu in Step 7
+  - **Visual Feedback**: Deleted transactions removed immediately from view
+  - **Balance Updates**: Automatic recalculation of totals after deletions
+  - **Restore Option**: Ability to restore deleted transactions before final export
+  - **Clean Export**: Only selected transactions included in final OFX file
+
+- **Enhancement**: Improved Input Validation
+  - **Numeric-Only Fields**: Balance fields (initial, manual final) accept only numbers during typing
+  - **Real-time Validation**: Invalid characters rejected immediately, not after submission
+  - **Date Format Enforcement**: Date fields (validation range) accept only DD/MM/YYYY format
+  - **Auto-formatting**: Automatic slash insertion in date fields as you type
+  - **Cursor Intelligence**: Proper cursor positioning during auto-formatting
+  - **User-Friendly**: No need to correct formatting errors after entry
+
+- **Bug Fix**: Date input auto-formatting works correctly
+  - Fixed critical issue where typing dates required entering digits twice after slashes
+  - Completely rewrote date formatting with proper cursor position tracking
+  - Now correctly formats DD/MM/YYYY without confusion (e.g., "12/10" no longer becomes "12/01")
+
+- **Bug Fix**: Navigation buttons maintain correct position
+  - Fixed button repositioning bug that occurred after Step 7 or using Clear All
+  - Buttons now consistently appear in order: Back → Next/Convert → Clear All
+
+- **Bug Fix**: Context menu improvements
+  - Removed duplicate exclusion options (no more "Exclude" + "Delete Selected")
+  - Menu closes properly when clicking outside
+  - Better visual feedback for selections
+
+- **New Feature**: Windows DPI Awareness Support
+  - Automatic DPI awareness configuration for Windows high-resolution displays
+  - Supports per-monitor DPI (Windows 8.1+) and system DPI (Windows 7/8.0)
+  - Prevents blurry text on high-DPI screens (125%, 150%, 200% scaling)
+  - Ensures correct window maximization on 4K monitors
+  - No impact on Linux/macOS systems (cross-platform safe)
+
+- **Testing**: All 94 tests passing
+  - Comprehensive test coverage for all features
+  - Cross-platform compatibility verified
+  - No regressions introduced
+
+**Important**: This major version significantly improves the user workflow with proactive date validation, unlimited transaction preview, and better balance management. Highly recommended upgrade.
+
 ### Version 2.1.2 (November 2025) - Code Quality Release
 
 - **Code Quality**: Fixed SonarQube code quality issues in converter_gui
