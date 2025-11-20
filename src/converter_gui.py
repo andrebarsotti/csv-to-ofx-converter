@@ -18,6 +18,7 @@ License: MIT
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import logging
+import re
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
@@ -33,6 +34,8 @@ from .transaction_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
 class ConverterGUI:
     """
     Graphical User Interface for CSV to OFX conversion with step-by-step wizard.
@@ -64,12 +67,15 @@ class ConverterGUI:
         try:
             # Try Windows/macOS method
             self.root.state('zoomed')
-        except:
+        except Exception as e:
             # Fallback to Linux method
+            logger.debug("Couldn't maximize window using state(): %s", e)
             try:
                 self.root.attributes('-zoomed', True)
-            except:
+            except Exception as e2:
                 # If both fail, just maximize using geometry
+                logger.debug(
+                    "Couldn't maximize window using attributes(): %s", e2)
                 self.root.update_idletasks()
                 screen_width = self.root.winfo_screenwidth()
                 screen_height = self.root.winfo_screenheight()
@@ -104,7 +110,8 @@ class ConverterGUI:
         self.transaction_tree_items = {}  # Map row_index -> tree item ID
 
         # Date validation management (for preview date action feature)
-        self.date_action_decisions = {}  # Map row_index -> action ('adjust', 'keep', 'exclude')
+        # Map row_index -> action ('adjust', 'keep', 'exclude')
+        self.date_action_decisions = {}
 
         # Wizard steps
         self.current_step = 0
@@ -137,7 +144,7 @@ class ConverterGUI:
 
         # Title
         title_label = ttk.Label(main_frame, text="CSV to OFX Converter - Enhanced Edition",
-                               font=('Arial', 16, 'bold'))
+                                font=('Arial', 16, 'bold'))
         title_label.grid(row=0, column=0, pady=(0, 10))
 
         # Progress indicator
@@ -145,7 +152,8 @@ class ConverterGUI:
 
         # Step container
         self.step_container = ttk.Frame(main_frame)
-        self.step_container.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+        self.step_container.grid(row=2, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), pady=10)
         self.step_container.columnconfigure(0, weight=1)
         self.step_container.rowconfigure(0, weight=1)
 
@@ -189,7 +197,8 @@ class ConverterGUI:
 
             # Arrow (except after last step)
             if idx < len(self.steps) - 1:
-                arrow = ttk.Label(self.progress_frame, text=">", font=('Arial', 12))
+                arrow = ttk.Label(self.progress_frame,
+                                  text=">", font=('Arial', 12))
                 arrow.grid(row=0, column=idx * 2 + 1, padx=5)
 
     def _update_progress_indicator(self):
@@ -210,17 +219,21 @@ class ConverterGUI:
         nav_frame = ttk.Frame(parent)
         nav_frame.grid(row=row, column=0, pady=10)
 
-        self.back_btn = ttk.Button(nav_frame, text="< Back", command=self._go_back)
+        self.back_btn = ttk.Button(
+            nav_frame, text="< Back", command=self._go_back)
         self.back_btn.pack(side=tk.LEFT, padx=5)
 
-        self.next_btn = ttk.Button(nav_frame, text="Next >", command=self._go_next)
+        self.next_btn = ttk.Button(
+            nav_frame, text="Next >", command=self._go_next)
         self.next_btn.pack(side=tk.LEFT, padx=5)
 
-        self.convert_btn = ttk.Button(nav_frame, text="Convert to OFX", command=self._convert)
+        self.convert_btn = ttk.Button(
+            nav_frame, text="Convert to OFX", command=self._convert)
         self.convert_btn.pack(side=tk.LEFT, padx=5)
         self.convert_btn.pack_forget()  # Hidden initially
 
-        self.clear_btn = ttk.Button(nav_frame, text="Clear All", command=self._clear)
+        self.clear_btn = ttk.Button(
+            nav_frame, text="Clear All", command=self._clear)
         self.clear_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_log_section(self, parent: ttk.Frame, row: int):
@@ -229,7 +242,8 @@ class ConverterGUI:
         frame.grid(row=row, column=0, sticky=(tk.W, tk.E), pady=2)
         frame.columnconfigure(0, weight=1)
 
-        self.log_text = scrolledtext.ScrolledText(frame, height=3, state='disabled', wrap=tk.WORD)
+        self.log_text = scrolledtext.ScrolledText(
+            frame, height=3, state='disabled', wrap=tk.WORD)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
 
     def _show_step(self, step_num: int):
@@ -349,7 +363,7 @@ class ConverterGUI:
         if not desc_col or desc_col.get() == NOT_MAPPED:
             if not any(var.get() != NOT_SELECTED for var in self.description_columns):
                 messagebox.showwarning("Required",
-                    "Please map the Description field or configure composite description")
+                                       "Please map the Description field or configure composite description")
                 return False
         return True
 
@@ -357,12 +371,14 @@ class ConverterGUI:
 
     def _create_step_file_selection(self):
         """Create file selection step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 1: Select CSV File", padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame = ttk.LabelFrame(self.step_container,
+                               text="Step 1: Select CSV File", padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
         frame.columnconfigure(1, weight=1)
 
         ttk.Label(frame, text="Select a CSV file to convert to OFX format:",
-                 font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
+                  font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
 
         ttk.Label(frame, text="CSV File:", font=('Arial', 10, 'bold')).grid(
             row=1, column=0, sticky=tk.W, padx=5, pady=10)
@@ -375,10 +391,10 @@ class ConverterGUI:
 
         # Info text
         info_text = ("Select a CSV file containing your bank transactions.\n"
-                    "The file should have a header row with column names.\n"
-                    "Supported formats: CSV with comma, semicolon, or tab delimiters.")
+                     "The file should have a header row with column names.\n"
+                     "Supported formats: CSV with comma, semicolon, or tab delimiters.")
         ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
-                 wraplength=600, justify=tk.LEFT).grid(
+                  wraplength=600, justify=tk.LEFT).grid(
             row=2, column=0, columnspan=3, sticky=tk.W, pady=20)
 
     def _browse_csv(self):
@@ -395,11 +411,13 @@ class ConverterGUI:
 
     def _create_step_csv_format(self):
         """Create CSV format configuration step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 2: Configure CSV Format", padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame = ttk.LabelFrame(
+            self.step_container, text="Step 2: Configure CSV Format", padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
 
         ttk.Label(frame, text="Select the format of your CSV file:",
-                 font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
+                  font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
 
         # Delimiter options
         ttk.Label(frame, text="Column Delimiter:", font=('Arial', 10, 'bold')).grid(
@@ -409,11 +427,11 @@ class ConverterGUI:
         delimiter_frame.grid(row=1, column=1, sticky=tk.W, padx=20, pady=10)
 
         ttk.Radiobutton(delimiter_frame, text="Comma (,) - Standard format",
-                       variable=self.delimiter, value=',').pack(anchor=tk.W, pady=2)
+                        variable=self.delimiter, value=',').pack(anchor=tk.W, pady=2)
         ttk.Radiobutton(delimiter_frame, text="Semicolon (;) - Common in Brazilian exports",
-                       variable=self.delimiter, value=';').pack(anchor=tk.W, pady=2)
+                        variable=self.delimiter, value=';').pack(anchor=tk.W, pady=2)
         ttk.Radiobutton(delimiter_frame, text="Tab - Tab-separated values",
-                       variable=self.delimiter, value='\t').pack(anchor=tk.W, pady=2)
+                        variable=self.delimiter, value='\t').pack(anchor=tk.W, pady=2)
 
         # Decimal separator options
         ttk.Label(frame, text="Decimal Separator:", font=('Arial', 10, 'bold')).grid(
@@ -423,25 +441,27 @@ class ConverterGUI:
         decimal_frame.grid(row=2, column=1, sticky=tk.W, padx=20, pady=10)
 
         ttk.Radiobutton(decimal_frame, text="Dot (.) - Standard format (e.g., 100.50)",
-                       variable=self.decimal_separator, value='.').pack(anchor=tk.W, pady=2)
+                        variable=self.decimal_separator, value='.').pack(anchor=tk.W, pady=2)
         ttk.Radiobutton(decimal_frame, text="Comma (,) - Brazilian format (e.g., 100,50)",
-                       variable=self.decimal_separator, value=',').pack(anchor=tk.W, pady=2)
+                        variable=self.decimal_separator, value=',').pack(anchor=tk.W, pady=2)
 
         # Info text
         info_text = ("These settings determine how the CSV file is parsed.\n"
-                    "Common combinations:\n"
-                    "- Standard: Comma delimiter + Dot decimal (1,234.56)\n"
-                    "- Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
+                     "Common combinations:\n"
+                     "- Standard: Comma delimiter + Dot decimal (1,234.56)\n"
+                     "- Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
         ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
-                 wraplength=600, justify=tk.LEFT).grid(
+                  wraplength=600, justify=tk.LEFT).grid(
             row=3, column=0, columnspan=2, sticky=tk.W, pady=20)
 
     # ==================== STEP 3: DATA PREVIEW ====================
 
     def _create_step_data_preview(self):
         """Create data preview step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 3: Preview CSV Data", padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame = ttk.LabelFrame(self.step_container,
+                               text="Step 3: Preview CSV Data", padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(1, weight=1)
 
@@ -451,11 +471,11 @@ class ConverterGUI:
         info_frame.columnconfigure(1, weight=1)
 
         ttk.Label(info_frame, text="Preview of your CSV data:",
-                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W)
+                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W)
 
         # Load button
         ttk.Button(info_frame, text="Reload Data",
-                  command=lambda: self._load_csv_data(force_reload=True)).grid(
+                   command=lambda: self._load_csv_data(force_reload=True)).grid(
             row=0, column=1, sticky=tk.E, padx=5)
 
         # Create treeview for data preview
@@ -474,13 +494,15 @@ class ConverterGUI:
         vsb.configure(command=self.preview_tree.yview)
         hsb.configure(command=self.preview_tree.xview)
 
-        self.preview_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.preview_tree.grid(
+            row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
         hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
         # Stats label
         self.preview_stats_label = ttk.Label(frame, text="", font=('Arial', 9))
-        self.preview_stats_label.grid(row=2, column=0, sticky=tk.W, pady=(10, 0))
+        self.preview_stats_label.grid(
+            row=2, column=0, sticky=tk.W, pady=(10, 0))
 
         # Load data if not already loaded
         if not self.csv_data:
@@ -508,9 +530,11 @@ class ConverterGUI:
         )
 
         # Parse file
-        self.csv_headers, self.csv_data = parser.parse_file(self.csv_file.get())
+        self.csv_headers, self.csv_data = parser.parse_file(
+            self.csv_file.get())
 
-        self._log(f"CSV loaded: {len(self.csv_data)} rows, {len(self.csv_headers)} columns")
+        self._log(
+            f"CSV loaded: {len(self.csv_data)} rows, {len(self.csv_headers)} columns")
 
         # Update preview if on preview step
         if self.current_step == 2:
@@ -550,12 +574,14 @@ class ConverterGUI:
 
     def _create_step_ofx_config(self):
         """Create OFX configuration step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 4: OFX Configuration", padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame = ttk.LabelFrame(self.step_container,
+                               text="Step 4: OFX Configuration", padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
         frame.columnconfigure(1, weight=1)
 
         ttk.Label(frame, text="Configure the OFX output file settings:",
-                 font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
+                  font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
 
         # Account ID
         ttk.Label(frame, text="Account ID:", font=('Arial', 10, 'bold')).grid(
@@ -563,7 +589,7 @@ class ConverterGUI:
         ttk.Entry(frame, textvariable=self.account_id, width=40).grid(
             row=1, column=1, sticky=tk.W, padx=5, pady=5)
         ttk.Label(frame, text="(Optional - Default: 'UNKNOWN')",
-                 font=('Arial', 8), foreground='gray').grid(
+                  font=('Arial', 8), foreground='gray').grid(
             row=2, column=1, sticky=tk.W, padx=5)
 
         # Bank Name
@@ -572,18 +598,18 @@ class ConverterGUI:
         ttk.Entry(frame, textvariable=self.bank_name, width=40).grid(
             row=3, column=1, sticky=tk.W, padx=5, pady=5)
         ttk.Label(frame, text="(Optional - Default: 'CSV Import')",
-                 font=('Arial', 8), foreground='gray').grid(
+                  font=('Arial', 8), foreground='gray').grid(
             row=4, column=1, sticky=tk.W, padx=5)
 
         # Currency
         ttk.Label(frame, text="Currency:", font=('Arial', 10, 'bold')).grid(
             row=5, column=0, sticky=tk.W, padx=5, pady=5)
         currency_combo = ttk.Combobox(frame, textvariable=self.currency,
-                                     values=['BRL', 'USD', 'EUR', 'GBP'],
-                                     state='readonly', width=10)
+                                      values=['BRL', 'USD', 'EUR', 'GBP'],
+                                      state='readonly', width=10)
         currency_combo.grid(row=5, column=1, sticky=tk.W, padx=5, pady=5)
         ttk.Label(frame, text="(BRL=Brazilian Real, USD=US Dollar, EUR=Euro, GBP=British Pound)",
-                 font=('Arial', 8), foreground='gray').grid(
+                  font=('Arial', 8), foreground='gray').grid(
             row=6, column=1, sticky=tk.W, padx=5)
 
     # ==================== STEP 5: FIELD MAPPING ====================
@@ -591,25 +617,27 @@ class ConverterGUI:
     def _create_step_field_mapping(self):
         """Create field mapping step."""
         frame = ttk.LabelFrame(self.step_container, text="Step 5: Map CSV Columns to OFX Fields",
-                              padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+                               padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
         frame.columnconfigure(1, weight=1)
 
         # Info label
         ttk.Label(frame, text="Map your CSV columns to OFX transaction fields:",
-                 font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
+                  font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
 
         # Ensure CSV is loaded
         if not self.csv_headers:
             ttk.Label(frame, text="No CSV data loaded. Please go back to step 3.",
-                     foreground='red').grid(row=1, column=0, columnspan=3)
+                      foreground='red').grid(row=1, column=0, columnspan=3)
             return
 
         # Define OFX fields
         ofx_fields = [
             ('date', 'Date *', 'Transaction date'),
             ('amount', 'Amount *', 'Transaction amount (positive or negative)'),
-            ('description', 'Description', 'Transaction description (or use composite below)'),
+            ('description', 'Description',
+             'Transaction description (or use composite below)'),
             ('type', 'Type', 'Transaction type: DEBIT or CREDIT (optional)'),
             ('id', 'ID', 'Unique transaction identifier (optional)'),
         ]
@@ -625,7 +653,7 @@ class ConverterGUI:
                 self.field_mappings[field_key] = tk.StringVar(value=NOT_MAPPED)
 
             combo = ttk.Combobox(frame, textvariable=self.field_mappings[field_key],
-                               values=column_options, state='readonly', width=30)
+                                 values=column_options, state='readonly', width=30)
             combo.grid(row=idx, column=1, sticky=tk.W, padx=5, pady=5)
 
             ttk.Label(frame, text=field_help, font=('Arial', 8), foreground='gray').grid(
@@ -636,26 +664,26 @@ class ConverterGUI:
             row=len(ofx_fields) + 1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=20)
 
         ttk.Label(frame, text="Composite Description (Optional)",
-                 font=('Arial', 11, 'bold')).grid(
+                  font=('Arial', 11, 'bold')).grid(
             row=len(ofx_fields) + 2, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
 
         ttk.Label(frame, text="Combine multiple columns to create transaction descriptions:",
-                 font=('Arial', 9)).grid(
+                  font=('Arial', 9)).grid(
             row=len(ofx_fields) + 3, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
 
         # Create composite description interface
         composite_frame = ttk.Frame(frame)
         composite_frame.grid(row=len(ofx_fields) + 4, column=0, columnspan=3,
-                            sticky=(tk.W, tk.E), pady=5)
+                             sticky=(tk.W, tk.E), pady=5)
 
         self._create_composite_description_ui(composite_frame)
 
         # Note
         note_text = ("* Required fields\n"
-                    "Note: If composite description is configured, it will be used instead of "
-                    "the Description field mapping.")
+                     "Note: If composite description is configured, it will be used instead of "
+                     "the Description field mapping.")
         ttk.Label(frame, text=note_text, font=('Arial', 8), foreground='gray',
-                 wraplength=700, justify=tk.LEFT).grid(
+                  wraplength=700, justify=tk.LEFT).grid(
             row=len(ofx_fields) + 5, column=0, columnspan=3, sticky=tk.W, pady=(20, 0))
 
     def _create_composite_description_ui(self, parent: ttk.Frame):
@@ -669,14 +697,15 @@ class ConverterGUI:
         if len(self.description_columns) != 4:
             self.description_columns = []
             for i in range(4):
-                self.description_columns.append(tk.StringVar(value=NOT_SELECTED))
+                self.description_columns.append(
+                    tk.StringVar(value=NOT_SELECTED))
 
         for i in range(4):
             ttk.Label(parent, text=f"Column {i+1}:", font=('Arial', 9)).grid(
                 row=i, column=0, sticky=tk.W, padx=5, pady=3)
 
             combo = ttk.Combobox(parent, textvariable=self.description_columns[i],
-                               values=column_options, state='readonly', width=30)
+                                 values=column_options, state='readonly', width=30)
             combo.grid(row=i, column=1, sticky=tk.W, padx=5, pady=3)
 
         # Separator
@@ -687,27 +716,30 @@ class ConverterGUI:
         sep_frame.grid(row=4, column=1, sticky=tk.W, padx=5, pady=3)
 
         ttk.Radiobutton(sep_frame, text="Space", variable=self.description_separator,
-                       value=' ').pack(side=tk.LEFT, padx=5)
+                        value=' ').pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(sep_frame, text="Dash (-)", variable=self.description_separator,
-                       value=' - ').pack(side=tk.LEFT, padx=5)
+                        value=' - ').pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(sep_frame, text="Comma (,)", variable=self.description_separator,
-                       value=', ').pack(side=tk.LEFT, padx=5)
+                        value=', ').pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(sep_frame, text="Pipe (|)", variable=self.description_separator,
-                       value=' | ').pack(side=tk.LEFT, padx=5)
+                        value=' | ').pack(side=tk.LEFT, padx=5)
 
     # ==================== STEP 6: ADVANCED OPTIONS ====================
 
     def _create_step_advanced_options(self):
         """Create advanced options step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 6: Advanced Options", padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
+        frame = ttk.LabelFrame(self.step_container,
+                               text="Step 6: Advanced Options", padding="20")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
         frame.columnconfigure(0, weight=1)
 
         ttk.Label(frame, text="Configure optional advanced features:",
-                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 20))
+                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 20))
 
         # Value Inversion
-        inversion_frame = ttk.LabelFrame(frame, text="Value Inversion", padding="10")
+        inversion_frame = ttk.LabelFrame(
+            frame, text="Value Inversion", padding="10")
         inversion_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=10)
 
         ttk.Checkbutton(
@@ -717,12 +749,13 @@ class ConverterGUI:
         ).pack(anchor=tk.W, pady=5)
 
         ttk.Label(inversion_frame,
-                 text="Use this if your CSV shows debits as positive and credits as negative,\n"
-                      "or vice versa. This will multiply all amounts by -1.",
-                 font=('Arial', 8), foreground='gray').pack(anchor=tk.W, pady=5)
+                  text="Use this if your CSV shows debits as positive and credits as negative,\n"
+                  "or vice versa. This will multiply all amounts by -1.",
+                  font=('Arial', 8), foreground='gray').pack(anchor=tk.W, pady=5)
 
         # Date Validation
-        validation_frame = ttk.LabelFrame(frame, text="Transaction Date Validation", padding="10")
+        validation_frame = ttk.LabelFrame(
+            frame, text="Transaction Date Validation", padding="10")
         validation_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=10)
         validation_frame.columnconfigure(1, weight=1)
 
@@ -737,11 +770,13 @@ class ConverterGUI:
             row=1, column=0, sticky=tk.W, padx=5, pady=5)
         self.start_date_entry = ttk.Entry(validation_frame, textvariable=self.start_date,
                                           state='disabled', width=20)
-        self.start_date_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        self.start_date_entry.grid(
+            row=1, column=1, sticky=tk.W, padx=5, pady=5)
         # Add date format validation for start_date (DD/MM/YYYY)
-        self.start_date_entry.bind('<KeyRelease>', lambda e: self._format_date_entry(self.start_date_entry))
+        self.start_date_entry.bind(
+            '<KeyRelease>', lambda e: self._format_date_entry(self.start_date_entry))
         ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 01/10/2025)",
-                 font=('Arial', 8), foreground='gray').grid(
+                  font=('Arial', 8), foreground='gray').grid(
             row=1, column=2, sticky=tk.W, padx=5, pady=5)
 
         ttk.Label(validation_frame, text="End Date:").grid(
@@ -750,22 +785,23 @@ class ConverterGUI:
                                         state='disabled', width=20)
         self.end_date_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
         # Add date format validation for end_date (DD/MM/YYYY)
-        self.end_date_entry.bind('<KeyRelease>', lambda e: self._format_date_entry(self.end_date_entry))
+        self.end_date_entry.bind(
+            '<KeyRelease>', lambda e: self._format_date_entry(self.end_date_entry))
         ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 31/10/2025)",
-                 font=('Arial', 8), foreground='gray').grid(
+                  font=('Arial', 8), foreground='gray').grid(
             row=2, column=2, sticky=tk.W, padx=5, pady=5)
 
         ttk.Label(validation_frame,
-                 text="When enabled, transactions outside the date range will prompt you to:\n"
-                      "- Keep the original date\n"
-                      "- Adjust to the nearest boundary (start or end date)\n"
-                      "- Exclude the transaction from the OFX file",
-                 font=('Arial', 8), foreground='gray').grid(
+                  text="When enabled, transactions outside the date range will prompt you to:\n"
+                  "- Keep the original date\n"
+                  "- Adjust to the nearest boundary (start or end date)\n"
+                  "- Exclude the transaction from the OFX file",
+                  font=('Arial', 8), foreground='gray').grid(
             row=3, column=0, columnspan=3, sticky=tk.W, pady=10)
 
         # Ready to proceed
         ttk.Label(frame, text="[OK] Configuration complete! Click 'Next' to preview balances.",
-                 font=('Arial', 10, 'bold'), foreground='green').grid(
+                  font=('Arial', 10, 'bold'), foreground='green').grid(
             row=3, column=0, sticky=tk.W, pady=(20, 0))
 
         # Restore the correct state of date entry fields based on checkbox value
@@ -785,13 +821,15 @@ class ConverterGUI:
     def _create_step_balance_preview(self):
         """Create balance preview step showing transactions and calculated balances."""
         frame = ttk.LabelFrame(self.step_container, text="Step 7: Balance Preview & Confirmation",
-                              padding="10")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=10, pady=10)
+                               padding="10")
+        frame.grid(row=0, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), padx=10, pady=10)
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(3, weight=1)  # Make transaction preview row expandable
+        # Make transaction preview row expandable
+        frame.rowconfigure(3, weight=1)
 
         ttk.Label(frame, text="Review transactions and balances before exporting:",
-                 font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
 
         # Calculate balance information
         try:
@@ -800,13 +838,15 @@ class ConverterGUI:
             self._cached_balance_info = balance_info
         except Exception as e:
             ttk.Label(frame, text=f"Error calculating balances: {e}",
-                     foreground='red', font=('Arial', 10, 'bold')).grid(
+                      foreground='red', font=('Arial', 10, 'bold')).grid(
                 row=1, column=0, sticky=tk.W, pady=20)
             return
 
         # Initial Balance Input (moved from Step 4)
-        initial_balance_frame = ttk.LabelFrame(frame, text="Initial Balance", padding="5")
-        initial_balance_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+        initial_balance_frame = ttk.LabelFrame(
+            frame, text="Initial Balance", padding="5")
+        initial_balance_frame.grid(
+            row=1, column=0, sticky=(tk.W, tk.E), pady=5)
 
         balance_input_frame = ttk.Frame(initial_balance_frame)
         balance_input_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -814,29 +854,33 @@ class ConverterGUI:
         ttk.Label(balance_input_frame, text="Starting Balance:", font=('Arial', 10, 'bold')).pack(
             side=tk.LEFT, padx=5)
         # Register numeric validation command
-        vcmd_numeric = (self.root.register(self._validate_numeric_input), '%d', '%P')
+        vcmd_numeric = (self.root.register(
+            self._validate_numeric_input), '%d', '%P')
         self.initial_balance_entry = ttk.Entry(balance_input_frame, textvariable=self.initial_balance,
                                                width=20, validate='key', validatecommand=vcmd_numeric)
         self.initial_balance_entry.pack(side=tk.LEFT, padx=5)
         ttk.Button(balance_input_frame, text="Recalculate",
-                  command=self._recalculate_balance_preview).pack(side=tk.LEFT, padx=5)
+                   command=self._recalculate_balance_preview).pack(side=tk.LEFT, padx=5)
         ttk.Label(balance_input_frame, text="(Enter starting balance and click Recalculate)",
-                 font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
+                  font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
 
         # Balance summary frame (compact layout)
-        summary_frame = ttk.LabelFrame(frame, text="Balance Summary", padding="5")
+        summary_frame = ttk.LabelFrame(
+            frame, text="Balance Summary", padding="5")
         summary_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
         summary_frame.columnconfigure(1, weight=1)
 
         # Total Credits
         self.total_credits_label = ttk.Label(summary_frame, text=f"Total Credits (+): {balance_info['total_credits']:.2f}",
-                                            font=('Arial', 10), foreground='green')
-        self.total_credits_label.grid(row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
+                                             font=('Arial', 10), foreground='green')
+        self.total_credits_label.grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
         # Total Debits
         self.total_debits_label = ttk.Label(summary_frame, text=f"Total Debits (-): {balance_info['total_debits']:.2f}",
-                                           font=('Arial', 10), foreground='red')
-        self.total_debits_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
+                                            font=('Arial', 10), foreground='red')
+        self.total_debits_label.grid(
+            row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
         # Calculated Final Balance
         ttk.Label(summary_frame, text="Calculated Final Balance:", font=('Arial', 10, 'bold')).grid(
@@ -847,14 +891,16 @@ class ConverterGUI:
             font=('Arial', 11, 'bold'),
             foreground='blue'
         )
-        self.calculated_balance_label.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
+        self.calculated_balance_label.grid(
+            row=2, column=1, sticky=tk.W, padx=5, pady=2)
 
         ttk.Separator(summary_frame, orient='horizontal').grid(
             row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
         # Final Balance Mode Selection
         mode_frame = ttk.Frame(summary_frame)
-        mode_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        mode_frame.grid(row=4, column=0, columnspan=2,
+                        sticky=(tk.W, tk.E), pady=5)
 
         ttk.Checkbutton(
             mode_frame,
@@ -865,30 +911,35 @@ class ConverterGUI:
 
         # Manual Final Balance Entry
         manual_frame = ttk.Frame(summary_frame)
-        manual_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
+        manual_frame.grid(row=5, column=0, columnspan=2,
+                          sticky=(tk.W, tk.E), pady=2)
 
         ttk.Label(manual_frame, text="Manual Final Balance:", font=('Arial', 10, 'bold')).pack(
             side=tk.LEFT, padx=5)
         # Set initial state based on auto_calculate_final_balance value
         initial_state = 'disabled' if self.auto_calculate_final_balance.get() else 'normal'
         # Register numeric validation command
-        vcmd_numeric = (self.root.register(self._validate_numeric_input), '%d', '%P')
+        vcmd_numeric = (self.root.register(
+            self._validate_numeric_input), '%d', '%P')
         self.final_balance_entry = ttk.Entry(manual_frame, textvariable=self.final_balance,
                                              width=20, state=initial_state,
                                              validate='key', validatecommand=vcmd_numeric)
         self.final_balance_entry.pack(side=tk.LEFT, padx=5)
         ttk.Label(manual_frame, text="(Uncheck above to edit manually)",
-                 font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
+                  font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
 
         # Transaction count
         self.transaction_count_label = ttk.Label(summary_frame,
-                                                text=f"Total Transactions: {balance_info['transaction_count']}",
-                                                font=('Arial', 9), foreground='gray')
-        self.transaction_count_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
+                                                 text=f"Total Transactions: {balance_info['transaction_count']}",
+                                                 font=('Arial', 9), foreground='gray')
+        self.transaction_count_label.grid(
+            row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
 
         # Transaction preview (scrollable list)
-        preview_frame = ttk.LabelFrame(frame, text="Transaction Preview (All Transactions)", padding="5")
-        preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        preview_frame = ttk.LabelFrame(
+            frame, text="Transaction Preview (All Transactions)", padding="5")
+        preview_frame.grid(row=3, column=0, sticky=(
+            tk.W, tk.E, tk.N, tk.S), pady=5)
         preview_frame.columnconfigure(0, weight=1)
         preview_frame.rowconfigure(0, weight=1)
 
@@ -921,16 +972,20 @@ class ConverterGUI:
         self.balance_preview_tree.column('amount', width=100, anchor=tk.E)
         self.balance_preview_tree.column('type', width=80, anchor=tk.CENTER)
 
-        self.balance_preview_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.balance_preview_tree.grid(
+            row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
         hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
         # Configure tags for date validation status
-        self.balance_preview_tree.tag_configure('date_before', background='#ffcccc')  # Light red
-        self.balance_preview_tree.tag_configure('date_after', background='#ffe6cc')   # Light orange
+        self.balance_preview_tree.tag_configure(
+            'date_before', background='#ffcccc')  # Light red
+        self.balance_preview_tree.tag_configure(
+            'date_after', background='#ffe6cc')   # Light orange
 
         # Bind context menu for deleting transactions
-        self.balance_preview_tree.bind("<Button-3>", self._show_transaction_context_menu)
+        self.balance_preview_tree.bind(
+            "<Button-3>", self._show_transaction_context_menu)
 
         # Populate transaction preview
         self.transaction_tree_items.clear()  # Clear previous mappings
@@ -959,11 +1014,12 @@ class ConverterGUI:
             self.transaction_tree_items[row_idx] = item_id
 
         # Initialize final balance
-        self._update_final_balance_display(balance_info['calculated_final_balance'])
+        self._update_final_balance_display(
+            balance_info['calculated_final_balance'])
 
         # Confirmation message
         ttk.Label(frame, text="[OK] Review complete! Click 'Convert to OFX' to generate the file.",
-                 font=('Arial', 10, 'bold'), foreground='green').grid(
+                  font=('Arial', 10, 'bold'), foreground='green').grid(
             row=4, column=0, sticky=tk.W, pady=(10, 0))
 
     def _recalculate_balance_preview(self):
@@ -991,13 +1047,16 @@ class ConverterGUI:
 
             # Update final balance if in automatic mode
             if self.auto_calculate_final_balance.get():
-                self._update_final_balance_display(balance_info['calculated_final_balance'])
+                self._update_final_balance_display(
+                    balance_info['calculated_final_balance'])
 
-            self._log(f"Balance recalculated with initial balance: {balance_info['initial_balance']:.2f}")
+            self._log(
+                f"Balance recalculated with initial balance: {balance_info['initial_balance']:.2f}")
 
         except Exception as e:
             self._log(f"Error recalculating balance: {e}")
-            messagebox.showerror("Error", f"Failed to recalculate balance:\n{e}")
+            messagebox.showerror(
+                "Error", f"Failed to recalculate balance:\n{e}")
 
     def _calculate_balance_preview(self) -> Dict:
         """
@@ -1007,14 +1066,16 @@ class ConverterGUI:
             Dictionary with balance calculations and transaction list
         """
         # Parse initial balance using utility function
-        initial_balance = parse_balance_value(self.initial_balance.get(), default=0.0)
+        initial_balance = parse_balance_value(
+            self.initial_balance.get(), default=0.0)
 
         # Get field mappings
         date_col = self.field_mappings['date'].get()
         amount_col = self.field_mappings['amount'].get()
         desc_col = self.field_mappings['description'].get()
         type_col = self.field_mappings['type'].get()
-        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+        use_composite = any(
+            var.get() != NOT_SELECTED for var in self.description_columns)
 
         # Create parser
         parser = CSVParser(
@@ -1046,7 +1107,8 @@ class ConverterGUI:
                     total_debits += abs(transaction['amount'])
 
         # Sort transactions by date (oldest to newest)
-        transactions.sort(key=lambda t: self._parse_date_for_sorting(t['date']))
+        transactions.sort(
+            key=lambda t: self._parse_date_for_sorting(t['date']))
 
         # Calculate final balance
         calculated_final_balance = initial_balance + total_credits - total_debits
@@ -1108,8 +1170,9 @@ class ConverterGUI:
                         validator = DateValidator(start_date_str, end_date_str)
                         if not validator.is_within_range(date):
                             date_status = validator.get_date_status(date)
-                    except:
-                        pass  # If validation fails, treat as valid
+                    except Exception as e:
+                        logger.debug(
+                            "Date validator initialization failed: %s", e)
 
             return {
                 'date': date,
@@ -1154,7 +1217,7 @@ class ConverterGUI:
 
         # If no format matches, log warning and return far future date
         # This pushes unparseable dates to the end of the list
-        logger.warning(f"Could not parse date for sorting: '{date_str}'")
+        logger.warning("Could not parse date for sorting: '%s'", date_str)
         return datetime(9999, 12, 31)
 
     def _validate_numeric_input(self, action: str, value_if_allowed: str) -> bool:
@@ -1183,7 +1246,6 @@ class ConverterGUI:
 
         # Check if it matches numeric pattern
         # Pattern: optional minus, digits, optional decimal point and digits
-        import re
         pattern = r'^-?\d*\.?\d*$'
         return bool(re.match(pattern, value_if_allowed))
 
@@ -1218,13 +1280,15 @@ class ConverterGUI:
             formatted = digits_only[:2] + '/' + digits_only[2:]
         else:
             # Day + month + year digits
-            formatted = digits_only[:2] + '/' + digits_only[2:4] + '/' + digits_only[4:]
+            formatted = digits_only[:2] + '/' + \
+                digits_only[2:4] + '/' + digits_only[4:]
 
         # Only update if different
         if formatted != current_value:
             # Calculate new cursor position
             # Count how many digits are before the cursor in the old value
-            digits_before_cursor = len([c for c in current_value[:cursor_pos] if c.isdigit()])
+            digits_before_cursor = len(
+                [c for c in current_value[:cursor_pos] if c.isdigit()])
 
             # Find the position in the new formatted string that corresponds to the same number of digits
             new_cursor_pos = 0
@@ -1252,9 +1316,10 @@ class ConverterGUI:
             # Update to calculated value
             try:
                 balance_info = self._calculate_balance_preview()
-                self._update_final_balance_display(balance_info['calculated_final_balance'])
-            except Exception:
-                pass
+                self._update_final_balance_display(
+                    balance_info['calculated_final_balance'])
+            except Exception as e:
+                logger.debug("Failed to update final balance display: %s", e)
         else:
             self.final_balance_entry.configure(state='normal')
 
@@ -1274,8 +1339,8 @@ class ConverterGUI:
             try:
                 self._context_menu.unpost()
                 self._context_menu.destroy()
-            except:
-                pass
+            except Exception as e:
+                logger.debug("Error closing existing context menu: %s", e)
 
         # Check if any items are selected
         selected = self.balance_preview_tree.selection()
@@ -1304,52 +1369,25 @@ class ConverterGUI:
         # Add date action options first if there's a date issue
         has_date_actions = False
         if selected_row_idx is not None and date_status in ('before', 'after'):
-            current_action = self.date_action_decisions.get(selected_row_idx, 'adjust')
-
-            # Get the date action setting
-            date_action = self.date_action.get() if hasattr(self, 'date_action') else 'adjust'
-
-            self._context_menu.add_command(
-                label="📅 Date Actions",
-                state='disabled'
-            )
-            self._context_menu.add_separator()
-
-            self._context_menu.add_command(
-                label=f"{'✓ ' if current_action == 'keep' else ''}Keep Original Date",
-                command=lambda: self._set_date_action_and_close(selected_row_idx, 'keep')
-            )
-            self._context_menu.add_command(
-                label=f"{'✓ ' if current_action == 'adjust' else ''}Adjust to Boundary",
-                command=lambda: self._set_date_action_and_close(selected_row_idx, 'adjust')
-            )
-            self._context_menu.add_command(
-                label=f"{'✓ ' if current_action == 'exclude' else ''}Exclude Transaction",
-                command=lambda: self._set_date_action_and_close(selected_row_idx, 'exclude')
-            )
-            self._context_menu.add_separator()
+            current_action = self.date_action_decisions.get(
+                selected_row_idx, 'adjust')
+            # Build date action menu items using helper to reduce cognitive complexity
+            self._add_date_action_menu_items(
+                self._context_menu, selected_row_idx, current_action)
             menu_has_items = True
             has_date_actions = True
 
         # Add delete/restore options (skip if date actions already shown to avoid duplication)
-        if selected and not has_date_actions:
-            self._context_menu.add_command(
-                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
-                command=lambda: self._delete_selected_and_close_menu()
-            )
-            menu_has_items = True
-
+        self._add_delete_restore_menu_items(
+            self._context_menu, selected, has_date_actions)
         if self.deleted_transactions:
-            self._context_menu.add_command(
-                label=f"Restore All Deleted ({len(self.deleted_transactions)} transaction{'s' if len(self.deleted_transactions) > 1 else ''})",
-                command=lambda: self._restore_all_and_close_menu()
-            )
             menu_has_items = True
 
         if menu_has_items:
             self._context_menu.post(event.x_root, event.y_root)
             # Bind to close menu when clicking elsewhere
-            self._context_menu.bind("<FocusOut>", lambda e: self._context_menu.unpost())
+            self._context_menu.bind(
+                "<FocusOut>", lambda e: self._context_menu.unpost())
             self.root.bind("<Button-1>", self._close_context_menu, add="+")
 
     def _close_context_menu(self, event=None):
@@ -1357,8 +1395,45 @@ class ConverterGUI:
         if hasattr(self, '_context_menu') and self._context_menu:
             try:
                 self._context_menu.unpost()
-            except:
-                pass
+            except Exception as e:
+                logger.debug("Error unposting context menu: %s", e)
+
+    def _add_date_action_menu_items(self, menu: tk.Menu, row_idx: int, current_action: str):
+        """Add date-related actions to a context menu for a specific row.
+
+        Extracted to reduce complexity of the context-menu builder.
+        """
+        menu.add_command(label="📅 Date Actions", state='disabled')
+        menu.add_separator()
+        menu.add_command(
+            label=f"{'✓ ' if current_action == 'keep' else ''}Keep Original Date",
+            command=lambda: self._set_date_action_and_close(row_idx, 'keep')
+        )
+        menu.add_command(
+            label=f"{'✓ ' if current_action == 'adjust' else ''}Adjust to Boundary",
+            command=lambda: self._set_date_action_and_close(row_idx, 'adjust')
+        )
+        menu.add_command(
+            label=f"{'✓ ' if current_action == 'exclude' else ''}Exclude Transaction",
+            command=lambda: self._set_date_action_and_close(row_idx, 'exclude')
+        )
+        menu.add_separator()
+
+    def _add_delete_restore_menu_items(self, menu: tk.Menu, selected, has_date_actions: bool):
+        """Add delete/restore menu items (separated) depending on selection and state.
+
+        Extracted to simplify the main context-menu routine.
+        """
+        if selected and not has_date_actions:
+            menu.add_command(
+                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
+                command=lambda: self._delete_selected_and_close_menu()
+            )
+        if self.deleted_transactions:
+            menu.add_command(
+                label=f"Restore All Deleted ({len(self.deleted_transactions)} transaction{'s' if len(self.deleted_transactions) > 1 else ''})",
+                command=lambda: self._restore_all_and_close_menu()
+            )
 
     def _set_date_action_and_close(self, row_idx: int, action: str):
         """
@@ -1369,7 +1444,8 @@ class ConverterGUI:
             action: Date action to apply ('keep', 'adjust', 'exclude')
         """
         self.date_action_decisions[row_idx] = action
-        self._log(f"Date action set to '{action}' for transaction at row {row_idx}")
+        self._log(
+            f"Date action set to '{action}' for transaction at row {row_idx}")
         self._close_context_menu()
 
         # If action is 'exclude', also mark as deleted and remove from tree
@@ -1418,7 +1494,8 @@ class ConverterGUI:
                     break
 
         if deleted_count > 0:
-            self._log(f"Deleted {deleted_count} transaction{'s' if deleted_count > 1 else ''} from preview")
+            self._log(
+                f"Deleted {deleted_count} transaction{'s' if deleted_count > 1 else ''} from preview")
             # Recalculate balances
             self._recalculate_balance_preview()
 
@@ -1433,7 +1510,8 @@ class ConverterGUI:
 
         count = len(self.deleted_transactions)
         self.deleted_transactions.clear()
-        self._log(f"Restored {count} deleted transaction{'s' if count > 1 else ''}")
+        self._log(
+            f"Restored {count} deleted transaction{'s' if count > 1 else ''}")
 
         # Refresh the entire preview step to rebuild the tree
         self._show_step(self.current_step)
@@ -1492,7 +1570,8 @@ class ConverterGUI:
 
         ttk.Label(details_frame, text="Transaction Date:", font=('Arial', 10, 'bold')).grid(
             row=0, column=0, sticky=tk.W, pady=2)
-        ttk.Label(details_frame, text=date_str).grid(row=0, column=1, sticky=tk.W, padx=10, pady=2)
+        ttk.Label(details_frame, text=date_str).grid(
+            row=0, column=1, sticky=tk.W, padx=10, pady=2)
 
         ttk.Label(details_frame, text="Description:", font=('Arial', 10, 'bold')).grid(
             row=1, column=0, sticky=tk.W, pady=2)
@@ -1502,7 +1581,8 @@ class ConverterGUI:
         ttk.Label(details_frame, text="Valid Range:", font=('Arial', 10, 'bold')).grid(
             row=2, column=0, sticky=tk.W, pady=2)
         range_text = f"{validator.start_date.strftime('%Y-%m-%d')} to {validator.end_date.strftime('%Y-%m-%d')}"
-        ttk.Label(details_frame, text=range_text).grid(row=2, column=1, sticky=tk.W, padx=10, pady=2)
+        ttk.Label(details_frame, text=range_text).grid(
+            row=2, column=1, sticky=tk.W, padx=10, pady=2)
 
         if status == 'before':
             status_text = "This transaction occurs BEFORE the start date"
@@ -1619,15 +1699,17 @@ class ConverterGUI:
         amount_col = self.field_mappings['amount'].get()
 
         if date_col == NOT_MAPPED or amount_col == NOT_MAPPED:
-            messagebox.showwarning("Warning", "Please map at least Date and Amount fields")
+            messagebox.showwarning(
+                "Warning", "Please map at least Date and Amount fields")
             return False
 
         desc_col = self.field_mappings['description'].get()
-        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+        use_composite = any(
+            var.get() != NOT_SELECTED for var in self.description_columns)
 
         if desc_col == NOT_MAPPED and not use_composite:
             messagebox.showwarning("Warning",
-                                  "Please map the Description field or configure composite description")
+                                   "Please map the Description field or configure composite description")
             return False
         return True
 
@@ -1641,12 +1723,13 @@ class ConverterGUI:
 
         if not start_date_str or not end_date_str:
             messagebox.showwarning("Warning",
-                                  "Please enter both start and end dates for validation")
+                                   "Please enter both start and end dates for validation")
             return False
 
         try:
             validator = DateValidator(start_date_str, end_date_str)
-            self._log(f"Date validation enabled: {start_date_str} to {end_date_str}")
+            self._log(
+                f"Date validation enabled: {start_date_str} to {end_date_str}")
             return validator
         except ValueError as e:
             messagebox.showerror("Error", f"Invalid date range: {e}")
@@ -1672,7 +1755,8 @@ class ConverterGUI:
         desc_col = self.field_mappings['description'].get()
         type_col = self.field_mappings['type'].get()
         id_col = self.field_mappings['id'].get()
-        use_composite = any(var.get() != NOT_SELECTED for var in self.description_columns)
+        use_composite = any(
+            var.get() != NOT_SELECTED for var in self.description_columns)
 
         stats = {
             'total_rows': len(self.csv_data),
@@ -1692,7 +1776,8 @@ class ConverterGUI:
             try:
                 date = row[date_col]
                 amount = parser.normalize_amount(row[amount_col])
-                description = self._build_description(row, desc_col, use_composite)
+                description = self._build_description(
+                    row, desc_col, use_composite)
 
                 date, date_stats = self._validate_and_adjust_date(
                     date, row_idx, description, date_validator
@@ -1702,7 +1787,8 @@ class ConverterGUI:
                     continue
 
                 stats['adjusted'] += date_stats.get('adjusted', 0)
-                stats['kept_out_of_range'] += date_stats.get('kept_out_of_range', 0)
+                stats['kept_out_of_range'] += date_stats.get(
+                    'kept_out_of_range', 0)
 
                 trans_type = self._get_transaction_type(type_col, row, amount)
                 trans_id = self._get_transaction_id(id_col, row)
@@ -1772,17 +1858,20 @@ class ConverterGUI:
             # Apply user's decision
             if user_action == 'exclude':
                 # Exclude transaction (return None)
-                self._log(f"Row {row_idx + 1}: Transaction excluded (user decision)")
+                self._log(
+                    f"Row {row_idx + 1}: Transaction excluded (user decision)")
                 return None, stats
             elif user_action == 'keep':
                 # Keep original date
-                self._log(f"Row {row_idx + 1}: Keeping original date {date} (user decision)")
+                self._log(
+                    f"Row {row_idx + 1}: Keeping original date {date} (user decision)")
                 stats['kept_out_of_range'] = 1
                 return date, stats
             elif user_action == 'adjust':
                 # Adjust to boundary
                 adjusted_date = date_validator.adjust_date_to_boundary(date)
-                self._log(f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (user decision)")
+                self._log(
+                    f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (user decision)")
                 stats['adjusted'] = 1
                 return adjusted_date, stats
         else:
@@ -1790,13 +1879,15 @@ class ConverterGUI:
             if status == 'before':
                 # Default action for dates before start: adjust to boundary
                 adjusted_date = date_validator.adjust_date_to_boundary(date)
-                self._log(f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (before start date)")
+                self._log(
+                    f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (before start date)")
                 stats['adjusted'] = 1
                 return adjusted_date, stats
 
             elif status == 'after':
                 # Default action for dates after end: keep with warning
-                self._log(f"Row {row_idx + 1}: Date {date} is after end date (kept as-is)")
+                self._log(
+                    f"Row {row_idx + 1}: Date {date} is after end date (kept as-is)")
                 stats['kept_out_of_range'] = 1
                 return date, stats
 
@@ -1828,7 +1919,6 @@ class ConverterGUI:
         Args:
             message: Message to log
         """
-        from datetime import datetime
         self.log_text.configure(state='normal')
         timestamp = datetime.now().strftime('%H:%M:%S')
         self.log_text.insert(tk.END, f"[{timestamp}] {message}\n")
@@ -1893,7 +1983,8 @@ class ConverterGUI:
         initial_balance_str = self.initial_balance.get().strip()
         if initial_balance_str and initial_balance_str not in ['0', '0.0', '0.00']:
             # Non-empty, non-zero input - attempt parsing
-            initial_balance = parse_balance_value(initial_balance_str, default=0.0)
+            initial_balance = parse_balance_value(
+                initial_balance_str, default=0.0)
             if abs(initial_balance) < 1e-9:
                 # Parse returned ~zero for non-zero input - parsing failed
                 self._log("Warning: Invalid initial balance, using 0.00")
@@ -1908,11 +1999,14 @@ class ConverterGUI:
             if final_balance_str:
                 try:
                     final_balance = float(final_balance_str)
-                    self._log(f"Using manual final balance: {final_balance:.2f}")
+                    self._log(
+                        f"Using manual final balance: {final_balance:.2f}")
                 except ValueError:
-                    self._log("Warning: Invalid final balance, will calculate automatically")
+                    self._log(
+                        "Warning: Invalid final balance, will calculate automatically")
             else:
-                self._log("Warning: Invalid final balance, will calculate automatically")
+                self._log(
+                    "Warning: Invalid final balance, will calculate automatically")
 
         generator.generate(
             output_path=output_file,
@@ -1923,7 +2017,7 @@ class ConverterGUI:
             final_balance=final_balance
         )
         self._log(f"OFX file saved: {output_file}")
-        logger.info(f"OFX file saved: {output_file}")
+        logger.info("OFX file saved: %s", output_file)
 
     def _show_conversion_success(self, output_file: str, stats: dict, date_validator):
         """
@@ -1952,9 +2046,10 @@ class ConverterGUI:
             msg_parts.append(f"  - Dates adjusted: {stats['adjusted']}")
 
         if date_validator and stats['kept_out_of_range'] > 0:
-            msg_parts.append(f"  - Out-of-range dates kept: {stats['kept_out_of_range']}")
+            msg_parts.append(
+                f"  - Out-of-range dates kept: {stats['kept_out_of_range']}")
 
         message = "\n".join(msg_parts)
         self._log("Conversion completed successfully!")
         messagebox.showinfo("Success", message)
-        logger.info(f"Conversion completed: {stats}")
+        logger.info("Conversion completed: %s", stats)
