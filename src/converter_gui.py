@@ -18,7 +18,6 @@ License: MIT
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import logging
-import re
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
@@ -1244,10 +1243,20 @@ class ConverterGUI:
         if value_if_allowed == '-':
             return True
 
-        # Check if it matches numeric pattern
-        # Pattern: optional minus, digits, optional decimal point and digits
-        pattern = r'^-?\d*\.?\d*$'
-        return bool(re.match(pattern, value_if_allowed))
+        # Validate numeric input without regex to avoid potential backtracking issues
+        # Check for valid numeric format: optional minus, digits, optional single decimal point
+        value = value_if_allowed
+
+        # Handle minus sign at start
+        if value.startswith('-'):
+            value = value[1:]
+
+        # Check for at most one decimal point
+        if value.count('.') > 1:
+            return False
+
+        # Check that all remaining characters are digits or single decimal point
+        return all(c.isdigit() or c == '.' for c in value)
 
     def _format_date_entry(self, entry_widget):
         """
