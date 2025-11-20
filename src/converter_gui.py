@@ -650,15 +650,17 @@ class ConverterGUI:
         # Up to 4 column selectors
         column_options = [NOT_SELECTED] + self.csv_headers
 
-        self.description_columns = []
+        # Preserve existing StringVar values if they exist
+        if len(self.description_columns) != 4:
+            self.description_columns = []
+            for i in range(4):
+                self.description_columns.append(tk.StringVar(value=NOT_SELECTED))
+
         for i in range(4):
             ttk.Label(parent, text=f"Column {i+1}:", font=('Arial', 9)).grid(
                 row=i, column=0, sticky=tk.W, padx=5, pady=3)
 
-            var = tk.StringVar(value=NOT_SELECTED)
-            self.description_columns.append(var)
-
-            combo = ttk.Combobox(parent, textvariable=var,
+            combo = ttk.Combobox(parent, textvariable=self.description_columns[i],
                                values=column_options, state='readonly', width=30)
             combo.grid(row=i, column=1, sticky=tk.W, padx=5, pady=3)
 
@@ -746,6 +748,9 @@ class ConverterGUI:
         ttk.Label(frame, text="[OK] Configuration complete! Click 'Next' to preview balances.",
                  font=('Arial', 10, 'bold'), foreground='green').grid(
             row=3, column=0, sticky=tk.W, pady=(20, 0))
+
+        # Restore the correct state of date entry fields based on checkbox value
+        self._toggle_date_inputs()
 
     def _toggle_date_inputs(self):
         """Enable or disable date input fields based on checkbox state."""
