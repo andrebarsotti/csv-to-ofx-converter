@@ -1327,6 +1327,58 @@ class ConverterGUI:
         """Update the final balance display with calculated or manual value."""
         self.final_balance.set(f"{calculated_balance:.2f}")
 
+    def _close_existing_context_menu(self):
+        """Close any existing context menu."""
+        if hasattr(self, '_context_menu') and self._context_menu:
+            try:
+                self._context_menu.unpost()
+                self._context_menu.destroy()
+            except Exception as e:
+                logger.debug("Error closing existing context menu: %s", e)
+
+    def _get_selected_row_info(self, selected):
+        """
+        Get row index and date status for selected transaction.
+
+        Args:
+            selected: Selection from balance_preview_tree
+
+        Returns:
+            Tuple of (row_idx, date_status) or (None, None) if not found
+        """
+        if len(selected) != 1:
+            return None, None
+
+        item_id = selected[0]
+
+        # Find the row_idx for this tree item
+        for row_idx, tree_item_id in self.transaction_tree_items.items():
+            if tree_item_id == item_id:
+                # Get the transaction data to check date status
+                date_status = self._get_date_status_for_row(row_idx)
+                return row_idx, date_status
+
+        return None, None
+
+    def _get_date_status_for_row(self, row_idx):
+        """
+        Get date status for a specific row.
+
+        Args:
+            row_idx: Row index to check
+
+        Returns:
+            Date status string ('before', 'after', 'valid') or 'valid' if not found
+        """
+        if not hasattr(self, '_cached_balance_info'):
+            return 'valid'
+
+        for trans in self._cached_balance_info.get('transactions', []):
+            if trans.get('row_idx') == row_idx:
+                return trans.get('date_status', 'valid')
+
+        return 'valid'
+
     def _show_transaction_context_menu(self, event):
         """
         Show context menu for transaction operations (delete, restore, date actions).
@@ -1335,12 +1387,7 @@ class ConverterGUI:
             event: Right-click event containing mouse position
         """
         # Close any existing menu
-        if hasattr(self, '_context_menu') and self._context_menu:
-            try:
-                self._context_menu.unpost()
-                self._context_menu.destroy()
-            except Exception as e:
-                logger.debug("Error closing existing context menu: %s", e)
+        self._close_existing_context_menu()
 
         # Check if any items are selected
         selected = self.balance_preview_tree.selection()
@@ -1350,21 +1397,7 @@ class ConverterGUI:
         menu_has_items = False
 
         # Find the row index and date status for selected item (for single selection)
-        selected_row_idx = None
-        date_status = None
-        if len(selected) == 1:
-            item_id = selected[0]
-            # Find the row_idx for this tree item
-            for row_idx, tree_item_id in self.transaction_tree_items.items():
-                if tree_item_id == item_id:
-                    selected_row_idx = row_idx
-                    # Get the transaction data to check date status
-                    if hasattr(self, '_cached_balance_info'):
-                        for trans in self._cached_balance_info.get('transactions', []):
-                            if trans.get('row_idx') == row_idx:
-                                date_status = trans.get('date_status', 'valid')
-                                break
-                    break
+        selected_row_idx, date_status = self._get_selected_row_info(selected)
 
         # Add date action options first if there's a date issue
         has_date_actions = False
