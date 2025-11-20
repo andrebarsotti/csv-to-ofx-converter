@@ -89,4 +89,4 @@ ehthumbs.db
 Desktop.ini
 
 # AI
-.claude
+.claude/settings.local.json
