@@ -59,8 +59,21 @@ class ConverterGUI:
         self.root.minsize(900, 700)  # Set minimum window size
         # Allow window resizing
         self.root.resizable(True, True)
-        # Start maximized
-        self.root.state('zoomed')
+
+        # Start maximized (cross-platform compatible)
+        try:
+            # Try Windows/macOS method
+            self.root.state('zoomed')
+        except:
+            # Fallback to Linux method
+            try:
+                self.root.attributes('-zoomed', True)
+            except:
+                # If both fail, just maximize using geometry
+                self.root.update_idletasks()
+                screen_width = self.root.winfo_screenwidth()
+                screen_height = self.root.winfo_screenheight()
+                self.root.geometry(f"{screen_width}x{screen_height}+0+0")
 
         # Variables
         self.csv_file = tk.StringVar()
