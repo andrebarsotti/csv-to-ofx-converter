@@ -562,15 +562,6 @@ class ConverterGUI:
                  font=('Arial', 8), foreground='gray').grid(
             row=6, column=1, sticky=tk.W, padx=5)
 
-        # Initial Balance
-        ttk.Label(frame, text="Initial Balance:", font=('Arial', 10, 'bold')).grid(
-            row=7, column=0, sticky=tk.W, padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.initial_balance, width=20).grid(
-            row=7, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(frame, text="(Optional - Starting balance for the statement, e.g., 1000.50)",
-                 font=('Arial', 8), foreground='gray').grid(
-            row=8, column=1, sticky=tk.W, padx=5)
-
     # ==================== STEP 5: FIELD MAPPING ====================
 
     def _create_step_field_mapping(self):
@@ -723,7 +714,9 @@ class ConverterGUI:
         self.start_date_entry = ttk.Entry(validation_frame, textvariable=self.start_date,
                                           state='disabled', width=20)
         self.start_date_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(validation_frame, text="(e.g., 2025-10-01 or 01/10/2025)",
+        # Add date format validation for start_date (DD/MM/YYYY)
+        self.start_date.trace_add('write', lambda *a: self._validate_and_format_date(self.start_date))
+        ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 01/10/2025)",
                  font=('Arial', 8), foreground='gray').grid(
             row=1, column=2, sticky=tk.W, padx=5, pady=5)
 
@@ -732,7 +725,9 @@ class ConverterGUI:
         self.end_date_entry = ttk.Entry(validation_frame, textvariable=self.end_date,
                                         state='disabled', width=20)
         self.end_date_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(validation_frame, text="(e.g., 2025-10-31 or 31/10/2025)",
+        # Add date format validation for end_date (DD/MM/YYYY)
+        self.end_date.trace_add('write', lambda *a: self._validate_and_format_date(self.end_date))
+        ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 31/10/2025)",
                  font=('Arial', 8), foreground='gray').grid(
             row=2, column=2, sticky=tk.W, padx=5, pady=5)
 
@@ -783,48 +778,57 @@ class ConverterGUI:
                 row=1, column=0, sticky=tk.W, pady=20)
             return
 
+        # Initial Balance Input (moved from Step 4)
+        initial_balance_frame = ttk.LabelFrame(frame, text="Initial Balance", padding="5")
+        initial_balance_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+
+        balance_input_frame = ttk.Frame(initial_balance_frame)
+        balance_input_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        ttk.Label(balance_input_frame, text="Starting Balance:", font=('Arial', 10, 'bold')).pack(
+            side=tk.LEFT, padx=5)
+        # Register numeric validation command
+        vcmd_numeric = (self.root.register(self._validate_numeric_input), '%d', '%P')
+        self.initial_balance_entry = ttk.Entry(balance_input_frame, textvariable=self.initial_balance,
+                                               width=20, validate='key', validatecommand=vcmd_numeric)
+        self.initial_balance_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Button(balance_input_frame, text="Recalculate",
+                  command=self._recalculate_balance_preview).pack(side=tk.LEFT, padx=5)
+        ttk.Label(balance_input_frame, text="(Enter starting balance and click Recalculate)",
+                 font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
+
         # Balance summary frame (compact layout)
         summary_frame = ttk.LabelFrame(frame, text="Balance Summary", padding="5")
-        summary_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+        summary_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
         summary_frame.columnconfigure(1, weight=1)
 
-        # Initial Balance
-        ttk.Label(summary_frame, text="Initial Balance:", font=('Arial', 10, 'bold')).grid(
-            row=0, column=0, sticky=tk.W, padx=5, pady=2)
-        ttk.Label(summary_frame, text=f"{balance_info['initial_balance']:.2f}",
-                 font=('Arial', 10)).grid(row=0, column=1, sticky=tk.W, padx=5, pady=2)
-
         # Total Credits
-        ttk.Label(summary_frame, text="Total Credits (+):", font=('Arial', 10, 'bold')).grid(
-            row=1, column=0, sticky=tk.W, padx=5, pady=2)
-        ttk.Label(summary_frame, text=f"{balance_info['total_credits']:.2f}",
-                 font=('Arial', 10), foreground='green').grid(
-            row=1, column=1, sticky=tk.W, padx=5, pady=2)
+        self.total_credits_label = ttk.Label(summary_frame, text=f"Total Credits (+): {balance_info['total_credits']:.2f}",
+                                            font=('Arial', 10), foreground='green')
+        self.total_credits_label.grid(row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
         # Total Debits
-        ttk.Label(summary_frame, text="Total Debits (-):", font=('Arial', 10, 'bold')).grid(
-            row=2, column=0, sticky=tk.W, padx=5, pady=2)
-        ttk.Label(summary_frame, text=f"{balance_info['total_debits']:.2f}",
-                 font=('Arial', 10), foreground='red').grid(
-            row=2, column=1, sticky=tk.W, padx=5, pady=2)
+        self.total_debits_label = ttk.Label(summary_frame, text=f"Total Debits (-): {balance_info['total_debits']:.2f}",
+                                           font=('Arial', 10), foreground='red')
+        self.total_debits_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
         # Calculated Final Balance
         ttk.Label(summary_frame, text="Calculated Final Balance:", font=('Arial', 10, 'bold')).grid(
-            row=3, column=0, sticky=tk.W, padx=5, pady=2)
+            row=2, column=0, sticky=tk.W, padx=5, pady=2)
         self.calculated_balance_label = ttk.Label(
             summary_frame,
             text=f"{balance_info['calculated_final_balance']:.2f}",
             font=('Arial', 11, 'bold'),
             foreground='blue'
         )
-        self.calculated_balance_label.grid(row=3, column=1, sticky=tk.W, padx=5, pady=2)
+        self.calculated_balance_label.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
 
         ttk.Separator(summary_frame, orient='horizontal').grid(
-            row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+            row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
         # Final Balance Mode Selection
         mode_frame = ttk.Frame(summary_frame)
-        mode_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        mode_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
         ttk.Checkbutton(
             mode_frame,
@@ -835,26 +839,30 @@ class ConverterGUI:
 
         # Manual Final Balance Entry
         manual_frame = ttk.Frame(summary_frame)
-        manual_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
+        manual_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
 
         ttk.Label(manual_frame, text="Manual Final Balance:", font=('Arial', 10, 'bold')).pack(
             side=tk.LEFT, padx=5)
         # Set initial state based on auto_calculate_final_balance value
         initial_state = 'disabled' if self.auto_calculate_final_balance.get() else 'normal'
+        # Register numeric validation command
+        vcmd_numeric = (self.root.register(self._validate_numeric_input), '%d', '%P')
         self.final_balance_entry = ttk.Entry(manual_frame, textvariable=self.final_balance,
-                                             width=20, state=initial_state)
+                                             width=20, state=initial_state,
+                                             validate='key', validatecommand=vcmd_numeric)
         self.final_balance_entry.pack(side=tk.LEFT, padx=5)
         ttk.Label(manual_frame, text="(Uncheck above to edit manually)",
                  font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
 
         # Transaction count
-        ttk.Label(summary_frame, text=f"Total Transactions: {balance_info['transaction_count']}",
-                 font=('Arial', 9), foreground='gray').grid(
-            row=7, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
+        self.transaction_count_label = ttk.Label(summary_frame,
+                                                text=f"Total Transactions: {balance_info['transaction_count']}",
+                                                font=('Arial', 9), foreground='gray')
+        self.transaction_count_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
 
         # Transaction preview (scrollable list)
-        preview_frame = ttk.LabelFrame(frame, text="Transaction Preview (First 20)", padding="5")
-        preview_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        preview_frame = ttk.LabelFrame(frame, text="Transaction Preview (All Transactions)", padding="5")
+        preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         preview_frame.columnconfigure(0, weight=1)
         preview_frame.rowconfigure(0, weight=1)
 
@@ -893,7 +901,7 @@ class ConverterGUI:
         hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
         # Populate transaction preview
-        for trans in balance_info['transactions'][:20]:
+        for trans in balance_info['transactions']:
             self.balance_preview_tree.insert('', tk.END, values=(
                 trans['date'],
                 trans['description'][:50],
@@ -907,7 +915,38 @@ class ConverterGUI:
         # Confirmation message
         ttk.Label(frame, text="[OK] Review complete! Click 'Convert to OFX' to generate the file.",
                  font=('Arial', 10, 'bold'), foreground='green').grid(
-            row=3, column=0, sticky=tk.W, pady=(10, 0))
+            row=4, column=0, sticky=tk.W, pady=(10, 0))
+
+    def _recalculate_balance_preview(self):
+        """
+        Recalculate balance preview when initial balance changes.
+
+        Called when user clicks the Recalculate button after changing initial balance.
+        Updates all balance labels without recreating the entire step.
+        """
+        try:
+            # Recalculate balance information
+            balance_info = self._calculate_balance_preview()
+
+            # Update labels
+            self.total_credits_label.configure(
+                text=f"Total Credits (+): {balance_info['total_credits']:.2f}")
+            self.total_debits_label.configure(
+                text=f"Total Debits (-): {balance_info['total_debits']:.2f}")
+            self.calculated_balance_label.configure(
+                text=f"{balance_info['calculated_final_balance']:.2f}")
+            self.transaction_count_label.configure(
+                text=f"Total Transactions: {balance_info['transaction_count']}")
+
+            # Update final balance if in automatic mode
+            if self.auto_calculate_final_balance.get():
+                self._update_final_balance_display(balance_info['calculated_final_balance'])
+
+            self._log(f"Balance recalculated with initial balance: {balance_info['initial_balance']:.2f}")
+
+        except Exception as e:
+            self._log(f"Error recalculating balance: {e}")
+            messagebox.showerror("Error", f"Failed to recalculate balance:\n{e}")
 
     def _calculate_balance_preview(self) -> Dict:
         """
@@ -948,6 +987,9 @@ class ConverterGUI:
                     total_credits += transaction['amount']
                 else:
                     total_debits += abs(transaction['amount'])
+
+        # Sort transactions by date (oldest to newest)
+        transactions.sort(key=lambda t: self._parse_date_for_sorting(t['date']))
 
         # Calculate final balance
         calculated_final_balance = initial_balance + total_credits - total_debits
@@ -1008,6 +1050,118 @@ class ConverterGUI:
         except Exception as e:
             self._log(f"Warning: Error processing row for preview: {e}")
             return None
+
+    def _parse_date_for_sorting(self, date_str: str) -> datetime:
+        """
+        Parse date string to datetime for sorting purposes.
+
+        Supports multiple date formats and returns a datetime object for comparison.
+        If date cannot be parsed, returns a far future date to push invalid dates to end.
+
+        Args:
+            date_str: Date string in various formats
+
+        Returns:
+            datetime object for sorting
+        """
+        date_formats = [
+            '%Y-%m-%d',    # ISO format: 2025-10-01
+            '%d/%m/%Y',    # Brazilian format: 01/10/2025
+            '%m/%d/%Y',    # US format: 10/01/2025
+            '%Y/%m/%d',    # Alternative ISO: 2025/10/01
+            '%d-%m-%Y',    # Dash format: 01-10-2025
+            '%d.%m.%Y',    # Dot format: 01.10.2025
+            '%Y%m%d'       # Compact format: 20251001
+        ]
+
+        for fmt in date_formats:
+            try:
+                return datetime.strptime(date_str.strip(), fmt)
+            except ValueError:
+                continue
+
+        # If no format matches, log warning and return far future date
+        # This pushes unparseable dates to the end of the list
+        logger.warning(f"Could not parse date for sorting: '{date_str}'")
+        return datetime(9999, 12, 31)
+
+    def _validate_numeric_input(self, action: str, value_if_allowed: str) -> bool:
+        """
+        Validate numeric input for balance fields.
+
+        Allows: digits, optional minus sign at start, optional single decimal point.
+        Blocks: letters, special characters, multiple decimal points.
+
+        Args:
+            action: '1' for insert, '0' for delete
+            value_if_allowed: The value the entry will have if the change is allowed
+
+        Returns:
+            True if change is allowed, False otherwise
+        """
+        if action == '0':  # Deletion always allowed
+            return True
+
+        if value_if_allowed == '':  # Empty is allowed (will default to 0.00)
+            return True
+
+        # Allow minus sign only at start
+        if value_if_allowed == '-':
+            return True
+
+        # Check if it matches numeric pattern
+        # Pattern: optional minus, digits, optional decimal point and digits
+        import re
+        pattern = r'^-?\d*\.?\d*$'
+        return bool(re.match(pattern, value_if_allowed))
+
+    def _validate_and_format_date(self, var: tk.StringVar, *args):
+        """
+        Auto-format date input with slashes in DD/MM/YYYY format.
+
+        Removes non-digit, non-slash characters and auto-inserts slashes.
+        Limits to DD/MM/YYYY format (Brazilian/European standard).
+
+        Args:
+            var: StringVar associated with the date entry field
+            *args: Additional args from variable trace (ignored)
+        """
+        value = var.get()
+
+        # Remove any non-digit, non-slash characters
+        cleaned = ''.join(c for c in value if c.isdigit() or c == '/')
+
+        # Auto-insert slashes after day (2 digits) and month (2 digits)
+        if len(cleaned) == 2 and '/' not in cleaned:
+            cleaned += '/'
+        elif len(cleaned) == 5 and cleaned.count('/') == 1:
+            cleaned += '/'
+
+        # Limit to DD/MM/YYYY format
+        parts = cleaned.split('/')
+        if len(parts) >= 1:
+            parts[0] = parts[0][:2]  # Day max 2 digits
+        if len(parts) >= 2:
+            parts[1] = parts[1][:2]  # Month max 2 digits
+        if len(parts) >= 3:
+            parts[2] = parts[2][:4]  # Year max 4 digits
+            parts = parts[:3]  # Remove any extra parts
+
+        formatted = '/'.join(parts)
+
+        # Only update if different to avoid recursion
+        if formatted != value:
+            # Temporarily disable trace to avoid recursion
+            trace_id = var.trace_info()
+            if trace_id:
+                for trace in trace_id:
+                    if trace[1] == 'write':
+                        var.trace_remove('write', trace[2])
+
+            var.set(formatted)
+
+            # Re-enable trace
+            var.trace_add('write', lambda *a: self._validate_and_format_date(var))
 
     def _toggle_final_balance_mode(self):
         """Toggle between automatic and manual final balance mode."""
