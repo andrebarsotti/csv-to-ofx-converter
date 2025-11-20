@@ -84,6 +84,13 @@ class ConverterGUI:
         self.csv_data: List[Dict[str, str]] = []
         self.field_mappings: Dict[str, tk.StringVar] = {}
 
+        # Transaction management (for preview deletion feature)
+        self.deleted_transactions = set()  # Set of row indices to exclude
+        self.transaction_tree_items = {}  # Map row_index -> tree item ID
+
+        # Date validation management (for preview date action feature)
+        self.date_action_decisions = {}  # Map row_index -> action ('adjust', 'keep', 'exclude')
+
         # Wizard steps
         self.current_step = 0
         self.steps = [
@@ -900,14 +907,24 @@ class ConverterGUI:
         vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
         hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
+        # Bind context menu for deleting transactions
+        self.balance_preview_tree.bind("<Button-3>", self._show_transaction_context_menu)
+
         # Populate transaction preview
-        for trans in balance_info['transactions']:
-            self.balance_preview_tree.insert('', tk.END, values=(
+        self.transaction_tree_items.clear()  # Clear previous mappings
+        for row_idx, trans in enumerate(balance_info['transactions']):
+            # Skip deleted transactions
+            if row_idx in self.deleted_transactions:
+                continue
+
+            item_id = self.balance_preview_tree.insert('', tk.END, values=(
                 trans['date'],
                 trans['description'][:50],
                 f"{trans['amount']:.2f}",
                 trans['type']
             ))
+            # Store mapping of row_idx to tree item ID
+            self.transaction_tree_items[row_idx] = item_id
 
         # Initialize final balance
         self._update_final_balance_display(balance_info['calculated_final_balance'])
@@ -976,7 +993,11 @@ class ConverterGUI:
         total_debits = 0.0
 
         # Process each row
-        for row in self.csv_data:
+        for row_idx, row in enumerate(self.csv_data):
+            # Skip deleted transactions
+            if row_idx in self.deleted_transactions:
+                continue
+
             transaction = self._process_preview_row(
                 row, parser, date_col, amount_col, desc_col, type_col, use_composite
             )
@@ -1179,6 +1200,80 @@ class ConverterGUI:
     def _update_final_balance_display(self, calculated_balance: float):
         """Update the final balance display with calculated or manual value."""
         self.final_balance.set(f"{calculated_balance:.2f}")
+
+    def _show_transaction_context_menu(self, event):
+        """
+        Show context menu for transaction operations (delete, restore).
+
+        Args:
+            event: Right-click event containing mouse position
+        """
+        # Check if any items are selected
+        selected = self.balance_preview_tree.selection()
+
+        # Create context menu
+        menu = tk.Menu(self.root, tearoff=0)
+
+        if selected:
+            menu.add_command(
+                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
+                command=self._delete_selected_transactions
+            )
+
+        if self.deleted_transactions:
+            menu.add_command(
+                label=f"Restore All Deleted ({len(self.deleted_transactions)} transaction{'s' if len(self.deleted_transactions) > 1 else ''})",
+                command=self._restore_all_transactions
+            )
+
+        if selected or self.deleted_transactions:
+            menu.post(event.x_root, event.y_root)
+
+    def _delete_selected_transactions(self):
+        """
+        Delete selected transactions from preview and mark them for exclusion.
+
+        Removes selected items from tree, adds their row indices to deleted set,
+        and recalculates balances.
+        """
+        selected = self.balance_preview_tree.selection()
+
+        if not selected:
+            return
+
+        # Find row indices for selected items
+        deleted_count = 0
+        for item_id in selected:
+            # Find the row_idx for this tree item
+            for row_idx, tree_item_id in self.transaction_tree_items.items():
+                if tree_item_id == item_id:
+                    # Mark as deleted
+                    self.deleted_transactions.add(row_idx)
+                    # Remove from tree
+                    self.balance_preview_tree.delete(item_id)
+                    deleted_count += 1
+                    break
+
+        if deleted_count > 0:
+            self._log(f"Deleted {deleted_count} transaction{'s' if deleted_count > 1 else ''} from preview")
+            # Recalculate balances
+            self._recalculate_balance_preview()
+
+    def _restore_all_transactions(self):
+        """
+        Restore all deleted transactions.
+
+        Clears the deleted set and refreshes the preview to show all transactions.
+        """
+        if not self.deleted_transactions:
+            return
+
+        count = len(self.deleted_transactions)
+        self.deleted_transactions.clear()
+        self._log(f"Restored {count} deleted transaction{'s' if count > 1 else ''}")
+
+        # Refresh the entire preview step to rebuild the tree
+        self._show_step(self.current_step)
 
     # ==================== CONVERSION ====================
 
@@ -1421,17 +1516,23 @@ class ConverterGUI:
             'processed': 0,
             'excluded': 0,
             'adjusted': 0,
-            'kept_out_of_range': 0
+            'kept_out_of_range': 0,
+            'deleted': len(self.deleted_transactions)
         }
 
-        for row_idx, row in enumerate(self.csv_data, 1):
+        for row_idx, row in enumerate(self.csv_data):
+            # Skip deleted transactions (deleted in preview)
+            if row_idx in self.deleted_transactions:
+                stats['excluded'] += 1
+                continue
+
             try:
                 date = row[date_col]
                 amount = parser.normalize_amount(row[amount_col])
                 description = self._build_description(row, desc_col, use_composite)
 
                 date, date_stats = self._validate_and_adjust_date(
-                    date, row_idx, description, date_validator
+                    date, row_idx + 1, description, date_validator
                 )
                 if date is None:
                     stats['excluded'] += 1
@@ -1453,7 +1554,7 @@ class ConverterGUI:
                 stats['processed'] += 1
 
             except Exception as e:
-                self._log(f"Warning: Skipping row {row_idx}: {e}")
+                self._log(f"Warning: Skipping row {row_idx + 1}: {e}")
                 stats['excluded'] += 1
 
         return stats
@@ -1472,7 +1573,14 @@ class ConverterGUI:
         )
 
     def _validate_and_adjust_date(self, date, row_idx, description, date_validator):
-        """Validate date and adjust if necessary. Returns (date, stats_dict)."""
+        """
+        Validate date and adjust if necessary. Returns (date, stats_dict).
+
+        NEW BEHAVIOR (Improvement #3):
+        - Dates BEFORE start_date: automatically adjusted to start_date (default action)
+        - Dates AFTER end_date: kept as-is with warning
+        - No interactive dialogs during conversion
+        """
         stats = {'adjusted': 0, 'kept_out_of_range': 0}
 
         if not date_validator:
@@ -1482,21 +1590,18 @@ class ConverterGUI:
             return date, stats
 
         status = date_validator.get_date_status(date)
-        self._log(f"Row {row_idx}: Date {date} is out of range ({status})")
 
-        adjusted_date, action = self._handle_out_of_range_transaction(
-            row_idx, date, status, date_validator, description
-        )
-
-        if action == 'exclude':
-            self._log(f"Row {row_idx}: Transaction excluded by user")
-            return None, stats
-        elif action == 'adjust':
-            self._log(f"Row {row_idx}: Date adjusted from {date} to {adjusted_date}")
+        # Apply automatic actions based on date status
+        if status == 'before':
+            # Default action for dates before start: adjust to boundary
+            adjusted_date = date_validator.adjust_date_to_boundary(date)
+            self._log(f"Row {row_idx}: Date {date} adjusted to {adjusted_date} (before start date)")
             stats['adjusted'] = 1
             return adjusted_date, stats
-        elif action == 'keep':
-            self._log(f"Row {row_idx}: Keeping original date {date}")
+
+        elif status == 'after':
+            # Default action for dates after end: keep with warning
+            self._log(f"Row {row_idx}: Date {date} is after end date (kept as-is)")
             stats['kept_out_of_range'] = 1
             return date, stats
 
@@ -1560,6 +1665,11 @@ class ConverterGUI:
         self.csv_headers.clear()
         self.csv_data.clear()
         self.field_mappings.clear()
+
+        # Clear transaction management
+        self.deleted_transactions.clear()
+        self.transaction_tree_items.clear()
+        self.date_action_decisions.clear()
 
         # Reset to first step
         self._show_step(0)
