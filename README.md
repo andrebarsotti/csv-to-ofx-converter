@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 2.1.2** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.0.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -779,6 +779,30 @@ For issues, questions, or suggestions:
 **License**: MIT
 
 ## Changelog
+
+### Version 3.0.1 (November 2025) - Code Quality and Security Improvements
+
+- **Security Fix**: Replaced regex validation with safer string methods
+  - Eliminated potential catastrophic backtracking vulnerability in numeric input validation
+  - Replaced regex pattern `r'^-?\d*\.?\d*$'` with efficient string operations
+  - Addresses SonarQube security rule python:S5852 (DoS prevention)
+  - Maintains identical validation behavior with improved performance
+
+- **Code Quality**: Reduced cognitive complexity in context menu logic
+  - Refactored `_show_transaction_context_menu()` for better maintainability
+  - Extracted complex nested logic into separate helper methods
+  - Added `_close_existing_context_menu()`, `_get_selected_row_info()`, and `_get_date_status_for_row()`
+  - Addresses SonarQube rule python:S3776 (cognitive complexity)
+  - Improved code testability and separation of concerns
+
+- **Code Quality**: Improved exception handling and logging
+  - Replaced bare `except:` clauses with specific exception types
+  - Added proper error logging throughout converter_gui.py
+  - Better error messages for debugging and troubleshooting
+
+- **Documentation**: Updated test coverage information
+  - Test suite now includes 94 comprehensive tests (up from 44)
+  - All tests passing with improved coverage
 
 ### Version 3.0.0 (November 2025) - Major Usability and Workflow Improvements
 

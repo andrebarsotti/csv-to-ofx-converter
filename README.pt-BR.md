@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 2.1.2** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.0.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -779,6 +779,30 @@ Para problemas, questões ou sugestões:
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.0.1 (Novembro de 2025) - Melhorias de Qualidade de Código e Segurança
+
+- **Correção de Segurança**: Substituída validação regex por métodos de string mais seguros
+  - Eliminada vulnerabilidade potencial de backtracking catastrófico na validação de entrada numérica
+  - Substituído padrão regex `r'^-?\d*\.?\d*$'` por operações eficientes de string
+  - Atende à regra de segurança SonarQube python:S5852 (prevenção de DoS)
+  - Mantém comportamento idêntico de validação com desempenho melhorado
+
+- **Qualidade de Código**: Reduzida complexidade cognitiva na lógica do menu de contexto
+  - Refatorado `_show_transaction_context_menu()` para melhor manutenibilidade
+  - Extraída lógica aninhada complexa para métodos auxiliares separados
+  - Adicionados `_close_existing_context_menu()`, `_get_selected_row_info()` e `_get_date_status_for_row()`
+  - Atende à regra SonarQube python:S3776 (complexidade cognitiva)
+  - Melhorada testabilidade do código e separação de responsabilidades
+
+- **Qualidade de Código**: Melhorado tratamento de exceções e logging
+  - Substituídas cláusulas `except:` genéricas por tipos específicos de exceção
+  - Adicionado logging apropriado de erros em converter_gui.py
+  - Melhores mensagens de erro para debugging e troubleshooting
+
+- **Documentação**: Atualizada informação de cobertura de testes
+  - Suíte de testes agora inclui 94 testes abrangentes (antes eram 44)
+  - Todos os testes passando com cobertura melhorada
 
 ### Versão 3.0.0 (Novembro de 2025) - Melhorias Importantes de Usabilidade e Fluxo de Trabalho
 
