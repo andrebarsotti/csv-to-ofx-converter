@@ -81,8 +81,10 @@ src/
   csv_parser.py            # CSVParser class - handles CSV file parsing
   ofx_generator.py         # OFXGenerator class - generates OFX files
   date_validator.py        # DateValidator class - validates transaction dates
-  converter_gui.py         # ConverterGUI class - Tkinter wizard interface
+  converter_gui.py         # ConverterGUI class - Tkinter wizard interface (1,927 lines)
   transaction_utils.py     # Utility functions for transaction processing (no UI dependencies)
+  gui_utils.py             # GUI utility functions (pure functions, no Tkinter dependencies)
+  gui_balance_manager.py   # BalanceManager class - balance calculations and preview
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
 tests/
   __init__.py              # Test package initialization
@@ -90,6 +92,9 @@ tests/
   test_ofx_generator.py    # OFX generator tests (20 tests)
   test_date_validator.py   # Date validator tests (12 tests)
   test_transaction_utils.py # Transaction utilities tests (50 tests)
+  test_gui_utils.py        # GUI utilities tests (58 tests)
+  test_gui_integration.py  # GUI integration tests (15 tests)
+  test_gui_balance_manager.py # Balance Manager tests (14 tests)
   test_integration.py      # Integration tests (5 tests)
   run_all_tests.py         # Convenience script to run all tests
 ```
@@ -129,9 +134,24 @@ tests/
 - Function `validate_field_mappings()` validates required field mappings
 - Function `parse_balance_value()` safely parses balance strings to floats with defaults
 
+**GUIUtils** (`src/gui_utils.py`):
+- Pure utility functions with no Tkinter dependencies (fully testable)
+- File validation, field mapping validation, date formatting
+- Numeric validation, balance calculations, statistics formatting
+- 16 functions organized into 8 sections
+- Used by ConverterGUI and BalanceManager
+
+**BalanceManager** (`src/gui_balance_manager.py`):
+- Companion class for ConverterGUI using dependency injection pattern
+- Handles all balance calculations and preview generation
+- Returns BalancePreviewData dataclass with calculation results
+- No direct Tkinter dependencies (independently testable)
+- Methods: calculate_balance_preview(), format_balance_labels(), validate_balance_input()
+
 **ConverterGUI** (`src/converter_gui.py`):
 - Multi-step wizard interface (7 steps)
 - Uses Tkinter ttk widgets for modern appearance
+- Delegates balance operations to BalanceManager
 - Step 1: File selection
 - Step 2: CSV format configuration (delimiter, decimal separator)
 - Step 3: Data preview (Treeview showing first 100 rows)
@@ -193,7 +213,7 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (95 tests total):
+Test suite is organized into separate modules (181 tests total):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
@@ -221,6 +241,24 @@ Test suite is organized into separate modules (95 tests total):
 - Validating field mappings
 - Parsing balance values with fallback defaults
 - Tests cover edge cases, empty values, and error handling
+
+**test_gui_utils.py** (58 tests):
+- File validation, field mapping validation, date formatting
+- Numeric validation, balance calculations
+- Date parsing for sorting, conversion validation
+- Statistics formatting, edge cases
+
+**test_gui_integration.py** (15 tests):
+- GUI wizard navigation and data loading
+- Field mapping and validation workflows
+- Integration between GUI components
+- Note: Skipped in CI environments without display server
+
+**test_gui_balance_manager.py** (14 tests):
+- Balance calculations with various transaction sets
+- Preview generation with different currencies
+- Balance input validation, date status checking
+- Edge cases: empty transactions, deleted transactions, value inversion
 
 **test_integration.py** (5 tests):
 - Complete end-to-end conversion workflows
@@ -254,11 +292,22 @@ Test suite is organized into separate modules (95 tests total):
 - Add tests for new field
 
 **When extracting functions from GUI**:
-- Create pure utility functions without UI dependencies in `transaction_utils.py`
-- Functions should accept all needed data as parameters (no `self` access)
-- Write comprehensive unit tests for each utility function
-- Update GUI code to import and use the utility functions
+- Create pure utility functions without UI dependencies in `transaction_utils.py` or `gui_utils.py`
+- For complex subsystems, create companion classes (e.g., `BalanceManager`)
+- Use dependency injection pattern: companion receives ConverterGUI as parameter
+- Return data structures instead of directly manipulating widgets
+- Functions should accept all needed data as parameters (no `self.parent` access in calculations)
+- Write comprehensive unit tests for each utility function or companion class
+- Update GUI code to import and use the utility functions/companion classes
 - Ensure all tests pass after refactoring
+
+**Companion Class Pattern** (established in Phase 3 refactoring):
+- Create companion class in `src/gui_*.py` (e.g., `gui_balance_manager.py`)
+- Initialize in ConverterGUI: `self.manager = ManagerClass(self)`
+- Companion returns data structures (e.g., BalancePreviewData dataclass)
+- No direct Tkinter widget creation in companion (keeps it testable)
+- ConverterGUI extracts data and updates its own widgets
+- Test with mock ConverterGUI to avoid GUI dependencies
 
 ## Important Notes
 

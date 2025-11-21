@@ -32,6 +32,7 @@ from .transaction_utils import (
     parse_balance_value
 )
 from . import gui_utils
+from .gui_balance_manager import BalanceManager
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,9 @@ class ConverterGUI:
             "Advanced Options",
             "Balance Preview"
         ]
+
+        # Initialize balance manager
+        self.balance_manager = BalanceManager(self)
 
         # Build UI
         self._create_widgets()
@@ -1071,142 +1075,30 @@ class ConverterGUI:
         Returns:
             Dictionary with balance calculations and transaction list
         """
-        # Parse initial balance using utility function
-        initial_balance = parse_balance_value(
-            self.initial_balance.get(), default=0.0)
+        # Get field mappings as strings
+        field_mappings = {k: v.get() for k, v in self.field_mappings.items()}
 
-        # Get field mappings
-        date_col = self.field_mappings['date'].get()
-        amount_col = self.field_mappings['amount'].get()
-        desc_col = self.field_mappings['description'].get()
-        type_col = self.field_mappings['type'].get()
-        use_composite = any(
-            var.get() != NOT_SELECTED for var in self.description_columns)
+        # Get description columns as list of strings
+        description_columns = [var.get() for var in self.description_columns]
 
-        # Create parser
-        parser = CSVParser(
+        # Use BalanceManager to calculate preview
+        balance_data = self.balance_manager.calculate_balance_preview(
+            initial_balance_str=self.initial_balance.get(),
+            csv_data=self.csv_data,
+            field_mappings=field_mappings,
+            description_columns=description_columns,
+            description_separator=self.description_separator.get(),
             delimiter=self.delimiter.get(),
-            decimal_separator=self.decimal_separator.get()
+            decimal_separator=self.decimal_separator.get(),
+            invert_values=self.invert_values.get(),
+            deleted_transactions=self.deleted_transactions,
+            enable_date_validation=self.enable_date_validation.get(),
+            start_date_str=self.start_date.get().strip(),
+            end_date_str=self.end_date.get().strip()
         )
 
-        transactions = []
-        total_credits = 0.0
-        total_debits = 0.0
-
-        # Process each row
-        for row_idx, row in enumerate(self.csv_data):
-            # Skip deleted transactions
-            if row_idx in self.deleted_transactions:
-                continue
-
-            transaction = self._process_preview_row(
-                row, parser, date_col, amount_col, desc_col, type_col, use_composite
-            )
-            if transaction:
-                # Add original row index to transaction for later reference
-                transaction['row_idx'] = row_idx
-                transactions.append(transaction)
-                # Update totals
-                if transaction['amount'] >= 0:
-                    total_credits += transaction['amount']
-                else:
-                    total_debits += abs(transaction['amount'])
-
-        # Sort transactions by date (oldest to newest)
-        transactions.sort(
-            key=lambda t: self._parse_date_for_sorting(t['date']))
-
-        # Calculate final balance
-        calculated_final_balance = initial_balance + total_credits - total_debits
-
-        return {
-            'initial_balance': initial_balance,
-            'total_credits': total_credits,
-            'total_debits': total_debits,
-            'calculated_final_balance': calculated_final_balance,
-            'transaction_count': len(transactions),
-            'transactions': transactions
-        }
-
-    def _process_preview_row(
-        self,
-        row: Dict[str, str],
-        parser: 'CSVParser',
-        date_col: str,
-        amount_col: str,
-        desc_col: str,
-        type_col: str,
-        use_composite: bool
-    ) -> Optional[Dict]:
-        """
-        Process a single row for balance preview.
-
-        Args:
-            row: CSV row data
-            parser: CSVParser instance
-            date_col: Date column name
-            amount_col: Amount column name
-            desc_col: Description column name
-            type_col: Type column name
-            use_composite: Whether to use composite description
-
-        Returns:
-            Transaction dictionary or None if processing fails
-        """
-        try:
-            date = row[date_col]
-            amount = parser.normalize_amount(row[amount_col])
-            description = self._build_description(row, desc_col, use_composite)
-
-            # Apply value inversion if enabled
-            if self.invert_values.get():
-                amount = -amount
-
-            # Determine transaction type using utility function
-            trans_type = determine_transaction_type(type_col, row, amount)
-
-            # Check date validation status if enabled
-            date_status = 'valid'
-            if self.enable_date_validation.get():
-                start_date_str = self.start_date.get().strip()
-                end_date_str = self.end_date.get().strip()
-                if start_date_str and end_date_str:
-                    try:
-                        from .date_validator import DateValidator
-                        validator = DateValidator(start_date_str, end_date_str)
-                        if not validator.is_within_range(date):
-                            date_status = validator.get_date_status(date)
-                    except Exception as e:
-                        logger.debug(
-                            "Date validator initialization failed: %s", e)
-
-            return {
-                'date': date,
-                'description': description,
-                'amount': amount,
-                'type': trans_type,
-                'date_status': date_status
-            }
-
-        except Exception as e:
-            self._log(f"Warning: Error processing row for preview: {e}")
-            return None
-
-    def _parse_date_for_sorting(self, date_str: str) -> datetime:
-        """
-        Parse date string to datetime for sorting purposes.
-
-        Supports multiple date formats and returns a datetime object for comparison.
-        If date cannot be parsed, returns a far future date to push invalid dates to end.
-
-        Args:
-            date_str: Date string in various formats
-
-        Returns:
-            datetime object for sorting
-        """
-        # Use gui_utils to parse date for sorting
-        return gui_utils.parse_date_for_sorting(date_str)
+        # Convert to dictionary for compatibility with existing code
+        return balance_data.to_dict()
 
     def _validate_numeric_input(self, action: str, value_if_allowed: str) -> bool:
         """
@@ -1222,14 +1114,9 @@ class ConverterGUI:
         Returns:
             True if change is allowed, False otherwise
         """
-        if action == '0':  # Deletion always allowed
-            return True
-
-        # Use gui_utils to validate numeric input
-        return gui_utils.validate_numeric_input(
-            value_if_allowed,
-            allow_negative=True,
-            allow_decimal=True
+        # Delegate to balance manager
+        return self.balance_manager.validate_balance_input(
+            action, value_if_allowed
         )
 
     def _format_date_entry(self, entry_widget):
@@ -1279,7 +1166,7 @@ class ConverterGUI:
 
     def _update_final_balance_display(self, calculated_balance: float):
         """Update the final balance display with calculated or manual value."""
-        formatted = gui_utils.format_balance_value(calculated_balance)
+        formatted = self.balance_manager.format_final_balance(calculated_balance)
         self.final_balance.set(formatted)
 
     def _close_existing_context_menu(self):
@@ -1325,14 +1212,10 @@ class ConverterGUI:
         Returns:
             Date status string ('before', 'after', 'valid') or 'valid' if not found
         """
-        if not hasattr(self, '_cached_balance_info'):
-            return 'valid'
-
-        for trans in self._cached_balance_info.get('transactions', []):
-            if trans.get('row_idx') == row_idx:
-                return trans.get('date_status', 'valid')
-
-        return 'valid'
+        cached_balance = getattr(self, '_cached_balance_info', None)
+        return self.balance_manager.get_date_status_for_transaction(
+            row_idx, cached_balance
+        )
 
     def _show_transaction_context_menu(self, event):
         """
@@ -1391,18 +1274,21 @@ class ConverterGUI:
 
         Extracted to reduce complexity of the context-menu builder.
         """
+        # Get label texts from balance manager
+        labels = self.balance_manager.get_date_action_label_texts(current_action)
+
         menu.add_command(label="📅 Date Actions", state='disabled')
         menu.add_separator()
         menu.add_command(
-            label=f"{'✓ ' if current_action == 'keep' else ''}Keep Original Date",
+            label=labels['keep'],
             command=lambda: self._set_date_action_and_close(row_idx, 'keep')
         )
         menu.add_command(
-            label=f"{'✓ ' if current_action == 'adjust' else ''}Adjust to Boundary",
+            label=labels['adjust'],
             command=lambda: self._set_date_action_and_close(row_idx, 'adjust')
         )
         menu.add_command(
-            label=f"{'✓ ' if current_action == 'exclude' else ''}Exclude Transaction",
+            label=labels['exclude'],
             command=lambda: self._set_date_action_and_close(row_idx, 'exclude')
         )
         menu.add_separator()

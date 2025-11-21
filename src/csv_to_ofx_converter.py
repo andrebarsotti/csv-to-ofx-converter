@@ -43,9 +43,19 @@ from .date_validator import DateValidator
 from .converter_gui import ConverterGUI
 from .constants import NOT_MAPPED, NOT_SELECTED
 from . import gui_utils
+from .gui_balance_manager import BalanceManager
 
 # Export all classes for backward compatibility
-__all__ = ['CSVParser', 'OFXGenerator', 'DateValidator', 'ConverterGUI', 'NOT_MAPPED', 'NOT_SELECTED', 'gui_utils']
+__all__ = [
+    'CSVParser',
+    'OFXGenerator',
+    'DateValidator',
+    'ConverterGUI',
+    'NOT_MAPPED',
+    'NOT_SELECTED',
+    'gui_utils',
+    'BalanceManager'
+]
 
 logger = logging.getLogger(__name__)
 
