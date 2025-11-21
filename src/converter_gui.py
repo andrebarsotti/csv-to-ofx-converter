@@ -31,6 +31,7 @@ from .transaction_utils import (
     extract_transaction_id,
     parse_balance_value
 )
+from . import gui_utils
 
 logger = logging.getLogger(__name__)
 
@@ -320,8 +321,10 @@ class ConverterGUI:
 
     def _validate_file_selection(self) -> bool:
         """Validate file selection step."""
-        if not self.csv_file.get():
-            messagebox.showwarning("Required", "Please select a CSV file")
+        csv_file = self.csv_file.get()
+        is_valid, error_msg = gui_utils.validate_csv_file_selection(csv_file)
+        if not is_valid:
+            messagebox.showwarning("Required", error_msg)
             return False
         return True
 
@@ -345,25 +348,23 @@ class ConverterGUI:
 
     def _validate_required_fields(self) -> bool:
         """Validate required date and amount fields."""
-        date_col = self.field_mappings.get('date')
-        amount_col = self.field_mappings.get('amount')
-
-        if not date_col or date_col.get() == NOT_MAPPED:
-            messagebox.showwarning("Required", "Please map the Date field")
-            return False
-        if not amount_col or amount_col.get() == NOT_MAPPED:
-            messagebox.showwarning("Required", "Please map the Amount field")
+        field_mappings_dict = {k: v.get() for k, v in self.field_mappings.items()}
+        is_valid, error_msg = gui_utils.validate_required_field_mappings(
+            field_mappings_dict, NOT_MAPPED)
+        if not is_valid:
+            messagebox.showwarning("Required", error_msg)
             return False
         return True
 
     def _validate_description_mapping(self) -> bool:
         """Validate description field or composite description."""
-        desc_col = self.field_mappings.get('description')
-        if not desc_col or desc_col.get() == NOT_MAPPED:
-            if not any(var.get() != NOT_SELECTED for var in self.description_columns):
-                messagebox.showwarning("Required",
-                                       "Please map the Description field or configure composite description")
-                return False
+        desc_mapping = self.field_mappings.get('description', tk.StringVar(value=NOT_MAPPED)).get()
+        description_columns = [var.get() for var in self.description_columns]
+        is_valid, error_msg = gui_utils.validate_description_mapping(
+            desc_mapping, description_columns, NOT_MAPPED, NOT_SELECTED)
+        if not is_valid:
+            messagebox.showwarning("Required", error_msg)
+            return False
         return True
 
     # ==================== STEP 1: FILE SELECTION ====================
@@ -564,9 +565,8 @@ class ConverterGUI:
             self.preview_tree.insert('', tk.END, values=values)
 
         # Update stats
-        stats_text = f"Showing {max_rows} of {len(self.csv_data)} rows"
-        if len(self.csv_data) > max_rows:
-            stats_text += f" (limited to first {max_rows} for preview)"
+        stats_text = gui_utils.format_preview_stats(
+            max_rows, len(self.csv_data), max_preview=100)
         self.preview_stats_label.configure(text=stats_text)
 
     # ==================== STEP 4: OFX CONFIGURATION ====================
@@ -855,8 +855,9 @@ class ConverterGUI:
         # Register numeric validation command
         vcmd_numeric = (self.root.register(
             self._validate_numeric_input), '%d', '%P')
-        self.initial_balance_entry = ttk.Entry(balance_input_frame, textvariable=self.initial_balance,
-                                               width=20, validate='key', validatecommand=vcmd_numeric)
+        self.initial_balance_entry = ttk.Entry(
+            balance_input_frame, textvariable=self.initial_balance,
+            width=20, validate='key', validatecommand=vcmd_numeric)
         self.initial_balance_entry.pack(side=tk.LEFT, padx=5)
         ttk.Button(balance_input_frame, text="Recalculate",
                    command=self._recalculate_balance_preview).pack(side=tk.LEFT, padx=5)
@@ -870,14 +871,18 @@ class ConverterGUI:
         summary_frame.columnconfigure(1, weight=1)
 
         # Total Credits
-        self.total_credits_label = ttk.Label(summary_frame, text=f"Total Credits (+): {balance_info['total_credits']:.2f}",
-                                             font=('Arial', 10), foreground='green')
+        credits_text = f"Total Credits (+): {balance_info['total_credits']:.2f}"
+        self.total_credits_label = ttk.Label(
+            summary_frame, text=credits_text,
+            font=('Arial', 10), foreground='green')
         self.total_credits_label.grid(
             row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
         # Total Debits
-        self.total_debits_label = ttk.Label(summary_frame, text=f"Total Debits (-): {balance_info['total_debits']:.2f}",
-                                            font=('Arial', 10), foreground='red')
+        debits_text = f"Total Debits (-): {balance_info['total_debits']:.2f}"
+        self.total_debits_label = ttk.Label(
+            summary_frame, text=debits_text,
+            font=('Arial', 10), foreground='red')
         self.total_debits_label.grid(
             row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
@@ -920,17 +925,19 @@ class ConverterGUI:
         # Register numeric validation command
         vcmd_numeric = (self.root.register(
             self._validate_numeric_input), '%d', '%P')
-        self.final_balance_entry = ttk.Entry(manual_frame, textvariable=self.final_balance,
-                                             width=20, state=initial_state,
-                                             validate='key', validatecommand=vcmd_numeric)
+        self.final_balance_entry = ttk.Entry(
+            manual_frame, textvariable=self.final_balance,
+            width=20, state=initial_state,
+            validate='key', validatecommand=vcmd_numeric)
         self.final_balance_entry.pack(side=tk.LEFT, padx=5)
         ttk.Label(manual_frame, text="(Uncheck above to edit manually)",
                   font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
 
         # Transaction count
-        self.transaction_count_label = ttk.Label(summary_frame,
-                                                 text=f"Total Transactions: {balance_info['transaction_count']}",
-                                                 font=('Arial', 9), foreground='gray')
+        count_text = f"Total Transactions: {balance_info['transaction_count']}"
+        self.transaction_count_label = ttk.Label(
+            summary_frame, text=count_text,
+            font=('Arial', 9), foreground='gray')
         self.transaction_count_label.grid(
             row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
 
@@ -1198,26 +1205,8 @@ class ConverterGUI:
         Returns:
             datetime object for sorting
         """
-        date_formats = [
-            '%Y-%m-%d',    # ISO format: 2025-10-01
-            '%d/%m/%Y',    # Brazilian format: 01/10/2025
-            '%m/%d/%Y',    # US format: 10/01/2025
-            '%Y/%m/%d',    # Alternative ISO: 2025/10/01
-            '%d-%m-%Y',    # Dash format: 01-10-2025
-            '%d.%m.%Y',    # Dot format: 01.10.2025
-            '%Y%m%d'       # Compact format: 20251001
-        ]
-
-        for fmt in date_formats:
-            try:
-                return datetime.strptime(date_str.strip(), fmt)
-            except ValueError:
-                continue
-
-        # If no format matches, log warning and return far future date
-        # This pushes unparseable dates to the end of the list
-        logger.warning("Could not parse date for sorting: '%s'", date_str)
-        return datetime(9999, 12, 31)
+        # Use gui_utils to parse date for sorting
+        return gui_utils.parse_date_for_sorting(date_str)
 
     def _validate_numeric_input(self, action: str, value_if_allowed: str) -> bool:
         """
@@ -1236,27 +1225,12 @@ class ConverterGUI:
         if action == '0':  # Deletion always allowed
             return True
 
-        if value_if_allowed == '':  # Empty is allowed (will default to 0.00)
-            return True
-
-        # Allow minus sign only at start
-        if value_if_allowed == '-':
-            return True
-
-        # Validate numeric input without regex to avoid potential backtracking issues
-        # Check for valid numeric format: optional minus, digits, optional single decimal point
-        value = value_if_allowed
-
-        # Handle minus sign at start
-        if value.startswith('-'):
-            value = value[1:]
-
-        # Check for at most one decimal point
-        if value.count('.') > 1:
-            return False
-
-        # Check that all remaining characters are digits or single decimal point
-        return all(c.isdigit() or c == '.' for c in value)
+        # Use gui_utils to validate numeric input
+        return gui_utils.validate_numeric_input(
+            value_if_allowed,
+            allow_negative=True,
+            allow_decimal=True
+        )
 
     def _format_date_entry(self, entry_widget):
         """
@@ -1273,45 +1247,16 @@ class ConverterGUI:
         current_value = entry_widget.get()
         cursor_pos = entry_widget.index(tk.INSERT)
 
-        # Remove any non-digit, non-slash characters
-        digits_only = ''.join(c for c in current_value if c.isdigit())
-
-        # Limit to 8 digits (DDMMYYYY)
-        digits_only = digits_only[:8]
-
-        # Build formatted string based on number of digits
-        # DD/MM/YYYY format
-        if len(digits_only) <= 2:
-            # Just day digits
-            formatted = digits_only
-        elif len(digits_only) <= 4:
-            # Day + month digits
-            formatted = digits_only[:2] + '/' + digits_only[2:]
-        else:
-            # Day + month + year digits
-            formatted = digits_only[:2] + '/' + \
-                digits_only[2:4] + '/' + digits_only[4:]
+        # Use gui_utils to format the date string
+        formatted = gui_utils.format_date_string(current_value)
 
         # Only update if different
         if formatted != current_value:
-            # Calculate new cursor position
-            # Count how many digits are before the cursor in the old value
-            digits_before_cursor = len(
-                [c for c in current_value[:cursor_pos] if c.isdigit()])
+            # Calculate new cursor position using gui_utils
+            new_cursor_pos = gui_utils.calculate_cursor_position_after_format(
+                current_value, formatted, cursor_pos)
 
-            # Find the position in the new formatted string that corresponds to the same number of digits
-            new_cursor_pos = 0
-            digit_count = 0
-            for i, char in enumerate(formatted):
-                if char.isdigit():
-                    digit_count += 1
-                if digit_count >= digits_before_cursor:
-                    new_cursor_pos = i + 1
-                    break
-            else:
-                new_cursor_pos = len(formatted)
-
-            # Update the entry
+            # Update the entry (UI manipulation stays in GUI)
             entry_widget.delete(0, tk.END)
             entry_widget.insert(0, formatted)
 
@@ -1334,7 +1279,8 @@ class ConverterGUI:
 
     def _update_final_balance_display(self, calculated_balance: float):
         """Update the final balance display with calculated or manual value."""
-        self.final_balance.set(f"{calculated_balance:.2f}")
+        formatted = gui_utils.format_balance_value(calculated_balance)
+        self.final_balance.set(formatted)
 
     def _close_existing_context_menu(self):
         """Close any existing context menu."""
@@ -1467,13 +1413,17 @@ class ConverterGUI:
         Extracted to simplify the main context-menu routine.
         """
         if selected and not has_date_actions:
+            delete_count = len(selected)
+            plural = 's' if delete_count > 1 else ''
             menu.add_command(
-                label=f"Delete Selected ({len(selected)} transaction{'s' if len(selected) > 1 else ''})",
+                label=f"Delete Selected ({delete_count} transaction{plural})",
                 command=lambda: self._delete_selected_and_close_menu()
             )
         if self.deleted_transactions:
+            deleted_count = len(self.deleted_transactions)
+            plural = 's' if deleted_count > 1 else ''
             menu.add_command(
-                label=f"Restore All Deleted ({len(self.deleted_transactions)} transaction{'s' if len(self.deleted_transactions) > 1 else ''})",
+                label=f"Restore All Deleted ({deleted_count} transaction{plural})",
                 command=lambda: self._restore_all_and_close_menu()
             )
 
@@ -1536,8 +1486,9 @@ class ConverterGUI:
                     break
 
         if deleted_count > 0:
+            plural = 's' if deleted_count > 1 else ''
             self._log(
-                f"Deleted {deleted_count} transaction{'s' if deleted_count > 1 else ''} from preview")
+                f"Deleted {deleted_count} transaction{plural} from preview")
             # Recalculate balances
             self._recalculate_balance_preview()
 
@@ -1617,12 +1568,15 @@ class ConverterGUI:
 
         ttk.Label(details_frame, text="Description:", font=('Arial', 10, 'bold')).grid(
             row=1, column=0, sticky=tk.W, pady=2)
-        ttk.Label(details_frame, text=description[:50] + ('...' if len(description) > 50 else '')).grid(
+        desc_text = description[:50] + ('...' if len(description) > 50 else '')
+        ttk.Label(details_frame, text=desc_text).grid(
             row=1, column=1, sticky=tk.W, padx=10, pady=2)
 
         ttk.Label(details_frame, text="Valid Range:", font=('Arial', 10, 'bold')).grid(
             row=2, column=0, sticky=tk.W, pady=2)
-        range_text = f"{validator.start_date.strftime('%Y-%m-%d')} to {validator.end_date.strftime('%Y-%m-%d')}"
+        start_str = validator.start_date.strftime('%Y-%m-%d')
+        end_str = validator.end_date.strftime('%Y-%m-%d')
+        range_text = f"{start_str} to {end_str}"
         ttk.Label(details_frame, text=range_text).grid(
             row=2, column=1, sticky=tk.W, padx=10, pady=2)
 
@@ -1733,25 +1687,19 @@ class ConverterGUI:
 
     def _validate_conversion_prerequisites(self) -> bool:
         """Validate prerequisites for conversion."""
-        if not self.csv_data:
-            messagebox.showwarning("Warning", "Please load a CSV file first")
+        field_mappings_dict = {k: v.get() for k, v in self.field_mappings.items()}
+        is_valid, error_msg = gui_utils.validate_conversion_prerequisites(
+            self.csv_data, field_mappings_dict, NOT_MAPPED)
+        if not is_valid:
+            messagebox.showwarning("Warning", error_msg)
             return False
 
-        date_col = self.field_mappings['date'].get()
-        amount_col = self.field_mappings['amount'].get()
-
-        if date_col == NOT_MAPPED or amount_col == NOT_MAPPED:
-            messagebox.showwarning(
-                "Warning", "Please map at least Date and Amount fields")
-            return False
-
-        desc_col = self.field_mappings['description'].get()
-        use_composite = any(
-            var.get() != NOT_SELECTED for var in self.description_columns)
-
-        if desc_col == NOT_MAPPED and not use_composite:
-            messagebox.showwarning("Warning",
-                                   "Please map the Description field or configure composite description")
+        desc_mapping = field_mappings_dict.get('description', NOT_MAPPED)
+        description_columns = [var.get() for var in self.description_columns]
+        is_valid, error_msg = gui_utils.validate_description_mapping(
+            desc_mapping, description_columns, NOT_MAPPED, NOT_SELECTED)
+        if not is_valid:
+            messagebox.showwarning("Warning", error_msg)
             return False
         return True
 
@@ -1921,8 +1869,9 @@ class ConverterGUI:
             if status == 'before':
                 # Default action for dates before start: adjust to boundary
                 adjusted_date = date_validator.adjust_date_to_boundary(date)
-                self._log(
-                    f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (before start date)")
+                msg = (f"Row {row_idx + 1}: Date {date} adjusted to "
+                       f"{adjusted_date} (before start date)")
+                self._log(msg)
                 stats['adjusted'] = 1
                 return adjusted_date, stats
 
@@ -2070,28 +2019,23 @@ class ConverterGUI:
             stats: Dictionary with conversion statistics
             date_validator: DateValidator instance (or None if not used)
         """
-        # Build statistics message
-        msg_parts = [
-            "Conversion completed successfully!",
-            "",
-            f"Output file: {output_file}",
-            "",
-            "Statistics:",
-            f"  - Total rows processed: {stats['total_rows']}",
-            f"  - Transactions exported: {stats['processed']}",
-        ]
+        # Build statistics message using gui_utils
+        stats_text = gui_utils.format_conversion_stats(
+            total_rows=stats['total_rows'],
+            processed=stats['processed'],
+            excluded=stats['excluded'],
+            adjusted=stats.get('adjusted', 0),
+            kept_out_of_range=stats.get('kept_out_of_range', 0),
+            has_date_validator=date_validator is not None
+        )
 
-        if stats['excluded'] > 0:
-            msg_parts.append(f"  - Transactions excluded: {stats['excluded']}")
-
-        if date_validator and stats['adjusted'] > 0:
-            msg_parts.append(f"  - Dates adjusted: {stats['adjusted']}")
-
-        if date_validator and stats['kept_out_of_range'] > 0:
-            msg_parts.append(
-                f"  - Out-of-range dates kept: {stats['kept_out_of_range']}")
-
-        message = "\n".join(msg_parts)
+        message = (
+            "Conversion completed successfully!\n"
+            f"\n"
+            f"Output file: {output_file}\n"
+            f"\n"
+            f"{stats_text}"
+        )
         self._log("Conversion completed successfully!")
         messagebox.showinfo("Success", message)
         logger.info("Conversion completed: %s", stats)
