@@ -22,9 +22,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install coverage
+          sudo apt-get update
+          sudo apt-get install -y xvfb
       - name: Test with coverage
         run: |
-          coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest discover -s tests
+          xvfb-run -a coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest discover -s tests
           coverage xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
