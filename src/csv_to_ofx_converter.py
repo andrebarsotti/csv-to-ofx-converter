@@ -42,9 +42,10 @@ from .ofx_generator import OFXGenerator
 from .date_validator import DateValidator
 from .converter_gui import ConverterGUI
 from .constants import NOT_MAPPED, NOT_SELECTED
+from . import gui_utils
 
 # Export all classes for backward compatibility
-__all__ = ['CSVParser', 'OFXGenerator', 'DateValidator', 'ConverterGUI', 'NOT_MAPPED', 'NOT_SELECTED']
+__all__ = ['CSVParser', 'OFXGenerator', 'DateValidator', 'ConverterGUI', 'NOT_MAPPED', 'NOT_SELECTED', 'gui_utils']
 
 logger = logging.getLogger(__name__)
 
