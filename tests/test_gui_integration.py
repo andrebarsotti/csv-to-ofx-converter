@@ -9,7 +9,12 @@ import unittest
 import tkinter as tk
 import tempfile
 import os
+import sys
 from src.csv_to_ofx_converter import ConverterGUI
+
+# Skip all GUI tests if SKIP_GUI_TESTS environment variable is set
+if os.environ.get('SKIP_GUI_TESTS'):
+    raise unittest.SkipTest("GUI tests are disabled in CI environment")
 
 
 class TestGUIIntegration(unittest.TestCase):
