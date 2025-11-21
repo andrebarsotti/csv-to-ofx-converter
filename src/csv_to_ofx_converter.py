@@ -45,6 +45,7 @@ from .constants import NOT_MAPPED, NOT_SELECTED
 from . import gui_utils
 from .gui_balance_manager import BalanceManager
 from .gui_conversion_handler import ConversionHandler, ConversionConfig
+from .gui_transaction_manager import TransactionManager
 
 # Export all classes for backward compatibility
 __all__ = [
@@ -57,7 +58,8 @@ __all__ = [
     'gui_utils',
     'BalanceManager',
     'ConversionHandler',
-    'ConversionConfig'
+    'ConversionConfig',
+    'TransactionManager'
 ]
 
 logger = logging.getLogger(__name__)

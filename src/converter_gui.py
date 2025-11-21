@@ -28,6 +28,7 @@ from .transaction_utils import parse_balance_value
 from . import gui_utils
 from .gui_balance_manager import BalanceManager
 from .gui_conversion_handler import ConversionHandler, ConversionConfig
+from .gui_transaction_manager import TransactionManager
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +127,9 @@ class ConverterGUI:
 
         # Initialize conversion handler
         self.conversion_handler = ConversionHandler(self)
+
+        # Initialize transaction manager
+        self.transaction_manager = TransactionManager(self)
 
         # Build UI
         self._create_widgets()
@@ -993,7 +997,7 @@ class ConverterGUI:
 
         # Bind context menu for deleting transactions
         self.balance_preview_tree.bind(
-            "<Button-3>", self._show_transaction_context_menu)
+            "<Button-3>", self._show_transaction_context_menu_wrapper)
 
         # Populate transaction preview
         self.transaction_tree_items.clear()  # Clear previous mappings
@@ -1167,231 +1171,22 @@ class ConverterGUI:
         formatted = self.balance_manager.format_final_balance(calculated_balance)
         self.final_balance.set(formatted)
 
-    def _close_existing_context_menu(self):
-        """Close any existing context menu."""
-        if hasattr(self, '_context_menu') and self._context_menu:
-            try:
-                self._context_menu.unpost()
-                self._context_menu.destroy()
-            except Exception as e:
-                logger.debug("Error closing existing context menu: %s", e)
-
-    def _get_selected_row_info(self, selected):
+    def _show_transaction_context_menu_wrapper(self, event):
         """
-        Get row index and date status for selected transaction.
+        Wrapper for showing transaction context menu.
 
-        Args:
-            selected: Selection from balance_preview_tree
-
-        Returns:
-            Tuple of (row_idx, date_status) or (None, None) if not found
-        """
-        if len(selected) != 1:
-            return None, None
-
-        item_id = selected[0]
-
-        # Find the row_idx for this tree item
-        for row_idx, tree_item_id in self.transaction_tree_items.items():
-            if tree_item_id == item_id:
-                # Get the transaction data to check date status
-                date_status = self._get_date_status_for_row(row_idx)
-                return row_idx, date_status
-
-        return None, None
-
-    def _get_date_status_for_row(self, row_idx):
-        """
-        Get date status for a specific row.
-
-        Args:
-            row_idx: Row index to check
-
-        Returns:
-            Date status string ('before', 'after', 'valid') or 'valid' if not found
-        """
-        cached_balance = getattr(self, '_cached_balance_info', None)
-        return self.balance_manager.get_date_status_for_transaction(
-            row_idx, cached_balance
-        )
-
-    def _show_transaction_context_menu(self, event):
-        """
-        Show context menu for transaction operations (delete, restore, date actions).
+        Delegates to transaction manager with necessary parameters.
 
         Args:
             event: Right-click event containing mouse position
         """
-        # Close any existing menu
-        self._close_existing_context_menu()
-
-        # Check if any items are selected
-        selected = self.balance_preview_tree.selection()
-
-        # Create context menu
-        self._context_menu = tk.Menu(self.root, tearoff=0)
-        menu_has_items = False
-
-        # Find the row index and date status for selected item (for single selection)
-        selected_row_idx, date_status = self._get_selected_row_info(selected)
-
-        # Add date action options first if there's a date issue
-        has_date_actions = False
-        if selected_row_idx is not None and date_status in ('before', 'after'):
-            current_action = self.date_action_decisions.get(
-                selected_row_idx, 'adjust')
-            # Build date action menu items using helper to reduce cognitive complexity
-            self._add_date_action_menu_items(
-                self._context_menu, selected_row_idx, current_action)
-            menu_has_items = True
-            has_date_actions = True
-
-        # Add delete/restore options (skip if date actions already shown to avoid duplication)
-        self._add_delete_restore_menu_items(
-            self._context_menu, selected, has_date_actions)
-        if self.deleted_transactions:
-            menu_has_items = True
-
-        if menu_has_items:
-            self._context_menu.post(event.x_root, event.y_root)
-            # Bind to close menu when clicking elsewhere
-            self._context_menu.bind(
-                "<FocusOut>", lambda e: self._context_menu.unpost())
-            self.root.bind("<Button-1>", self._close_context_menu, add="+")
-
-    def _close_context_menu(self, event=None):
-        """Close context menu if it exists."""
-        if hasattr(self, '_context_menu') and self._context_menu:
-            try:
-                self._context_menu.unpost()
-            except Exception as e:
-                logger.debug("Error unposting context menu: %s", e)
-
-    def _add_date_action_menu_items(self, menu: tk.Menu, row_idx: int, current_action: str):
-        """Add date-related actions to a context menu for a specific row.
-
-        Extracted to reduce complexity of the context-menu builder.
-        """
-        # Get label texts from balance manager
-        labels = self.balance_manager.get_date_action_label_texts(current_action)
-
-        menu.add_command(label="📅 Date Actions", state='disabled')
-        menu.add_separator()
-        menu.add_command(
-            label=labels['keep'],
-            command=lambda: self._set_date_action_and_close(row_idx, 'keep')
+        self.transaction_manager.show_context_menu(
+            event,
+            self.balance_preview_tree,
+            self.transaction_tree_items,
+            self.deleted_transactions,
+            self.date_action_decisions
         )
-        menu.add_command(
-            label=labels['adjust'],
-            command=lambda: self._set_date_action_and_close(row_idx, 'adjust')
-        )
-        menu.add_command(
-            label=labels['exclude'],
-            command=lambda: self._set_date_action_and_close(row_idx, 'exclude')
-        )
-        menu.add_separator()
-
-    def _add_delete_restore_menu_items(self, menu: tk.Menu, selected, has_date_actions: bool):
-        """Add delete/restore menu items (separated) depending on selection and state.
-
-        Extracted to simplify the main context-menu routine.
-        """
-        if selected and not has_date_actions:
-            delete_count = len(selected)
-            plural = 's' if delete_count > 1 else ''
-            menu.add_command(
-                label=f"Delete Selected ({delete_count} transaction{plural})",
-                command=lambda: self._delete_selected_and_close_menu()
-            )
-        if self.deleted_transactions:
-            deleted_count = len(self.deleted_transactions)
-            plural = 's' if deleted_count > 1 else ''
-            menu.add_command(
-                label=f"Restore All Deleted ({deleted_count} transaction{plural})",
-                command=lambda: self._restore_all_and_close_menu()
-            )
-
-    def _set_date_action_and_close(self, row_idx: int, action: str):
-        """
-        Set date action for a specific transaction and close menu.
-
-        Args:
-            row_idx: Row index of the transaction
-            action: Date action to apply ('keep', 'adjust', 'exclude')
-        """
-        self.date_action_decisions[row_idx] = action
-        self._log(
-            f"Date action set to '{action}' for transaction at row {row_idx}")
-        self._close_context_menu()
-
-        # If action is 'exclude', also mark as deleted and remove from tree
-        if action == 'exclude':
-            self.deleted_transactions.add(row_idx)
-            # Remove the transaction from the tree view
-            tree_item_id = self.transaction_tree_items.get(row_idx)
-            if tree_item_id:
-                self.balance_preview_tree.delete(tree_item_id)
-            # Recalculate balances without recreating the entire step
-            self._recalculate_balance_preview()
-
-    def _delete_selected_and_close_menu(self):
-        """Delete selected transactions and close menu."""
-        self._delete_selected_transactions()
-        self._close_context_menu()
-
-    def _restore_all_and_close_menu(self):
-        """Restore all transactions and close menu."""
-        self._restore_all_transactions()
-        self._close_context_menu()
-
-    def _delete_selected_transactions(self):
-        """
-        Delete selected transactions from preview and mark them for exclusion.
-
-        Removes selected items from tree, adds their row indices to deleted set,
-        and recalculates balances.
-        """
-        selected = self.balance_preview_tree.selection()
-
-        if not selected:
-            return
-
-        # Find row indices for selected items
-        deleted_count = 0
-        for item_id in selected:
-            # Find the row_idx for this tree item
-            for row_idx, tree_item_id in self.transaction_tree_items.items():
-                if tree_item_id == item_id:
-                    # Mark as deleted
-                    self.deleted_transactions.add(row_idx)
-                    # Remove from tree
-                    self.balance_preview_tree.delete(item_id)
-                    deleted_count += 1
-                    break
-
-        if deleted_count > 0:
-            plural = 's' if deleted_count > 1 else ''
-            self._log(
-                f"Deleted {deleted_count} transaction{plural} from preview")
-            # Recalculate balances
-            self._recalculate_balance_preview()
-
-    def _restore_all_transactions(self):
-        """
-        Restore all deleted transactions.
-
-        Clears the deleted set and refreshes the preview to show all transactions.
-        """
-        if not self.deleted_transactions:
-            return
-
-        count = len(self.deleted_transactions)
-        self.deleted_transactions.clear()
-        self._log(
-            f"Restored {count} deleted transaction{'s' if count > 1 else ''}")
-
-        # Refresh the entire preview step to rebuild the tree
-        self._show_step(self.current_step)
 
     # ==================== CONVERSION ====================
 
@@ -1400,6 +1195,8 @@ class ConverterGUI:
                                          description: str) -> Tuple[Optional[str], str]:
         """
         Show dialog to handle an out-of-range transaction.
+
+        Delegates to transaction manager for dialog display.
 
         Args:
             row_idx: Row index in CSV (1-based)
@@ -1413,135 +1210,9 @@ class ConverterGUI:
             - adjusted_date: New date string or None to exclude
             - action: 'keep', 'adjust', or 'exclude'
         """
-        # Create dialog
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Out-of-Range Transaction Detected")
-        dialog.geometry("650x350")
-        dialog.transient(self.root)
-        dialog.grab_set()
-
-        # Center the dialog
-        dialog.update_idletasks()
-        x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
-        y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
-        dialog.geometry(f"+{x}+{y}")
-
-        result = {'action': None, 'date': None}
-
-        # Main frame
-        main_frame = ttk.Frame(dialog, padding="20")
-        main_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Warning message
-        warning_label = ttk.Label(
-            main_frame,
-            text=f"Transaction #{row_idx} is out of range!",
-            font=('Arial', 14, 'bold'),
-            foreground='red'
+        return self.transaction_manager.show_out_of_range_dialog(
+            row_idx, date_str, status, validator, description
         )
-        warning_label.pack(pady=(0, 10))
-
-        # Transaction details
-        details_frame = ttk.Frame(main_frame)
-        details_frame.pack(fill=tk.X, pady=10)
-
-        ttk.Label(details_frame, text="Transaction Date:", font=('Arial', 10, 'bold')).grid(
-            row=0, column=0, sticky=tk.W, pady=2)
-        ttk.Label(details_frame, text=date_str).grid(
-            row=0, column=1, sticky=tk.W, padx=10, pady=2)
-
-        ttk.Label(details_frame, text="Description:", font=('Arial', 10, 'bold')).grid(
-            row=1, column=0, sticky=tk.W, pady=2)
-        desc_text = description[:50] + ('...' if len(description) > 50 else '')
-        ttk.Label(details_frame, text=desc_text).grid(
-            row=1, column=1, sticky=tk.W, padx=10, pady=2)
-
-        ttk.Label(details_frame, text="Valid Range:", font=('Arial', 10, 'bold')).grid(
-            row=2, column=0, sticky=tk.W, pady=2)
-        start_str = validator.start_date.strftime('%Y-%m-%d')
-        end_str = validator.end_date.strftime('%Y-%m-%d')
-        range_text = f"{start_str} to {end_str}"
-        ttk.Label(details_frame, text=range_text).grid(
-            row=2, column=1, sticky=tk.W, padx=10, pady=2)
-
-        if status == 'before':
-            status_text = "This transaction occurs BEFORE the start date"
-        else:
-            status_text = "This transaction occurs AFTER the end date"
-
-        ttk.Label(details_frame, text="Status:", font=('Arial', 10, 'bold')).grid(
-            row=3, column=0, sticky=tk.W, pady=2)
-        ttk.Label(details_frame, text=status_text, foreground='orange').grid(
-            row=3, column=1, sticky=tk.W, padx=10, pady=2)
-
-        # Question
-        question_label = ttk.Label(
-            main_frame,
-            text="How would you like to handle this transaction?",
-            font=('Arial', 10)
-        )
-        question_label.pack(pady=10)
-
-        # Buttons frame
-        buttons_frame = ttk.Frame(main_frame)
-        buttons_frame.pack(pady=10)
-
-        def keep_date():
-            result['action'] = 'keep'
-            result['date'] = date_str
-            dialog.destroy()
-
-        def adjust_date():
-            adjusted_date = validator.adjust_date_to_boundary(date_str)
-            result['action'] = 'adjust'
-            result['date'] = adjusted_date
-            dialog.destroy()
-
-        def exclude_transaction():
-            result['action'] = 'exclude'
-            dialog.destroy()
-
-        # Keep button (NEW!)
-        keep_btn = ttk.Button(
-            buttons_frame,
-            text="Keep original date",
-            command=keep_date
-        )
-        keep_btn.pack(side=tk.LEFT, padx=5)
-
-        # Adjust button
-        boundary = "start date" if status == 'before' else "end date"
-        adjust_btn = ttk.Button(
-            buttons_frame,
-            text=f"Adjust to {boundary}",
-            command=adjust_date
-        )
-        adjust_btn.pack(side=tk.LEFT, padx=5)
-
-        # Exclude button
-        exclude_btn = ttk.Button(
-            buttons_frame,
-            text="Exclude this transaction",
-            command=exclude_transaction
-        )
-        exclude_btn.pack(side=tk.LEFT, padx=5)
-
-        # Explanation
-        explanation = ttk.Label(
-            main_frame,
-            text="- Keep: Use the original date as-is\n"
-                 "- Adjust: Change to the nearest valid date\n"
-                 "- Exclude: Remove this transaction from the OFX file",
-            font=('Arial', 8),
-            foreground='gray',
-            justify=tk.LEFT
-        )
-        explanation.pack(pady=10)
-
-        # Wait for dialog to close
-        dialog.wait_window()
-
-        return result['date'], result['action']
 
     def _convert(self):
         """Convert CSV to OFX."""

@@ -81,22 +81,24 @@ src/
   csv_parser.py            # CSVParser class - handles CSV file parsing
   ofx_generator.py         # OFXGenerator class - generates OFX files
   date_validator.py        # DateValidator class - validates transaction dates
-  converter_gui.py         # ConverterGUI class - Tkinter wizard interface (1,729 lines)
+  converter_gui.py         # ConverterGUI class - Tkinter wizard interface (1,400 lines)
   transaction_utils.py     # Utility functions for transaction processing (no UI dependencies)
   gui_utils.py             # GUI utility functions (pure functions, no Tkinter dependencies)
   gui_balance_manager.py   # BalanceManager class - balance calculations and preview
   gui_conversion_handler.py # ConversionHandler class - CSV to OFX conversion orchestration
+  gui_transaction_manager.py # TransactionManager class - transaction operations and context menus
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
 tests/
   __init__.py              # Test package initialization
   test_csv_parser.py       # CSV parser tests (8 tests)
-  test_ofx_generator.py    # OFX generator tests (20 tests)
+  test_ofx_generator.py    # OFX generator tests (19 tests)
   test_date_validator.py   # Date validator tests (12 tests)
   test_transaction_utils.py # Transaction utilities tests (50 tests)
   test_gui_utils.py        # GUI utilities tests (58 tests)
   test_gui_integration.py  # GUI integration tests (15 tests)
   test_gui_balance_manager.py # Balance Manager tests (14 tests)
   test_gui_conversion_handler.py # Conversion Handler tests (23 tests)
+  test_gui_transaction_manager.py # Transaction Manager tests (26 tests)
   test_integration.py      # Integration tests (5 tests)
   run_all_tests.py         # Convenience script to run all tests
 ```
@@ -159,11 +161,20 @@ tests/
 - No direct widget manipulation (independently testable)
 - Methods: convert(), _process_csv_rows(), _validate_and_adjust_date(), _generate_ofx_file()
 
+**TransactionManager** (`src/gui_transaction_manager.py`):
+- Companion class for ConverterGUI using dependency injection pattern
+- Manages transaction operations and context menu for balance preview
+- Handles transaction deletion, restoration, and date action decisions
+- Shows context menu with date actions (keep/adjust/exclude) for out-of-range transactions
+- Displays out-of-range transaction dialog for user decision
+- Methods: show_context_menu(), delete_selected_transactions(), restore_all_transactions(), show_out_of_range_dialog()
+
 **ConverterGUI** (`src/converter_gui.py`):
 - Multi-step wizard interface (7 steps)
 - Uses Tkinter ttk widgets for modern appearance
 - Delegates balance operations to BalanceManager
 - Delegates conversion operations to ConversionHandler
+- Delegates transaction operations to TransactionManager
 - Step 1: File selection
 - Step 2: CSV format configuration (delimiter, decimal separator)
 - Step 3: Data preview (Treeview showing first 100 rows)
@@ -225,7 +236,7 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (204 tests total):
+Test suite is organized into separate modules (230 tests total):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
@@ -233,7 +244,7 @@ Test suite is organized into separate modules (204 tests total):
 - Support for parentheses notation for negative amounts
 - BOM handling and error cases
 
-**test_ofx_generator.py** (20 tests):
+**test_ofx_generator.py** (19 tests):
 - OFX generation and transaction formatting
 - Date parsing in multiple formats
 - Value inversion logic
@@ -280,6 +291,17 @@ Test suite is organized into separate modules (204 tests total):
 - Transaction type and ID determination
 - Error handling for malformed data and invalid date ranges
 
+**test_gui_transaction_manager.py** (26 tests):
+- Transaction manager initialization with parent GUI
+- Context menu creation for valid and out-of-range transactions
+- Transaction CRUD operations (delete single/multiple, restore all)
+- Getting selected row info from Treeview
+- Date status determination for transactions
+- Date action handling (keep/adjust/exclude)
+- Date action menu item creation based on current selection
+- Out-of-range dialog display logic
+- Uses mock Treeview and parent GUI to avoid display dependencies
+
 **test_integration.py** (5 tests):
 - Complete end-to-end conversion workflows
 - Composite descriptions with various separators
@@ -291,6 +313,7 @@ Test suite is organized into separate modules (204 tests total):
 - Tests both positive cases and error conditions
 - Each test class in its own file for better maintainability
 - Utility functions tested independently without UI dependencies
+- GUI component tests use mock objects to avoid display server requirements
 
 ## Common Patterns
 
