@@ -23,16 +23,11 @@ from typing import List, Dict, Tuple, Optional
 
 from .constants import NOT_MAPPED, NOT_SELECTED
 from .csv_parser import CSVParser
-from .ofx_generator import OFXGenerator
 from .date_validator import DateValidator
-from .transaction_utils import (
-    build_transaction_description,
-    determine_transaction_type,
-    extract_transaction_id,
-    parse_balance_value
-)
+from .transaction_utils import parse_balance_value
 from . import gui_utils
 from .gui_balance_manager import BalanceManager
+from .gui_conversion_handler import ConversionHandler, ConversionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +123,9 @@ class ConverterGUI:
 
         # Initialize balance manager
         self.balance_manager = BalanceManager(self)
+
+        # Initialize conversion handler
+        self.conversion_handler = ConversionHandler(self)
 
         # Build UI
         self._create_widgets()
@@ -1550,26 +1548,101 @@ class ConverterGUI:
         if not self._validate_conversion_prerequisites():
             return
 
-        date_validator = self._initialize_date_validator()
-        if date_validator is False:
-            return
-
         try:
             self._log("Converting CSV to OFX...")
-            parser, generator = self._create_parser_and_generator()
 
-            stats = self._process_csv_rows(parser, generator, date_validator)
-
+            # Prompt for output file first
             output_file = self._prompt_for_output_file()
             if not output_file:
                 return
 
-            self._generate_ofx_file(generator, output_file)
-            self._show_conversion_success(output_file, stats, date_validator)
+            # Create conversion config
+            config = self._create_conversion_config()
+
+            # Delegate to conversion handler
+            success, message, stats = self.conversion_handler.convert(
+                config, output_file
+            )
+
+            if success:
+                self._log("Conversion completed successfully!")
+                messagebox.showinfo("Success", message)
+                logger.info("Conversion completed: %s", stats)
+            else:
+                self._log(f"Error during conversion: {message}")
+                messagebox.showerror("Error", message)
 
         except Exception as e:
             self._log(f"Error during conversion: {e}")
             messagebox.showerror("Error", f"Conversion failed:\n{e}")
+
+    def _create_conversion_config(self) -> ConversionConfig:
+        """
+        Create ConversionConfig from GUI state.
+
+        Returns:
+            ConversionConfig object with all conversion parameters
+        """
+        # Get field mappings as strings
+        field_mappings_dict = {
+            k: v.get() for k, v in self.field_mappings.items()
+        }
+
+        # Get description columns as list of strings
+        description_columns = [var.get() for var in self.description_columns]
+
+        # Parse initial balance
+        initial_balance_str = self.initial_balance.get().strip()
+        if initial_balance_str and initial_balance_str not in [
+            '0', '0.0', '0.00'
+        ]:
+            initial_balance = parse_balance_value(
+                initial_balance_str, default=0.0
+            )
+            if abs(initial_balance) < 1e-9:
+                self._log("Warning: Invalid initial balance, using 0.00")
+                initial_balance = 0.0
+        else:
+            initial_balance = 0.0
+
+        # Parse final balance (if manual mode)
+        final_balance = None
+        if not self.auto_calculate_final_balance.get():
+            final_balance_str = self.final_balance.get().strip()
+            if final_balance_str:
+                try:
+                    final_balance = float(final_balance_str)
+                    self._log(
+                        f"Using manual final balance: {final_balance:.2f}"
+                    )
+                except ValueError:
+                    self._log(
+                        "Warning: Invalid final balance, "
+                        "will calculate automatically"
+                    )
+                    final_balance = None
+
+        return ConversionConfig(
+            csv_file_path=self.csv_file.get(),
+            csv_data=self.csv_data,
+            field_mappings=field_mappings_dict,
+            description_columns=description_columns,
+            description_separator=self.description_separator.get(),
+            delimiter=self.delimiter.get(),
+            decimal_separator=self.decimal_separator.get(),
+            invert_values=self.invert_values.get(),
+            account_id=self.account_id.get(),
+            bank_name=self.bank_name.get(),
+            currency=self.currency.get(),
+            initial_balance=initial_balance,
+            statement_start_date=self.start_date.get(),
+            statement_end_date=self.end_date.get(),
+            date_action=self.enable_date_validation.get(),
+            deleted_transactions=self.deleted_transactions,
+            date_action_decisions=self.date_action_decisions,
+            enable_date_validation=self.enable_date_validation.get(),
+            final_balance=final_balance
+        )
 
     def _validate_conversion_prerequisites(self) -> bool:
         """Validate prerequisites for conversion."""
@@ -1588,195 +1661,6 @@ class ConverterGUI:
             messagebox.showwarning("Warning", error_msg)
             return False
         return True
-
-    def _initialize_date_validator(self):
-        """Initialize date validator if enabled. Returns validator or False on error."""
-        if not self.enable_date_validation.get():
-            return None
-
-        start_date_str = self.start_date.get().strip()
-        end_date_str = self.end_date.get().strip()
-
-        if not start_date_str or not end_date_str:
-            messagebox.showwarning("Warning",
-                                   "Please enter both start and end dates for validation")
-            return False
-
-        try:
-            validator = DateValidator(start_date_str, end_date_str)
-            self._log(
-                f"Date validation enabled: {start_date_str} to {end_date_str}")
-            return validator
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid date range: {e}")
-            return False
-
-    def _create_parser_and_generator(self):
-        """Create CSV parser and OFX generator."""
-        parser = CSVParser(
-            delimiter=self.delimiter.get(),
-            decimal_separator=self.decimal_separator.get()
-        )
-        generator = OFXGenerator(invert_values=self.invert_values.get())
-
-        if self.invert_values.get():
-            self._log("Value inversion enabled - all amounts will be inverted")
-
-        return parser, generator
-
-    def _process_csv_rows(self, parser, generator, date_validator):
-        """Process all CSV rows and return statistics."""
-        date_col = self.field_mappings['date'].get()
-        amount_col = self.field_mappings['amount'].get()
-        desc_col = self.field_mappings['description'].get()
-        type_col = self.field_mappings['type'].get()
-        id_col = self.field_mappings['id'].get()
-        use_composite = any(
-            var.get() != NOT_SELECTED for var in self.description_columns)
-
-        stats = {
-            'total_rows': len(self.csv_data),
-            'processed': 0,
-            'excluded': 0,
-            'adjusted': 0,
-            'kept_out_of_range': 0,
-            'deleted': len(self.deleted_transactions)
-        }
-
-        for row_idx, row in enumerate(self.csv_data):
-            # Skip deleted transactions (deleted in preview)
-            if row_idx in self.deleted_transactions:
-                stats['excluded'] += 1
-                continue
-
-            try:
-                date = row[date_col]
-                amount = parser.normalize_amount(row[amount_col])
-                description = self._build_description(
-                    row, desc_col, use_composite)
-
-                date, date_stats = self._validate_and_adjust_date(
-                    date, row_idx, description, date_validator
-                )
-                if date is None:
-                    stats['excluded'] += 1
-                    continue
-
-                stats['adjusted'] += date_stats.get('adjusted', 0)
-                stats['kept_out_of_range'] += date_stats.get(
-                    'kept_out_of_range', 0)
-
-                trans_type = self._get_transaction_type(type_col, row, amount)
-                trans_id = self._get_transaction_id(id_col, row)
-
-                generator.add_transaction(
-                    date=date,
-                    amount=amount,
-                    description=description,
-                    transaction_type=trans_type,
-                    transaction_id=trans_id
-                )
-                stats['processed'] += 1
-
-            except Exception as e:
-                self._log(f"Warning: Skipping row {row_idx + 1}: {e}")
-                stats['excluded'] += 1
-
-        return stats
-
-    def _build_description(self, row, desc_col, use_composite):
-        """Build transaction description from single or multiple columns."""
-        # Extract column names from StringVar objects
-        description_columns = [var.get() for var in self.description_columns]
-
-        return build_transaction_description(
-            row=row,
-            desc_col=desc_col,
-            description_columns=description_columns,
-            separator=self.description_separator.get(),
-            use_composite=use_composite
-        )
-
-    def _validate_and_adjust_date(self, date, row_idx, description, date_validator):
-        """
-        Validate date and adjust if necessary. Returns (date, stats_dict).
-
-        Checks if user has made a decision via context menu (date_action_decisions).
-        If yes, applies that decision. If no, applies default behavior:
-        - Dates BEFORE start_date: automatically adjusted to start_date
-        - Dates AFTER end_date: kept as-is with warning
-
-        Args:
-            date: Transaction date string
-            row_idx: Row index (0-based) in csv_data
-            description: Transaction description
-            date_validator: DateValidator instance or None
-
-        Returns:
-            Tuple of (date_string, stats_dict) where:
-            - date_string: Adjusted date or None to exclude transaction
-            - stats_dict: Dictionary with 'adjusted' and 'kept_out_of_range' counts
-        """
-        stats = {'adjusted': 0, 'kept_out_of_range': 0}
-
-        if not date_validator:
-            return date, stats
-
-        if date_validator.is_within_range(date):
-            return date, stats
-
-        status = date_validator.get_date_status(date)
-
-        # Check if user has already made a decision for this transaction
-        user_action = self.date_action_decisions.get(row_idx)
-
-        if user_action:
-            # Apply user's decision
-            if user_action == 'exclude':
-                # Exclude transaction (return None)
-                self._log(
-                    f"Row {row_idx + 1}: Transaction excluded (user decision)")
-                return None, stats
-            elif user_action == 'keep':
-                # Keep original date
-                self._log(
-                    f"Row {row_idx + 1}: Keeping original date {date} (user decision)")
-                stats['kept_out_of_range'] = 1
-                return date, stats
-            elif user_action == 'adjust':
-                # Adjust to boundary
-                adjusted_date = date_validator.adjust_date_to_boundary(date)
-                self._log(
-                    f"Row {row_idx + 1}: Date {date} adjusted to {adjusted_date} (user decision)")
-                stats['adjusted'] = 1
-                return adjusted_date, stats
-        else:
-            # Apply automatic default actions based on date status
-            if status == 'before':
-                # Default action for dates before start: adjust to boundary
-                adjusted_date = date_validator.adjust_date_to_boundary(date)
-                msg = (f"Row {row_idx + 1}: Date {date} adjusted to "
-                       f"{adjusted_date} (before start date)")
-                self._log(msg)
-                stats['adjusted'] = 1
-                return adjusted_date, stats
-
-            elif status == 'after':
-                # Default action for dates after end: keep with warning
-                self._log(
-                    f"Row {row_idx + 1}: Date {date} is after end date (kept as-is)")
-                stats['kept_out_of_range'] = 1
-                return date, stats
-
-        return date, stats
-
-    def _get_transaction_type(self, type_col, row, amount):
-        """Get transaction type from mapping or infer from amount."""
-        return determine_transaction_type(type_col, row, amount)
-
-    def _get_transaction_id(self, id_col, row):
-        """Get transaction ID from mapping if available."""
-        return extract_transaction_id(id_col, row)
 
     def _prompt_for_output_file(self):
         """Prompt user for output file location."""
@@ -1843,85 +1727,3 @@ class ConverterGUI:
 
         self._log("All fields cleared - ready for new conversion")
         logger.info("Form cleared and reset to initial state")
-
-    def _generate_ofx_file(self, generator, output_file: str):
-        """
-        Generate the OFX file using the generator.
-
-        Args:
-            generator: OFXGenerator instance with transactions
-            output_file: Path to save the OFX file
-        """
-        # Parse initial balance with validation
-        # Strategy: Check string value first to distinguish between:
-        #   1. Intentional zero/empty input (valid)
-        #   2. Non-zero input that failed to parse (invalid - should warn)
-        # This avoids direct floating point equality checks while maintaining exact logic
-        initial_balance_str = self.initial_balance.get().strip()
-        if initial_balance_str and initial_balance_str not in ['0', '0.0', '0.00']:
-            # Non-empty, non-zero input - attempt parsing
-            initial_balance = parse_balance_value(
-                initial_balance_str, default=0.0)
-            if abs(initial_balance) < 1e-9:
-                # Parse returned ~zero for non-zero input - parsing failed
-                self._log("Warning: Invalid initial balance, using 0.00")
-        else:
-            # Empty or explicitly zero input - use 0.0 (valid)
-            initial_balance = 0.0
-
-        # Parse final balance (if manual mode)
-        final_balance = None
-        if not self.auto_calculate_final_balance.get():
-            final_balance_str = self.final_balance.get().strip()
-            if final_balance_str:
-                try:
-                    final_balance = float(final_balance_str)
-                    self._log(
-                        f"Using manual final balance: {final_balance:.2f}")
-                except ValueError:
-                    self._log(
-                        "Warning: Invalid final balance, will calculate automatically")
-            else:
-                self._log(
-                    "Warning: Invalid final balance, will calculate automatically")
-
-        generator.generate(
-            output_path=output_file,
-            account_id=self.account_id.get(),
-            bank_name=self.bank_name.get(),
-            currency=self.currency.get(),
-            initial_balance=initial_balance,
-            final_balance=final_balance
-        )
-        self._log(f"OFX file saved: {output_file}")
-        logger.info("OFX file saved: %s", output_file)
-
-    def _show_conversion_success(self, output_file: str, stats: dict, date_validator):
-        """
-        Show conversion success message with statistics.
-
-        Args:
-            output_file: Path to the generated OFX file
-            stats: Dictionary with conversion statistics
-            date_validator: DateValidator instance (or None if not used)
-        """
-        # Build statistics message using gui_utils
-        stats_text = gui_utils.format_conversion_stats(
-            total_rows=stats['total_rows'],
-            processed=stats['processed'],
-            excluded=stats['excluded'],
-            adjusted=stats.get('adjusted', 0),
-            kept_out_of_range=stats.get('kept_out_of_range', 0),
-            has_date_validator=date_validator is not None
-        )
-
-        message = (
-            "Conversion completed successfully!\n"
-            f"\n"
-            f"Output file: {output_file}\n"
-            f"\n"
-            f"{stats_text}"
-        )
-        self._log("Conversion completed successfully!")
-        messagebox.showinfo("Success", message)
-        logger.info("Conversion completed: %s", stats)

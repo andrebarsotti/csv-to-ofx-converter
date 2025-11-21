@@ -44,6 +44,7 @@ from .converter_gui import ConverterGUI
 from .constants import NOT_MAPPED, NOT_SELECTED
 from . import gui_utils
 from .gui_balance_manager import BalanceManager
+from .gui_conversion_handler import ConversionHandler, ConversionConfig
 
 # Export all classes for backward compatibility
 __all__ = [
@@ -54,7 +55,9 @@ __all__ = [
     'NOT_MAPPED',
     'NOT_SELECTED',
     'gui_utils',
-    'BalanceManager'
+    'BalanceManager',
+    'ConversionHandler',
+    'ConversionConfig'
 ]
 
 logger = logging.getLogger(__name__)
