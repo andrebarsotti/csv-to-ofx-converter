@@ -248,6 +248,12 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 **GitHub Actions** (`.github/workflows/`):
 - `build-and-release.yml`: Multi-platform builds (Linux, macOS, Windows) with matrix strategy
 - `sonar.yml`: SonarCloud code quality analysis
+  - Runs on every push to main branch
+  - Executes 215 tests (excludes GUI tests that require display server)
+  - Excludes: `test_gui_integration.py` (15 tests), `test_gui_wizard_step.py` (32 tests)
+  - Generates coverage report for SonarCloud analysis
+  - **IMPORTANT**: After each push to main, verify the SonarCloud workflow passes by checking GitHub Actions
+  - GUI tests should NOT execute in this workflow (CI environment has no display server)
 
 ## Testing Strategy
 
@@ -421,6 +427,45 @@ Test suite is organized into separate modules (262 tests total):
 - Place in the appropriate test module (test_csv_parser.py, test_ofx_generator.py, etc.)
 - Update test counts in documentation
 - Ensure test discovery works: `python3 -m unittest discover tests`
+
+## CI/CD Workflow Verification
+
+**IMPORTANT**: After pushing commits to the main branch, always verify that GitHub Actions workflows pass:
+
+### Checking SonarCloud Workflow
+
+After each push to main, verify the SonarCloud workflow:
+
+```bash
+# List recent workflow runs
+gh run list --workflow=sonar.yml --limit 3
+
+# View specific run details
+gh run view <run-id>
+
+# Watch workflow in real-time
+gh run watch
+```
+
+**Expected Behavior**:
+- ✓ Workflow should complete successfully (status: "completed success")
+- ✓ Should run 215 tests (94 non-GUI + 121 GUI utility tests)
+- ✓ GUI tests requiring display server should be excluded:
+  - `test_gui_integration.py` (15 tests) - skipped
+  - `test_gui_wizard_step.py` (32 tests) - not executed
+- ✓ Coverage report should be generated successfully
+- ✓ SonarCloud scan should complete without errors
+
+**If Workflow Fails**:
+1. Check the workflow logs: `gh run view <run-id> --log`
+2. Look for test failures or Tkinter display errors
+3. Verify that GUI tests are properly excluded in `.github/workflows/sonar.yml`
+4. Verify exclusions in `sonar-project.properties`
+
+### Checking Build Workflow
+
+For releases, also verify the build-and-release workflow completes successfully for all platforms (Linux, macOS, Windows).
+
 ## Release Process
 
 **IMPORTANT**: Follow the comprehensive checklist in `RELEASE_CHECKLIST.md` for all releases.
