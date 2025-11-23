@@ -46,6 +46,8 @@ from . import gui_utils
 from .gui_balance_manager import BalanceManager
 from .gui_conversion_handler import ConversionHandler, ConversionConfig
 from .gui_transaction_manager import TransactionManager
+from .gui_wizard_step import WizardStep, StepConfig, StepData
+from . import gui_steps
 
 # Export all classes for backward compatibility
 __all__ = [
@@ -59,7 +61,11 @@ __all__ = [
     'BalanceManager',
     'ConversionHandler',
     'ConversionConfig',
-    'TransactionManager'
+    'TransactionManager',
+    'WizardStep',
+    'StepConfig',
+    'StepData',
+    'gui_steps'
 ]
 
 logger = logging.getLogger(__name__)

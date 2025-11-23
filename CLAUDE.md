@@ -39,6 +39,7 @@ python3 -m unittest tests.test_csv_parser
 python3 -m unittest tests.test_ofx_generator
 python3 -m unittest tests.test_date_validator
 python3 -m unittest tests.test_transaction_utils
+python3 -m unittest tests.test_gui_wizard_step
 python3 -m unittest tests.test_integration
 
 # Run specific test classes
@@ -46,6 +47,7 @@ python3 -m unittest tests.test_csv_parser.TestCSVParser
 python3 -m unittest tests.test_ofx_generator.TestOFXGenerator
 python3 -m unittest tests.test_date_validator.TestDateValidator
 python3 -m unittest tests.test_transaction_utils.TestBuildTransactionDescription
+python3 -m unittest tests.test_gui_wizard_step.TestWizardStepLifecycle
 python3 -m unittest tests.test_integration.TestIntegration
 
 # Alternative: Run using convenience script
@@ -87,7 +89,10 @@ src/
   gui_balance_manager.py   # BalanceManager class - balance calculations and preview
   gui_conversion_handler.py # ConversionHandler class - CSV to OFX conversion orchestration
   gui_transaction_manager.py # TransactionManager class - transaction operations and context menus
+  gui_wizard_step.py       # WizardStep base class - abstract base for wizard steps (~355 lines)
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
+  gui_steps/               # Wizard step implementations package
+    __init__.py            # Package initialization
 tests/
   __init__.py              # Test package initialization
   test_csv_parser.py       # CSV parser tests (8 tests)
@@ -99,6 +104,7 @@ tests/
   test_gui_balance_manager.py # Balance Manager tests (14 tests)
   test_gui_conversion_handler.py # Conversion Handler tests (23 tests)
   test_gui_transaction_manager.py # Transaction Manager tests (26 tests)
+  test_gui_wizard_step.py  # WizardStep base class tests (32 tests)
   test_integration.py      # Integration tests (5 tests)
   run_all_tests.py         # Convenience script to run all tests
 ```
@@ -169,6 +175,15 @@ tests/
 - Displays out-of-range transaction dialog for user decision
 - Methods: show_context_menu(), delete_selected_transactions(), restore_all_transactions(), show_out_of_range_dialog()
 
+**WizardStep** (`src/gui_wizard_step.py`):
+- Abstract base class for wizard step implementations
+- Provides lifecycle management: create(), show(), hide(), destroy()
+- Enforces implementation via abstract methods: _build_ui(), _collect_data(), _validate_data()
+- Helper methods for safe parent access: get_parent_data(), set_parent_data(), log()
+- Uses StepConfig dataclass for step configuration
+- Returns StepData dataclass from validate() method
+- Designed for dependency injection pattern (receives parent via constructor)
+
 **ConverterGUI** (`src/converter_gui.py`):
 - Multi-step wizard interface (7 steps)
 - Uses Tkinter ttk widgets for modern appearance
@@ -236,7 +251,7 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (230 tests total):
+Test suite is organized into separate modules (262 tests total):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
@@ -301,6 +316,13 @@ Test suite is organized into separate modules (230 tests total):
 - Date action menu item creation based on current selection
 - Out-of-range dialog display logic
 - Uses mock Treeview and parent GUI to avoid display dependencies
+
+**test_gui_wizard_step.py** (32 tests):
+- WizardStep base class lifecycle (create, show, hide, destroy)
+- StepConfig and StepData dataclasses
+- Helper methods (get_parent_data, set_parent_data, log)
+- Validation orchestration
+- Concrete implementation with MockWizardStep
 
 **test_integration.py** (5 tests):
 - Complete end-to-end conversion workflows
@@ -409,7 +431,7 @@ Before creating a release, ensure all of the following are complete:
 
 1. **Code Quality & Testing**:
    - All tests passing: `python3 -m unittest discover tests -v`
-   - Verify 95 tests run successfully
+   - Verify 262 tests run successfully
    - Test individual modules work correctly
    - Code follows PEP8 standards
    - No debugging code or print statements
@@ -524,7 +546,7 @@ Changes:
 - Documentation: Updates to docs
 
 Testing:
-- All 95 tests passing
+- All 262 tests passing
 - Tested on [platforms]
 - Compatible with [software versions]
 ```
