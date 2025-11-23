@@ -36,9 +36,11 @@ jobs:
             tests.test_gui_balance_manager \
             tests.test_gui_conversion_handler \
             tests.test_gui_transaction_manager \
-            tests.test_gui_utils \
-            tests.test_gui_wizard_step
-          # Note: Excludes tests.test_gui_integration and tests.test_gui_steps.* (require display server)
+            tests.test_gui_utils
+          # Note: Excludes tests requiring display server:
+          #   - tests.test_gui_integration (uses tk.Tk())
+          #   - tests.test_gui_wizard_step (uses tk.Tk())
+          #   - tests.test_gui_steps.* (uses tk.Tk())
           coverage xml
         env:
           SKIP_GUI_TESTS: "1"
