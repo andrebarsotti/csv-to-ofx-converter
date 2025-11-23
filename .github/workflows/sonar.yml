@@ -24,10 +24,20 @@ jobs:
           pip install coverage
       - name: Test with coverage
         run: |
-          # Run non-GUI tests
-          coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest discover -s tests -p "test_[!g]*.py" -t .
+          # Run non-GUI tests (explicit list to avoid discovering GUI step tests in subdirectories)
+          coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*,src/gui_steps/*" -m unittest \
+            tests.test_csv_parser \
+            tests.test_date_validator \
+            tests.test_integration \
+            tests.test_ofx_generator \
+            tests.test_transaction_utils
           # Run GUI utility/helper tests (no display required)
-          coverage run -a --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest tests.test_gui_balance_manager tests.test_gui_conversion_handler tests.test_gui_transaction_manager tests.test_gui_utils tests.test_gui_wizard_step
+          coverage run -a --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*,src/gui_steps/*" -m unittest \
+            tests.test_gui_balance_manager \
+            tests.test_gui_conversion_handler \
+            tests.test_gui_transaction_manager \
+            tests.test_gui_utils \
+            tests.test_gui_wizard_step
           # Note: Excludes tests.test_gui_integration and tests.test_gui_steps.* (require display server)
           coverage xml
         env:
