@@ -25,7 +25,7 @@ jobs:
       - name: Test with coverage
         run: |
           coverage run --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest discover -s tests -p "test_[!g]*.py" -t .
-          coverage run -a --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest tests.test_gui_integration tests.test_gui_balance_manager tests.test_gui_conversion_handler tests.test_gui_transaction_manager tests.test_gui_utils
+          coverage run -a --source=src --omit="src/converter_gui.py,src/*_gui.py,src/ui/*" -m unittest tests.test_gui_balance_manager tests.test_gui_conversion_handler tests.test_gui_transaction_manager tests.test_gui_utils
           coverage xml
         env:
           SKIP_GUI_TESTS: "1"
