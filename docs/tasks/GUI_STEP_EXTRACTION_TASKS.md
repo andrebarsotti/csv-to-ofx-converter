@@ -15,17 +15,17 @@ Phase A → Phase B → Phase C → Phase D → Phase E (all sequential)
 - Within each phase: Step implementation + test creation can run in parallel
 - Code quality review can run in parallel with next phase planning
 
-**Status:** 🟢 Phase A Complete (November 23, 2025) | 🟡 Phase B In Progress (Tasks B.1-B.2 Complete)
+**Status:** 🟢 Phase A Complete (November 23, 2025) | 🟡 Phase B In Progress (Tasks B.1-B.4 Complete)
 
 ---
 
 ## Overall Progress
 
-**Completion Status:** 10/47 tasks (21%)
+**Completion Status:** 12/47 tasks (26%)
 
 ### Phase Completion
 - ✅ **Phase A (Infrastructure):** 8/8 tasks (100%) - COMPLETED November 23, 2025
-- 🟡 **Phase B (Simple Steps):** 2/9 tasks (22%) - IN PROGRESS (Tasks B.1-B.2 complete)
+- 🟡 **Phase B (Simple Steps):** 4/9 tasks (44%) - IN PROGRESS (Tasks B.1-B.4 complete)
 - ⏳ **Phase C (Medium Steps):** 0/8 tasks (0%) - NOT STARTED
 - ⏳ **Phase D (Complex Steps):** 0/10 tasks (0%) - NOT STARTED
 - ⏳ **Phase E (Cleanup):** 0/12 tasks (0%) - NOT STARTED
@@ -43,6 +43,13 @@ Phase A → Phase B → Phase C → Phase D → Phase E (all sequential)
 - Production Code: 194 lines (file_selection_step.py)
 - Test Code: 444 lines (24 tests)
 - Total Tests: 286 (262 existing + 24 new)
+- All tests passing
+- Zero regressions
+
+**Phase B Tasks B.3-B.4 (CSVFormatStep):**
+- Production Code: 220 lines (csv_format_step.py)
+- Test Code: 402 lines (21 tests)
+- Total Tests: 307 (286 existing + 21 new)
 - All tests passing
 - Zero regressions
 
@@ -201,9 +208,145 @@ Create comprehensive unit tests for the `WizardStep` base class covering all lif
 
 ---
 
-## Phase B: Simple Steps (Tasks B.1 through B.9) - NOT STARTED
+## Phase B: Simple Steps (Tasks B.1 through B.9) - 🟡 IN PROGRESS
 
-(Phase B tasks to be initiated next...)
+**Status:** 🟡 IN PROGRESS (4/9 tasks complete - 44%)
+**Goal:** Extract simple steps (Steps 1, 2, 4) from converter_gui.py
+**Success Criteria:** Steps 1, 2, 4 functional, 305+ total tests passing, zero regressions
+
+### Task B.1 - Extract FileSelectionStep ✅ COMPLETED
+
+**Status:** ✅ COMPLETED November 23, 2025
+**Agent:** feature-developer
+**Priority:** P1 (High)
+**Duration:** 0.5 days (Actual: Completed)
+**Dependencies:** Phase A complete
+
+**Description:**
+Extract Step 1 (File Selection) from converter_gui.py into FileSelectionStep class.
+
+**Files Created:**
+- `/workspaces/csv-to-ofx-converter/src/gui_steps/file_selection_step.py` (194 lines)
+
+**Acceptance Criteria:**
+- [x] FileSelectionStep class created
+- [x] Inherits from WizardStep
+- [x] UI creates file entry and browse button
+- [x] Validates CSV file selection
+- [x] Integrates with parent.csv_file StringVar
+
+**Actual LOC:** 194 lines
+
+---
+
+### Task B.2 - Create FileSelectionStep Unit Tests ✅ COMPLETED
+
+**Status:** ✅ COMPLETED November 23, 2025
+**Agent:** unit-test-generator
+**Priority:** P1 (High)
+**Duration:** 0.5 days (Actual: Completed)
+**Dependencies:** B.1
+
+**Description:**
+Create comprehensive unit tests for FileSelectionStep.
+
+**Files Created:**
+- `/workspaces/csv-to-ofx-converter/tests/test_gui_steps/test_file_selection_step.py` (444 lines)
+
+**Test Requirements:**
+- Initialization tests (3 tests)
+- UI creation tests (5 tests)
+- Layout tests (2 tests)
+- File browser tests (3 tests)
+- Data collection tests (2 tests)
+- Validation tests (6 tests)
+- Lifecycle tests (3 tests)
+- **Total: 24 tests**
+
+**Acceptance Criteria:**
+- [x] All 24 tests pass
+- [x] Test coverage ≥ 90%
+- [x] Uses mocking (no GUI dependencies)
+- [x] Total tests: 286 (262 + 24)
+- [x] Zero regressions
+
+**Actual LOC:** 444 lines
+
+---
+
+### Task B.3 - Extract CSVFormatStep ✅ COMPLETED
+
+**Status:** ✅ COMPLETED November 23, 2025
+**Agent:** feature-developer
+**Priority:** P1 (High)
+**Duration:** 0.5 days (Actual: Completed)
+**Dependencies:** B.2
+
+**Description:**
+Extract Step 2 (CSV Format) from converter_gui.py into CSVFormatStep class.
+
+**Files Created:**
+- `/workspaces/csv-to-ofx-converter/src/gui_steps/csv_format_step.py` (220 lines)
+
+**Acceptance Criteria:**
+- [x] CSVFormatStep class created
+- [x] Inherits from WizardStep
+- [x] UI creates radio buttons for delimiter (comma, semicolon, tab)
+- [x] UI creates radio buttons for decimal separator (dot, comma)
+- [x] Binds to parent.delimiter and parent.decimal_separator StringVars
+- [x] Validation always returns valid (defaults provided)
+
+**Actual LOC:** 220 lines
+
+---
+
+### Task B.4 - Create CSVFormatStep Unit Tests ✅ COMPLETED
+
+**Status:** ✅ COMPLETED November 23, 2025
+**Agent:** unit-test-generator
+**Priority:** P1 (High)
+**Duration:** 0.5 days (Actual: Completed)
+**Dependencies:** B.3
+
+**Description:**
+Create comprehensive unit tests for CSVFormatStep.
+
+**Files Created:**
+- `/workspaces/csv-to-ofx-converter/tests/test_gui_steps/test_csv_format_step.py` (402 lines)
+
+**Test Requirements:**
+- Initialization tests (3 tests)
+- UI creation tests (5 tests)
+- Layout tests (2 tests)
+- Radio button behavior tests (3 tests)
+- Data collection tests (2 tests)
+- Validation tests (3 tests)
+- Lifecycle tests (3 tests)
+- **Total: 21 tests**
+
+**Acceptance Criteria:**
+- [x] All 21 tests pass
+- [x] Test coverage ≥ 90%
+- [x] Uses mocking (no GUI dependencies)
+- [x] Total tests: 307 (286 + 21)
+- [x] Zero regressions
+
+**Actual LOC:** 402 lines
+
+---
+
+### Task B.5 - Extract OFXConfigStep ⏳ NOT STARTED
+
+**Status:** ⏳ NOT STARTED
+**Agent:** feature-developer
+**Priority:** P1 (High)
+**Duration:** 0.5 days (Estimated)
+**Dependencies:** B.4
+
+**Description:**
+Extract Step 4 (OFX Configuration) from converter_gui.py into OFXConfigStep class.
+
+(Remaining tasks B.5-B.9 to be completed...)
 
 ---
 
