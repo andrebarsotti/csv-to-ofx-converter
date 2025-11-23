@@ -29,6 +29,7 @@ from . import gui_utils
 from .gui_balance_manager import BalanceManager
 from .gui_conversion_handler import ConversionHandler, ConversionConfig
 from .gui_transaction_manager import TransactionManager
+from .gui_steps import FileSelectionStep, CSVFormatStep, OFXConfigStep
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,12 @@ class ConverterGUI:
 
         # Initialize transaction manager
         self.transaction_manager = TransactionManager(self)
+
+        # Initialize new wizard steps (Phase B - Steps 1, 2, 4)
+        self.step_instances = {}
+        self.step_instances[0] = FileSelectionStep(self)
+        self.step_instances[1] = CSVFormatStep(self)
+        self.step_instances[3] = OFXConfigStep(self)  # Step 4 is index 3
 
         # Build UI
         self._create_widgets()
@@ -254,29 +261,36 @@ class ConverterGUI:
 
     def _show_step(self, step_num: int):
         """Show the specified step."""
-        # Clear current step container
-        for widget in self.step_container.winfo_children():
-            widget.destroy()
-
         # Update current step
         self.current_step = step_num
         self._update_progress_indicator()
 
-        # Create step content
-        if step_num == 0:
-            self._create_step_file_selection()
-        elif step_num == 1:
-            self._create_step_csv_format()
-        elif step_num == 2:
-            self._create_step_data_preview()
-        elif step_num == 3:
-            self._create_step_ofx_config()
-        elif step_num == 4:
-            self._create_step_field_mapping()
-        elif step_num == 5:
-            self._create_step_advanced_options()
-        elif step_num == 6:
-            self._create_step_balance_preview()
+        # Check if we have a new step instance for this step
+        if step_num in self.step_instances:
+            # Use new step class pattern
+            step = self.step_instances[step_num]
+
+            # Clear current step container (destroy widgets)
+            for widget in self.step_container.winfo_children():
+                widget.destroy()
+
+            # Always create fresh UI (step container was destroyed above)
+            step.create(self.step_container)
+        else:
+            # Use old step method pattern (Steps 3, 5, 6, 7)
+            # Clear current step container
+            for widget in self.step_container.winfo_children():
+                widget.destroy()
+
+            # Create step content using old methods
+            if step_num == 2:
+                self._create_step_data_preview()
+            elif step_num == 4:
+                self._create_step_field_mapping()
+            elif step_num == 5:
+                self._create_step_advanced_options()
+            elif step_num == 6:
+                self._create_step_balance_preview()
 
         # Update navigation buttons
         self._update_navigation_buttons()
@@ -314,8 +328,19 @@ class ConverterGUI:
 
     def _validate_current_step(self) -> bool:
         """Validate current step before proceeding."""
+        # Check if we have a new step instance for this step
+        if self.current_step in self.step_instances:
+            # Use new step validation
+            step = self.step_instances[self.current_step]
+            step_data = step.validate()
+
+            if not step_data.is_valid:
+                messagebox.showwarning("Validation Error", step_data.error_message)
+                return False
+            return True
+
+        # Use old validation methods for steps not yet migrated
         validators = {
-            0: self._validate_file_selection,
             2: self._validate_data_preview,
             4: self._validate_field_mapping,
         }

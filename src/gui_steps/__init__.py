@@ -25,8 +25,10 @@ Future imports will be added here as step classes are implemented.
 # Step classes - imported as they are created
 from .file_selection_step import FileSelectionStep
 from .csv_format_step import CSVFormatStep
+from .ofx_config_step import OFXConfigStep
 
 __all__ = [
     'FileSelectionStep',
     'CSVFormatStep',
+    'OFXConfigStep',
 ]
