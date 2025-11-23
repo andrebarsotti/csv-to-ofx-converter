@@ -54,19 +54,26 @@ This document outlines the architecture and implementation plan for extracting t
 7. ✅ Integration testing
 8. ✅ Update documentation
 
-### 🟡 Phase B: Simple Steps (Steps 1, 2, 4) - IN PROGRESS
+### 🟡 Phase B: Simple Steps (Steps 1, 2, 4) - IN PROGRESS (4/9 tasks - 44%)
 
 **Target:** Extract FileSelectionStep, CSVFormatStep, OFXConfigStep
 
 **Progress (November 23, 2025):**
 - ✅ Task B.1: FileSelectionStep implementation (194 lines)
 - ✅ Task B.2: FileSelectionStep tests (24 tests, 444 lines)
-- ⏳ Task B.3-B.9: Remaining tasks (Steps 2, 4, orchestrator update, integration)
+- ✅ Task B.3: CSVFormatStep implementation (220 lines)
+- ✅ Task B.4: CSVFormatStep tests (21 tests, 402 lines)
+- ⏳ Task B.5-B.9: Remaining tasks (Step 4, orchestrator update, integration)
+
+**Commits:**
+- `e5c6560` - "feat(phase-b): Add FileSelectionStep wizard step (Tasks B.1-B.2)"
+- `047c76d` - "feat(phase-b): Add CSVFormatStep wizard step (Tasks B.3-B.4)"
 
 **Metrics:**
-- Total Tests: 286 (262 Phase A + 24 FileSelectionStep)
+- Total Tests: 307 (262 Phase A + 24 FileSelectionStep + 21 CSVFormatStep)
 - All tests passing
 - Zero regressions
+- SonarCloud: ✅ Passing (215 tests in CI)
 
 ### ⏳ Phase C: Medium Steps (Steps 3, 6) - NOT STARTED
 
