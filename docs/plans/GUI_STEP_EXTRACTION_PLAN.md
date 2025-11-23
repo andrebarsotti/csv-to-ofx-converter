@@ -54,9 +54,19 @@ This document outlines the architecture and implementation plan for extracting t
 7. ✅ Integration testing
 8. ✅ Update documentation
 
-### ⏳ Phase B: Simple Steps (Steps 1, 2, 4) - NOT STARTED
+### 🟡 Phase B: Simple Steps (Steps 1, 2, 4) - IN PROGRESS
 
 **Target:** Extract FileSelectionStep, CSVFormatStep, OFXConfigStep
+
+**Progress (November 23, 2025):**
+- ✅ Task B.1: FileSelectionStep implementation (194 lines)
+- ✅ Task B.2: FileSelectionStep tests (24 tests, 444 lines)
+- ⏳ Task B.3-B.9: Remaining tasks (Steps 2, 4, orchestrator update, integration)
+
+**Metrics:**
+- Total Tests: 286 (262 Phase A + 24 FileSelectionStep)
+- All tests passing
+- Zero regressions
 
 ### ⏳ Phase C: Medium Steps (Steps 3, 6) - NOT STARTED
 

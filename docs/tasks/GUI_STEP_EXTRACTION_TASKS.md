@@ -15,27 +15,36 @@ Phase A → Phase B → Phase C → Phase D → Phase E (all sequential)
 - Within each phase: Step implementation + test creation can run in parallel
 - Code quality review can run in parallel with next phase planning
 
-**Status:** 🟢 Phase A Complete (November 23, 2025) | ⏳ Phase B Pending
+**Status:** 🟢 Phase A Complete (November 23, 2025) | 🟡 Phase B In Progress (Tasks B.1-B.2 Complete)
 
 ---
 
 ## Overall Progress
 
-**Completion Status:** 8/47 tasks (17%)
+**Completion Status:** 10/47 tasks (21%)
 
 ### Phase Completion
 - ✅ **Phase A (Infrastructure):** 8/8 tasks (100%) - COMPLETED November 23, 2025
-- ⏳ **Phase B (Simple Steps):** 0/9 tasks (0%) - NOT STARTED
+- 🟡 **Phase B (Simple Steps):** 2/9 tasks (22%) - IN PROGRESS (Tasks B.1-B.2 complete)
 - ⏳ **Phase C (Medium Steps):** 0/8 tasks (0%) - NOT STARTED
 - ⏳ **Phase D (Complex Steps):** 0/10 tasks (0%) - NOT STARTED
 - ⏳ **Phase E (Cleanup):** 0/12 tasks (0%) - NOT STARTED
 
-### Metrics Achieved (Phase A)
+### Metrics Achieved
+
+**Phase A (Infrastructure):**
 - Production Code: 388 lines (355 + 33)
 - Test Code: 585 lines (32 tests)
 - Total Tests: 262 (230 existing + 32 new)
 - Code Quality: Grade A
 - All Acceptance Criteria: Met
+
+**Phase B Tasks B.1-B.2 (FileSelectionStep):**
+- Production Code: 194 lines (file_selection_step.py)
+- Test Code: 444 lines (24 tests)
+- Total Tests: 286 (262 existing + 24 new)
+- All tests passing
+- Zero regressions
 
 ---
 

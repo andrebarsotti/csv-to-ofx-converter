@@ -22,12 +22,9 @@ Each step class:
 Future imports will be added here as step classes are implemented.
 """
 
-# Step classes will be imported here as they are created
-# Example:
-# from .file_selection_step import FileSelectionStep
-# from .csv_format_step import CSVFormatStep
-# ...
+# Step classes - imported as they are created
+from .file_selection_step import FileSelectionStep
 
 __all__ = [
-    # Step classes will be exported here
+    'FileSelectionStep',
 ]
