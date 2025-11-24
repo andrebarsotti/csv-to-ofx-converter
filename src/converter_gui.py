@@ -29,7 +29,13 @@ from . import gui_utils
 from .gui_balance_manager import BalanceManager
 from .gui_conversion_handler import ConversionHandler, ConversionConfig
 from .gui_transaction_manager import TransactionManager
-from .gui_steps import FileSelectionStep, CSVFormatStep, OFXConfigStep
+from .gui_steps import (
+    FileSelectionStep,
+    CSVFormatStep,
+    DataPreviewStep,
+    OFXConfigStep,
+    AdvancedOptionsStep
+)
 
 logger = logging.getLogger(__name__)
 
@@ -132,11 +138,13 @@ class ConverterGUI:
         # Initialize transaction manager
         self.transaction_manager = TransactionManager(self)
 
-        # Initialize new wizard steps (Phase B - Steps 1, 2, 4)
+        # Initialize new wizard steps (Phase B - Steps 1, 2, 4; Phase C - Steps 3, 6)
         self.step_instances = {}
         self.step_instances[0] = FileSelectionStep(self)
         self.step_instances[1] = CSVFormatStep(self)
+        self.step_instances[2] = DataPreviewStep(self)  # Step 3 is index 2
         self.step_instances[3] = OFXConfigStep(self)  # Step 4 is index 3
+        self.step_instances[5] = AdvancedOptionsStep(self)  # Step 6 is index 5
 
         # Build UI
         self._create_widgets()
@@ -277,18 +285,14 @@ class ConverterGUI:
             # Always create fresh UI (step container was destroyed above)
             step.create(self.step_container)
         else:
-            # Use old step method pattern (Steps 3, 5, 6, 7)
+            # Use old step method pattern (Steps 5, 7 only)
             # Clear current step container
             for widget in self.step_container.winfo_children():
                 widget.destroy()
 
             # Create step content using old methods
-            if step_num == 2:
-                self._create_step_data_preview()
-            elif step_num == 4:
+            if step_num == 4:
                 self._create_step_field_mapping()
-            elif step_num == 5:
-                self._create_step_advanced_options()
             elif step_num == 6:
                 self._create_step_balance_preview()
 
@@ -341,7 +345,6 @@ class ConverterGUI:
 
         # Use old validation methods for steps not yet migrated
         validators = {
-            2: self._validate_data_preview,
             4: self._validate_field_mapping,
         }
 
@@ -357,16 +360,6 @@ class ConverterGUI:
         if not is_valid:
             messagebox.showwarning("Required", error_msg)
             return False
-        return True
-
-    def _validate_data_preview(self) -> bool:
-        """Validate data preview step."""
-        if not self.csv_data:
-            try:
-                self._load_csv_data()
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to load CSV:\n{e}")
-                return False
         return True
 
     def _validate_field_mapping(self) -> bool:
@@ -484,121 +477,6 @@ class ConverterGUI:
         ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
                   wraplength=600, justify=tk.LEFT).grid(
             row=3, column=0, columnspan=2, sticky=tk.W, pady=20)
-
-    # ==================== STEP 3: DATA PREVIEW ====================
-
-    def _create_step_data_preview(self):
-        """Create data preview step."""
-        frame = ttk.LabelFrame(self.step_container,
-                               text="Step 3: Preview CSV Data", padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-        frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(1, weight=1)
-
-        # Info label
-        info_frame = ttk.Frame(frame)
-        info_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
-        info_frame.columnconfigure(1, weight=1)
-
-        ttk.Label(info_frame, text="Preview of your CSV data:",
-                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W)
-
-        # Load button
-        ttk.Button(info_frame, text="Reload Data",
-                   command=lambda: self._load_csv_data(force_reload=True)).grid(
-            row=0, column=1, sticky=tk.E, padx=5)
-
-        # Create treeview for data preview
-        tree_frame = ttk.Frame(frame)
-        tree_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        tree_frame.columnconfigure(0, weight=1)
-        tree_frame.rowconfigure(0, weight=1)
-
-        # Scrollbars
-        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
-        hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
-
-        self.preview_tree = ttk.Treeview(tree_frame,
-                                         yscrollcommand=vsb.set,
-                                         xscrollcommand=hsb.set)
-        vsb.configure(command=self.preview_tree.yview)
-        hsb.configure(command=self.preview_tree.xview)
-
-        self.preview_tree.grid(
-            row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
-
-        # Stats label
-        self.preview_stats_label = ttk.Label(frame, text="", font=('Arial', 9))
-        self.preview_stats_label.grid(
-            row=2, column=0, sticky=tk.W, pady=(10, 0))
-
-        # Load data if not already loaded
-        if not self.csv_data:
-            try:
-                self._load_csv_data()
-            except Exception as e:
-                self._log(f"Error loading CSV: {e}")
-        else:
-            self._populate_preview()
-
-    def _load_csv_data(self, force_reload: bool = False):
-        """Load CSV data."""
-        if self.csv_data and not force_reload:
-            return
-
-        if not self.csv_file.get():
-            raise ValueError("No CSV file selected")
-
-        self._log("Loading CSV data...")
-
-        # Create parser with selected format
-        parser = CSVParser(
-            delimiter=self.delimiter.get(),
-            decimal_separator=self.decimal_separator.get()
-        )
-
-        # Parse file
-        self.csv_headers, self.csv_data = parser.parse_file(
-            self.csv_file.get())
-
-        self._log(
-            f"CSV loaded: {len(self.csv_data)} rows, {len(self.csv_headers)} columns")
-
-        # Update preview if on preview step
-        if self.current_step == 2:
-            self._populate_preview()
-
-    def _populate_preview(self):
-        """Populate the preview treeview with CSV data."""
-        # Clear existing items
-        for item in self.preview_tree.get_children():
-            self.preview_tree.delete(item)
-
-        if not self.csv_data:
-            return
-
-        # Configure columns
-        self.preview_tree['columns'] = self.csv_headers
-        self.preview_tree['show'] = 'headings'
-
-        # Set column headings and widths
-        for col in self.csv_headers:
-            self.preview_tree.heading(col, text=col)
-            self.preview_tree.column(col, width=120, anchor=tk.W)
-
-        # Add data rows (limit to first 100 for performance)
-        max_rows = min(100, len(self.csv_data))
-        for row in self.csv_data[:max_rows]:
-            values = [row.get(col, '') for col in self.csv_headers]
-            self.preview_tree.insert('', tk.END, values=values)
-
-        # Update stats
-        stats_text = gui_utils.format_preview_stats(
-            max_rows, len(self.csv_data), max_preview=100)
-        self.preview_stats_label.configure(text=stats_text)
 
     # ==================== STEP 4: OFX CONFIGURATION ====================
 
@@ -753,98 +631,6 @@ class ConverterGUI:
                         value=', ').pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(sep_frame, text="Pipe (|)", variable=self.description_separator,
                         value=' | ').pack(side=tk.LEFT, padx=5)
-
-    # ==================== STEP 6: ADVANCED OPTIONS ====================
-
-    def _create_step_advanced_options(self):
-        """Create advanced options step."""
-        frame = ttk.LabelFrame(self.step_container,
-                               text="Step 6: Advanced Options", padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-        frame.columnconfigure(0, weight=1)
-
-        ttk.Label(frame, text="Configure optional advanced features:",
-                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 20))
-
-        # Value Inversion
-        inversion_frame = ttk.LabelFrame(
-            frame, text="Value Inversion", padding="10")
-        inversion_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=10)
-
-        ttk.Checkbutton(
-            inversion_frame,
-            text="Invert all transaction values (swap debits and credits)",
-            variable=self.invert_values
-        ).pack(anchor=tk.W, pady=5)
-
-        ttk.Label(inversion_frame,
-                  text="Use this if your CSV shows debits as positive and credits as negative,\n"
-                  "or vice versa. This will multiply all amounts by -1.",
-                  font=('Arial', 8), foreground='gray').pack(anchor=tk.W, pady=5)
-
-        # Date Validation
-        validation_frame = ttk.LabelFrame(
-            frame, text="Transaction Date Validation", padding="10")
-        validation_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=10)
-        validation_frame.columnconfigure(1, weight=1)
-
-        ttk.Checkbutton(
-            validation_frame,
-            text="Enable date validation for credit card statement period",
-            variable=self.enable_date_validation,
-            command=self._toggle_date_inputs
-        ).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=5)
-
-        ttk.Label(validation_frame, text="Start Date:").grid(
-            row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        self.start_date_entry = ttk.Entry(validation_frame, textvariable=self.start_date,
-                                          state='disabled', width=20)
-        self.start_date_entry.grid(
-            row=1, column=1, sticky=tk.W, padx=5, pady=5)
-        # Add date format validation for start_date (DD/MM/YYYY)
-        self.start_date_entry.bind(
-            '<KeyRelease>', lambda e: self._format_date_entry(self.start_date_entry))
-        ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 01/10/2025)",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=1, column=2, sticky=tk.W, padx=5, pady=5)
-
-        ttk.Label(validation_frame, text="End Date:").grid(
-            row=2, column=0, sticky=tk.W, padx=5, pady=5)
-        self.end_date_entry = ttk.Entry(validation_frame, textvariable=self.end_date,
-                                        state='disabled', width=20)
-        self.end_date_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
-        # Add date format validation for end_date (DD/MM/YYYY)
-        self.end_date_entry.bind(
-            '<KeyRelease>', lambda e: self._format_date_entry(self.end_date_entry))
-        ttk.Label(validation_frame, text="(Format: DD/MM/YYYY, e.g., 31/10/2025)",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=2, column=2, sticky=tk.W, padx=5, pady=5)
-
-        ttk.Label(validation_frame,
-                  text="When enabled, transactions outside the date range will prompt you to:\n"
-                  "- Keep the original date\n"
-                  "- Adjust to the nearest boundary (start or end date)\n"
-                  "- Exclude the transaction from the OFX file",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=3, column=0, columnspan=3, sticky=tk.W, pady=10)
-
-        # Ready to proceed
-        ttk.Label(frame, text="[OK] Configuration complete! Click 'Next' to preview balances.",
-                  font=('Arial', 10, 'bold'), foreground='green').grid(
-            row=3, column=0, sticky=tk.W, pady=(20, 0))
-
-        # Restore the correct state of date entry fields based on checkbox value
-        self._toggle_date_inputs()
-
-    def _toggle_date_inputs(self):
-        """Enable or disable date input fields based on checkbox state."""
-        if self.enable_date_validation.get():
-            self.start_date_entry.configure(state='normal')
-            self.end_date_entry.configure(state='normal')
-        else:
-            self.start_date_entry.configure(state='disabled')
-            self.end_date_entry.configure(state='disabled')
 
     # ==================== STEP 7: BALANCE PREVIEW ====================
 
