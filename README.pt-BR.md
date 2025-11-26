@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.0.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.0** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -779,6 +779,46 @@ Para problemas, questões ou sugestões:
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.1.0 (Novembro de 2025) - Lançamento de Refatoração Arquitetural
+
+**Grande Refatoração: Extração de Etapas do Assistente**
+
+- **Melhoria de Arquitetura**: Refatoração completa da implementação do assistente GUI
+  - Extraídas todas as 7 etapas do assistente em classes de etapas separadas e reutilizáveis
+  - Criada classe base abstrata WizardStep para ciclo de vida padronizado das etapas
+  - Reduzido converter_gui.py de 1.400 linhas para 750 linhas (redução de 46%)
+  - Melhorada manutenibilidade e testabilidade do código
+
+- **Novas Classes de Etapas** (todas no pacote `src/gui_steps/`):
+  - FileSelectionStep (Etapa 1): Seleção de arquivo com validação
+  - CSVFormatStep (Etapa 2): Configuração de formato CSV
+  - DataPreviewStep (Etapa 3): Visualização prévia de dados com Treeview
+  - OFXConfigStep (Etapa 4): Configuração OFX
+  - FieldMappingStep (Etapa 5): Mapeamento de campos com descrições compostas
+  - AdvancedOptionsStep (Etapa 6): Opções avançadas e validação de datas
+  - BalancePreviewStep (Etapa 7): Visualização prévia de saldo e gerenciamento de transações
+
+- **Testes**: Suíte de testes abrangente expandida para 468 testes
+  - Adicionados 206 novos testes de etapas GUI
+  - Todos os testes passando com zero regressões
+  - Mantida 100% de compatibilidade retroativa
+
+- **Qualidade de Código**:
+  - Arquitetura Grau A (aprovada para produção)
+  - 100% de conformidade PEP8
+  - Modularidade e extensibilidade aprimoradas
+  - Melhor separação de responsabilidades
+
+- **Benefícios**:
+  - Mais fácil de manter e estender funcionalidades do assistente
+  - Cada etapa testável independentemente
+  - Organização e legibilidade do código melhoradas
+  - Fundação para futuras melhorias do assistente
+
+**Importante**: Este é um lançamento de refatoração sem mudanças visíveis ao usuário. Toda funcionalidade permanece idêntica à v3.0.x.
+
+**Notas de Atualização**: Atualização direta de qualquer versão 3.0.x. Sem mudanças incompatíveis.
 
 ### Versão 3.0.1 (Novembro de 2025) - Melhorias de Qualidade de Código e Segurança
 

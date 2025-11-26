@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CSV to OFX Converter - A Python application that converts CSV files to OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. Features a Tkinter-based wizard interface with 7 steps guiding users through CSV import, data preview, field mapping, balance preview, and conversion.
 
-**Current Version**: 3.0.0 (November 2025)
+**Current Version**: 3.1.0 (November 2025)
 
 **Key characteristics:**
 - Pure Python 3.7+ with standard library only (no external dependencies for runtime)

@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.0.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.0** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -779,6 +779,46 @@ For issues, questions, or suggestions:
 **License**: MIT
 
 ## Changelog
+
+### Version 3.1.0 (November 2025) - Architectural Refactoring Release
+
+**Major Refactoring: Wizard Step Extraction**
+
+- **Architecture Improvement**: Complete refactoring of GUI wizard implementation
+  - Extracted all 7 wizard steps into separate, reusable step classes
+  - Created WizardStep abstract base class for standardized step lifecycle
+  - Reduced converter_gui.py from 1,400 lines to 750 lines (46% reduction)
+  - Improved code maintainability and testability
+
+- **New Step Classes** (all in `src/gui_steps/` package):
+  - FileSelectionStep (Step 1): File selection with validation
+  - CSVFormatStep (Step 2): CSV format configuration
+  - DataPreviewStep (Step 3): Data preview with Treeview
+  - OFXConfigStep (Step 4): OFX configuration
+  - FieldMappingStep (Step 5): Field mapping with composite descriptions
+  - AdvancedOptionsStep (Step 6): Advanced options and date validation
+  - BalancePreviewStep (Step 7): Balance preview and transaction management
+
+- **Testing**: Comprehensive test suite expanded to 468 tests
+  - Added 206 new GUI step tests
+  - All tests passing with zero regressions
+  - Maintained 100% backward compatibility
+
+- **Code Quality**:
+  - Grade A architecture (approved for production)
+  - 100% PEP8 compliance
+  - Enhanced modularity and extensibility
+  - Better separation of concerns
+
+- **Benefits**:
+  - Easier to maintain and extend wizard functionality
+  - Each step independently testable
+  - Improved code organization and readability
+  - Foundation for future wizard enhancements
+
+**Important**: This is a refactoring release with no user-facing changes. All functionality remains identical to v3.0.x.
+
+**Upgrade Notes**: Direct upgrade from any 3.0.x version. No breaking changes.
 
 ### Version 3.0.1 (November 2025) - Code Quality and Security Improvements
 
