@@ -261,7 +261,8 @@ class FieldMappingStep(WizardStep):
         description_separator = self.get_parent_data('description_separator')
         if description_separator is None:
             description_separator = tk.StringVar(value=' ')
-            self.set_parent_data('description_separator', description_separator)
+            self.set_parent_data('description_separator',
+                                 description_separator)
 
         # Separator radio buttons frame
         sep_frame = ttk.Frame(parent)
@@ -301,7 +302,7 @@ class FieldMappingStep(WizardStep):
             foreground='gray',
             wraplength=700,
             justify=tk.LEFT
-        ).grid(row=10, column=0, columnspan=3, sticky=tk.W, pady=(20, 0))
+        ).grid(row=10, column=0, columnspan=3, sticky=tk.W, pady=(10, 0))
 
     def _configure_layout(self):
         """Configure responsive grid layout."""
@@ -344,7 +345,8 @@ class FieldMappingStep(WizardStep):
         if isinstance(description_separator, tk.StringVar):
             description_separator_str = description_separator.get()
         else:
-            description_separator_str = str(description_separator) if description_separator else ' '
+            description_separator_str = str(
+                description_separator) if description_separator else ' '
 
         return {
             'field_mappings': field_mappings_dict,
