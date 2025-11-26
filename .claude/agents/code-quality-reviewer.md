@@ -2,7 +2,7 @@
 name: code-quality-reviewer
 description: Use this agent when you have written or modified code and need to verify it follows the project's coding guidelines, clean code principles, and best practices before committing. This agent should be invoked proactively after completing logical code changes, such as:\n\n<example>\nContext: User has just implemented a new utility function for parsing CSV data.\n\nuser: "I've added a new function to handle edge cases in CSV parsing. Here's the code:\n```python\ndef parse_csv_edge_cases(data):\n    result = []\n    for line in data:\n        if line.strip():\n            result.append(line)\n    return result\n```"\n\nassistant: "Let me review this code for quality and adherence to our coding standards."\n\n<uses Task tool to launch code-quality-reviewer agent>\n</example>\n\n<example>\nContext: User has refactored a GUI method to be more modular.\n\nuser: "I've split the _create_step_5 method into smaller functions"\n\nassistant: "Great! Let me use the code quality reviewer to ensure the refactored code follows our guidelines."\n\n<uses Task tool to launch code-quality-reviewer agent>\n</example>\n\n<example>\nContext: User has just completed a feature implementation.\n\nuser: "I've finished implementing the date validation feature"\n\nassistant: "Excellent! Before we proceed, let me review the code to ensure it meets our quality standards."\n\n<uses Task tool to launch code-quality-reviewer agent>\n</example>
 tools: Bash, Glob, Grep, Read, WebFetch, TodoWrite, WebSearch, BashOutput, KillShell, AskUserQuestion, Skill, SlashCommand, mcp__ide__getDiagnostics, mcp__ide__executeCode
-model: inherit
+model: sonet
 color: blue
 ---
 
