@@ -326,7 +326,8 @@ class WizardStep(ABC):
         if hasattr(self.parent, key):
             attr = getattr(self.parent, key)
             # If it's a Tkinter variable (StringVar, BooleanVar, etc.), get its value
-            if hasattr(attr, 'get'):
+            # Check for Tkinter Variable class to avoid calling .get() on dict/list
+            if hasattr(attr, 'get') and hasattr(attr, 'set') and callable(attr.get):
                 return attr.get()
             return attr
         return default
