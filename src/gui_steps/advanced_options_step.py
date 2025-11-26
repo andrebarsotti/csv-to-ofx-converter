@@ -102,15 +102,9 @@ class AdvancedOptionsStep(WizardStep):
         inversion_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=10)
 
         # Get or create invert_values variable
-        invert_values_var = self.get_parent_data('invert_values')
-        if invert_values_var is None:
-            # Create variable if it doesn't exist
-            invert_values_var = tk.BooleanVar(value=False)
-            if hasattr(self.parent, 'invert_values'):
-                self.parent.invert_values = invert_values_var
-            else:
-                # Store in parent if attribute doesn't exist
-                setattr(self.parent, 'invert_values', invert_values_var)
+        invert_values_var = self._get_or_create_parent_var(
+            'invert_values', tk.BooleanVar, False
+        )
 
         # Checkbox
         ttk.Checkbutton(

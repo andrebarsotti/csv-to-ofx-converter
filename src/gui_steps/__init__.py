@@ -22,17 +22,21 @@ Each step class:
 Future imports will be added here as step classes are implemented.
 """
 
-# Step classes - imported as they are created
+# Step classes - all 7 steps implemented (Phase D complete)
 from .file_selection_step import FileSelectionStep
 from .csv_format_step import CSVFormatStep
 from .data_preview_step import DataPreviewStep
 from .ofx_config_step import OFXConfigStep
+from .field_mapping_step import FieldMappingStep
 from .advanced_options_step import AdvancedOptionsStep
+from .balance_preview_step import BalancePreviewStep
 
 __all__ = [
     'FileSelectionStep',
     'CSVFormatStep',
     'DataPreviewStep',
     'OFXConfigStep',
+    'FieldMappingStep',
     'AdvancedOptionsStep',
+    'BalancePreviewStep',
 ]

@@ -83,7 +83,7 @@ src/
   csv_parser.py            # CSVParser class - handles CSV file parsing
   ofx_generator.py         # OFXGenerator class - generates OFX files
   date_validator.py        # DateValidator class - validates transaction dates
-  converter_gui.py         # ConverterGUI class - Tkinter wizard interface (1,400 lines)
+  converter_gui.py         # ConverterGUI class - Tkinter wizard orchestrator (750 lines)
   transaction_utils.py     # Utility functions for transaction processing (no UI dependencies)
   gui_utils.py             # GUI utility functions (pure functions, no Tkinter dependencies)
   gui_balance_manager.py   # BalanceManager class - balance calculations and preview
@@ -91,8 +91,15 @@ src/
   gui_transaction_manager.py # TransactionManager class - transaction operations and context menus
   gui_wizard_step.py       # WizardStep base class - abstract base for wizard steps (~355 lines)
   constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
-  gui_steps/               # Wizard step implementations package
-    __init__.py            # Package initialization
+  gui_steps/               # Wizard step implementations package (Phase D complete - all 7 steps)
+    __init__.py            # Package initialization, exports all step classes
+    file_selection_step.py # FileSelectionStep - Step 1: File selection (174 lines, 7 tests)
+    csv_format_step.py     # CSVFormatStep - Step 2: CSV format config (197 lines, 31 tests)
+    data_preview_step.py   # DataPreviewStep - Step 3: Data preview (285 lines, 31 tests)
+    ofx_config_step.py     # OFXConfigStep - Step 4: OFX configuration (271 lines, 40 tests)
+    field_mapping_step.py  # FieldMappingStep - Step 5: Field mapping (390 lines, 38 tests)
+    advanced_options_step.py # AdvancedOptionsStep - Step 6: Advanced options (354 lines, 30 tests)
+    balance_preview_step.py # BalancePreviewStep - Step 7: Balance preview (641 lines, 29 tests)
 tests/
   __init__.py              # Test package initialization
   test_csv_parser.py       # CSV parser tests (8 tests)
@@ -106,6 +113,15 @@ tests/
   test_gui_transaction_manager.py # Transaction Manager tests (26 tests)
   test_gui_wizard_step.py  # WizardStep base class tests (32 tests)
   test_integration.py      # Integration tests (5 tests)
+  test_gui_steps/          # Wizard step tests package (Phase D complete - 206 tests)
+    __init__.py            # Test package initialization
+    test_file_selection_step.py # FileSelectionStep tests (7 tests)
+    test_csv_format_step.py # CSVFormatStep tests (31 tests)
+    test_data_preview_step.py # DataPreviewStep tests (31 tests)
+    test_ofx_config_step.py # OFXConfigStep tests (40 tests)
+    test_field_mapping_step.py # FieldMappingStep tests (38 tests)
+    test_advanced_options_step.py # AdvancedOptionsStep tests (30 tests)
+    test_balance_preview_step.py # BalancePreviewStep tests (29 tests)
   run_all_tests.py         # Convenience script to run all tests
 ```
 
@@ -185,19 +201,20 @@ tests/
 - Designed for dependency injection pattern (receives parent via constructor)
 
 **ConverterGUI** (`src/converter_gui.py`):
-- Multi-step wizard interface (7 steps)
+- Multi-step wizard orchestrator (7 steps) - reduced from 1,400+ lines to 750 lines in Phase D
 - Uses Tkinter ttk widgets for modern appearance
 - Delegates balance operations to BalanceManager
 - Delegates conversion operations to ConversionHandler
 - Delegates transaction operations to TransactionManager
-- Step 1: File selection
-- Step 2: CSV format configuration (delimiter, decimal separator)
-- Step 3: Data preview (Treeview showing first 100 rows)
-- Step 4: OFX configuration (account ID, bank name, currency, initial balance)
-- Step 5: Field mapping with composite description support (combine up to 4 columns)
-- Step 6: Advanced options (value inversion, date validation with Keep/Adjust/Exclude)
-- Step 7: Balance preview & confirmation (shows balance summary and transaction preview)
-- Orchestrates UI workflow, delegates business logic to companion classes
+- All 7 wizard steps extracted to gui_steps package (Phase A-D complete):
+  - Step 1: FileSelectionStep - File selection
+  - Step 2: CSVFormatStep - CSV format configuration (delimiter, decimal separator)
+  - Step 3: DataPreviewStep - Data preview (Treeview showing first 100 rows)
+  - Step 4: OFXConfigStep - OFX configuration (account ID, bank name, currency, initial balance)
+  - Step 5: FieldMappingStep - Field mapping with composite description support (combine up to 4 columns)
+  - Step 6: AdvancedOptionsStep - Advanced options (value inversion, date validation with Keep/Adjust/Exclude)
+  - Step 7: BalancePreviewStep - Balance preview & confirmation (shows balance summary and transaction preview)
+- Orchestrates UI workflow, delegates business logic to companion classes and step instances
 
 ### Data Flow
 
@@ -250,14 +267,15 @@ Logger is configured in `src/csv_to_ofx_converter.py` main module.
 - `sonar.yml`: SonarCloud code quality analysis
   - Runs on every push to main branch
   - Executes 215 tests (excludes GUI tests that require display server)
-  - Excludes: `test_gui_integration.py` (15 tests), `test_gui_wizard_step.py` (32 tests)
+  - Excludes: `test_gui_integration.py` (15 tests), `test_gui_wizard_step.py` (32 tests), `test_gui_steps/*` (206 tests)
+  - Total excluded GUI tests: 253 tests
   - Generates coverage report for SonarCloud analysis
   - **IMPORTANT**: After each push to main, verify the SonarCloud workflow passes by checking GitHub Actions
   - GUI tests should NOT execute in this workflow (CI environment has no display server)
 
 ## Testing Strategy
 
-Test suite is organized into separate modules (262 tests total):
+Test suite is organized into separate modules (468 tests total, Phase D complete):
 
 **test_csv_parser.py** (8 tests):
 - CSV parsing (standard and Brazilian formats)
@@ -334,6 +352,15 @@ Test suite is organized into separate modules (262 tests total):
 - Complete end-to-end conversion workflows
 - Composite descriptions with various separators
 - Value inversion in full workflow
+
+**test_gui_steps/** (206 tests, Phase D complete):
+- **test_file_selection_step.py** (7 tests): File selection UI, validation, data collection
+- **test_csv_format_step.py** (31 tests): CSV format configuration, delimiter/separator selection, preview
+- **test_data_preview_step.py** (31 tests): Data preview Treeview, column display, pagination
+- **test_ofx_config_step.py** (40 tests): OFX configuration, account ID, bank name, currency, balance inputs
+- **test_field_mapping_step.py** (38 tests): Field mapping, composite descriptions, column selection, validation
+- **test_advanced_options_step.py** (30 tests): Value inversion, date validation, date entry formatting
+- **test_balance_preview_step.py** (29 tests): Balance calculations, transaction preview, deletion, restoration
 
 **Test Patterns**:
 - Uses `unittest` framework with test discovery

@@ -448,7 +448,12 @@ class TestDataPreviewStepDataPopulation(unittest.TestCase):
         self.assertEqual(list(tree['columns']), headers)
 
         # Verify show mode is 'headings' (no tree column)
-        self.assertEqual(tree['show'], 'headings')
+        # Note: Treeview returns show as a tuple of index objects
+        show_value = tree['show']
+        self.assertTrue(
+            any('headings' in str(x) for x in show_value),
+            f"Expected 'headings' in show value, got {show_value}"
+        )
 
 
 class TestDataPreviewStepValidation(unittest.TestCase):

@@ -11,7 +11,7 @@ Classes:
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Dict, Any, Tuple, Optional, Set
+from typing import Dict, Any, Tuple, Optional
 
 from src.gui_wizard_step import WizardStep, StepConfig
 from src import gui_utils

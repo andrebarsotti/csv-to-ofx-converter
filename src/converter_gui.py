@@ -22,7 +22,6 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
 from .constants import NOT_MAPPED, NOT_SELECTED
-from .csv_parser import CSVParser
 from .date_validator import DateValidator
 from .transaction_utils import parse_balance_value
 from . import gui_utils
@@ -34,7 +33,9 @@ from .gui_steps import (
     CSVFormatStep,
     DataPreviewStep,
     OFXConfigStep,
-    AdvancedOptionsStep
+    FieldMappingStep,
+    AdvancedOptionsStep,
+    BalancePreviewStep
 )
 
 logger = logging.getLogger(__name__)
@@ -138,13 +139,15 @@ class ConverterGUI:
         # Initialize transaction manager
         self.transaction_manager = TransactionManager(self)
 
-        # Initialize new wizard steps (Phase B - Steps 1, 2, 4; Phase C - Steps 3, 6)
+        # Initialize all wizard steps (Phase D - all 7 steps extracted)
         self.step_instances = {}
-        self.step_instances[0] = FileSelectionStep(self)
-        self.step_instances[1] = CSVFormatStep(self)
-        self.step_instances[2] = DataPreviewStep(self)  # Step 3 is index 2
-        self.step_instances[3] = OFXConfigStep(self)  # Step 4 is index 3
-        self.step_instances[5] = AdvancedOptionsStep(self)  # Step 6 is index 5
+        self.step_instances[0] = FileSelectionStep(self)      # Step 1: File Selection
+        self.step_instances[1] = CSVFormatStep(self)          # Step 2: CSV Format
+        self.step_instances[2] = DataPreviewStep(self)        # Step 3: Data Preview
+        self.step_instances[3] = OFXConfigStep(self)          # Step 4: OFX Config
+        self.step_instances[4] = FieldMappingStep(self)       # Step 5: Field Mapping
+        self.step_instances[5] = AdvancedOptionsStep(self)    # Step 6: Advanced Options
+        self.step_instances[6] = BalancePreviewStep(self)     # Step 7: Balance Preview
 
         # Build UI
         self._create_widgets()
@@ -273,28 +276,15 @@ class ConverterGUI:
         self.current_step = step_num
         self._update_progress_indicator()
 
-        # Check if we have a new step instance for this step
-        if step_num in self.step_instances:
-            # Use new step class pattern
-            step = self.step_instances[step_num]
+        # Get step instance (all steps now use the new step class pattern)
+        step = self.step_instances[step_num]
 
-            # Clear current step container (destroy widgets)
-            for widget in self.step_container.winfo_children():
-                widget.destroy()
+        # Clear current step container (destroy widgets)
+        for widget in self.step_container.winfo_children():
+            widget.destroy()
 
-            # Always create fresh UI (step container was destroyed above)
-            step.create(self.step_container)
-        else:
-            # Use old step method pattern (Steps 5, 7 only)
-            # Clear current step container
-            for widget in self.step_container.winfo_children():
-                widget.destroy()
-
-            # Create step content using old methods
-            if step_num == 4:
-                self._create_step_field_mapping()
-            elif step_num == 6:
-                self._create_step_balance_preview()
+        # Always create fresh UI (step container was destroyed above)
+        step.create(self.step_container)
 
         # Update navigation buttons
         self._update_navigation_buttons()
@@ -391,459 +381,7 @@ class ConverterGUI:
             return False
         return True
 
-    # ==================== STEP 1: FILE SELECTION ====================
-
-    def _create_step_file_selection(self):
-        """Create file selection step."""
-        frame = ttk.LabelFrame(self.step_container,
-                               text="Step 1: Select CSV File", padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-        frame.columnconfigure(1, weight=1)
-
-        ttk.Label(frame, text="Select a CSV file to convert to OFX format:",
-                  font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
-
-        ttk.Label(frame, text="CSV File:", font=('Arial', 10, 'bold')).grid(
-            row=1, column=0, sticky=tk.W, padx=5, pady=10)
-
-        ttk.Entry(frame, textvariable=self.csv_file, state='readonly', width=50).grid(
-            row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=10)
-
-        ttk.Button(frame, text="Browse...", command=self._browse_csv).grid(
-            row=1, column=2, padx=5, pady=10)
-
-        # Info text
-        info_text = ("Select a CSV file containing your bank transactions.\n"
-                     "The file should have a header row with column names.\n"
-                     "Supported formats: CSV with comma, semicolon, or tab delimiters.")
-        ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
-                  wraplength=600, justify=tk.LEFT).grid(
-            row=2, column=0, columnspan=3, sticky=tk.W, pady=20)
-
-    def _browse_csv(self):
-        """Open file dialog to select CSV file."""
-        filename = filedialog.askopenfilename(
-            title="Select CSV File",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-        )
-        if filename:
-            self.csv_file.set(filename)
-            self._log(f"Selected file: {filename}")
-
-    # ==================== STEP 2: CSV FORMAT ====================
-
-    def _create_step_csv_format(self):
-        """Create CSV format configuration step."""
-        frame = ttk.LabelFrame(
-            self.step_container, text="Step 2: Configure CSV Format", padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-
-        ttk.Label(frame, text="Select the format of your CSV file:",
-                  font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
-
-        # Delimiter options
-        ttk.Label(frame, text="Column Delimiter:", font=('Arial', 10, 'bold')).grid(
-            row=1, column=0, sticky=tk.W, pady=10)
-
-        delimiter_frame = ttk.Frame(frame)
-        delimiter_frame.grid(row=1, column=1, sticky=tk.W, padx=20, pady=10)
-
-        ttk.Radiobutton(delimiter_frame, text="Comma (,) - Standard format",
-                        variable=self.delimiter, value=',').pack(anchor=tk.W, pady=2)
-        ttk.Radiobutton(delimiter_frame, text="Semicolon (;) - Common in Brazilian exports",
-                        variable=self.delimiter, value=';').pack(anchor=tk.W, pady=2)
-        ttk.Radiobutton(delimiter_frame, text="Tab - Tab-separated values",
-                        variable=self.delimiter, value='\t').pack(anchor=tk.W, pady=2)
-
-        # Decimal separator options
-        ttk.Label(frame, text="Decimal Separator:", font=('Arial', 10, 'bold')).grid(
-            row=2, column=0, sticky=tk.W, pady=10)
-
-        decimal_frame = ttk.Frame(frame)
-        decimal_frame.grid(row=2, column=1, sticky=tk.W, padx=20, pady=10)
-
-        ttk.Radiobutton(decimal_frame, text="Dot (.) - Standard format (e.g., 100.50)",
-                        variable=self.decimal_separator, value='.').pack(anchor=tk.W, pady=2)
-        ttk.Radiobutton(decimal_frame, text="Comma (,) - Brazilian format (e.g., 100,50)",
-                        variable=self.decimal_separator, value=',').pack(anchor=tk.W, pady=2)
-
-        # Info text
-        info_text = ("These settings determine how the CSV file is parsed.\n"
-                     "Common combinations:\n"
-                     "- Standard: Comma delimiter + Dot decimal (1,234.56)\n"
-                     "- Brazilian: Semicolon delimiter + Comma decimal (1.234,56)")
-        ttk.Label(frame, text=info_text, font=('Arial', 9), foreground='gray',
-                  wraplength=600, justify=tk.LEFT).grid(
-            row=3, column=0, columnspan=2, sticky=tk.W, pady=20)
-
-    # ==================== STEP 4: OFX CONFIGURATION ====================
-
-    def _create_step_ofx_config(self):
-        """Create OFX configuration step."""
-        frame = ttk.LabelFrame(self.step_container,
-                               text="Step 4: OFX Configuration", padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-        frame.columnconfigure(1, weight=1)
-
-        ttk.Label(frame, text="Configure the OFX output file settings:",
-                  font=('Arial', 10)).grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
-
-        # Account ID
-        ttk.Label(frame, text="Account ID:", font=('Arial', 10, 'bold')).grid(
-            row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.account_id, width=40).grid(
-            row=1, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(frame, text="(Optional - Default: 'UNKNOWN')",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=2, column=1, sticky=tk.W, padx=5)
-
-        # Bank Name
-        ttk.Label(frame, text="Bank Name:", font=('Arial', 10, 'bold')).grid(
-            row=3, column=0, sticky=tk.W, padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.bank_name, width=40).grid(
-            row=3, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(frame, text="(Optional - Default: 'CSV Import')",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=4, column=1, sticky=tk.W, padx=5)
-
-        # Currency
-        ttk.Label(frame, text="Currency:", font=('Arial', 10, 'bold')).grid(
-            row=5, column=0, sticky=tk.W, padx=5, pady=5)
-        currency_combo = ttk.Combobox(frame, textvariable=self.currency,
-                                      values=['BRL', 'USD', 'EUR', 'GBP'],
-                                      state='readonly', width=10)
-        currency_combo.grid(row=5, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(frame, text="(BRL=Brazilian Real, USD=US Dollar, EUR=Euro, GBP=British Pound)",
-                  font=('Arial', 8), foreground='gray').grid(
-            row=6, column=1, sticky=tk.W, padx=5)
-
-    # ==================== STEP 5: FIELD MAPPING ====================
-
-    def _create_step_field_mapping(self):
-        """Create field mapping step."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 5: Map CSV Columns to OFX Fields",
-                               padding="20")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=20, pady=20)
-        frame.columnconfigure(1, weight=1)
-
-        # Info label
-        ttk.Label(frame, text="Map your CSV columns to OFX transaction fields:",
-                  font=('Arial', 10)).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 20))
-
-        # Ensure CSV is loaded
-        if not self.csv_headers:
-            ttk.Label(frame, text="No CSV data loaded. Please go back to step 3.",
-                      foreground='red').grid(row=1, column=0, columnspan=3)
-            return
-
-        # Define OFX fields
-        ofx_fields = [
-            ('date', 'Date *', 'Transaction date'),
-            ('amount', 'Amount *', 'Transaction amount (positive or negative)'),
-            ('description', 'Description',
-             'Transaction description (or use composite below)'),
-            ('type', 'Type', 'Transaction type: DEBIT or CREDIT (optional)'),
-            ('id', 'ID', 'Unique transaction identifier (optional)'),
-        ]
-
-        column_options = [NOT_MAPPED] + self.csv_headers
-
-        # Create mapping widgets
-        for idx, (field_key, field_label, field_help) in enumerate(ofx_fields, start=1):
-            ttk.Label(frame, text=f"{field_label}:", font=('Arial', 10, 'bold')).grid(
-                row=idx, column=0, sticky=tk.W, padx=5, pady=5)
-
-            if field_key not in self.field_mappings:
-                self.field_mappings[field_key] = tk.StringVar(value=NOT_MAPPED)
-
-            combo = ttk.Combobox(frame, textvariable=self.field_mappings[field_key],
-                                 values=column_options, state='readonly', width=30)
-            combo.grid(row=idx, column=1, sticky=tk.W, padx=5, pady=5)
-
-            ttk.Label(frame, text=field_help, font=('Arial', 8), foreground='gray').grid(
-                row=idx, column=2, sticky=tk.W, padx=5, pady=5)
-
-        # Composite description section
-        ttk.Separator(frame, orient='horizontal').grid(
-            row=len(ofx_fields) + 1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=20)
-
-        ttk.Label(frame, text="Composite Description (Optional)",
-                  font=('Arial', 11, 'bold')).grid(
-            row=len(ofx_fields) + 2, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
-
-        ttk.Label(frame, text="Combine multiple columns to create transaction descriptions:",
-                  font=('Arial', 9)).grid(
-            row=len(ofx_fields) + 3, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
-
-        # Create composite description interface
-        composite_frame = ttk.Frame(frame)
-        composite_frame.grid(row=len(ofx_fields) + 4, column=0, columnspan=3,
-                             sticky=(tk.W, tk.E), pady=5)
-
-        self._create_composite_description_ui(composite_frame)
-
-        # Note
-        note_text = ("* Required fields\n"
-                     "Note: If composite description is configured, it will be used instead of "
-                     "the Description field mapping.")
-        ttk.Label(frame, text=note_text, font=('Arial', 8), foreground='gray',
-                  wraplength=700, justify=tk.LEFT).grid(
-            row=len(ofx_fields) + 5, column=0, columnspan=3, sticky=tk.W, pady=(20, 0))
-
-    def _create_composite_description_ui(self, parent: ttk.Frame):
-        """Create UI for composite description configuration."""
-        parent.columnconfigure(1, weight=1)
-
-        # Up to 4 column selectors
-        column_options = [NOT_SELECTED] + self.csv_headers
-
-        # Preserve existing StringVar values if they exist
-        if len(self.description_columns) != 4:
-            self.description_columns = []
-            for i in range(4):
-                self.description_columns.append(
-                    tk.StringVar(value=NOT_SELECTED))
-
-        for i in range(4):
-            ttk.Label(parent, text=f"Column {i+1}:", font=('Arial', 9)).grid(
-                row=i, column=0, sticky=tk.W, padx=5, pady=3)
-
-            combo = ttk.Combobox(parent, textvariable=self.description_columns[i],
-                                 values=column_options, state='readonly', width=30)
-            combo.grid(row=i, column=1, sticky=tk.W, padx=5, pady=3)
-
-        # Separator
-        ttk.Label(parent, text="Separator:", font=('Arial', 9)).grid(
-            row=4, column=0, sticky=tk.W, padx=5, pady=3)
-
-        sep_frame = ttk.Frame(parent)
-        sep_frame.grid(row=4, column=1, sticky=tk.W, padx=5, pady=3)
-
-        ttk.Radiobutton(sep_frame, text="Space", variable=self.description_separator,
-                        value=' ').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(sep_frame, text="Dash (-)", variable=self.description_separator,
-                        value=' - ').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(sep_frame, text="Comma (,)", variable=self.description_separator,
-                        value=', ').pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(sep_frame, text="Pipe (|)", variable=self.description_separator,
-                        value=' | ').pack(side=tk.LEFT, padx=5)
-
-    # ==================== STEP 7: BALANCE PREVIEW ====================
-
-    def _create_step_balance_preview(self):
-        """Create balance preview step showing transactions and calculated balances."""
-        frame = ttk.LabelFrame(self.step_container, text="Step 7: Balance Preview & Confirmation",
-                               padding="10")
-        frame.grid(row=0, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), padx=10, pady=10)
-        frame.columnconfigure(0, weight=1)
-        # Make transaction preview row expandable
-        frame.rowconfigure(3, weight=1)
-
-        ttk.Label(frame, text="Review transactions and balances before exporting:",
-                  font=('Arial', 10)).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
-
-        # Calculate balance information
-        try:
-            balance_info = self._calculate_balance_preview()
-            # Cache for context menu access
-            self._cached_balance_info = balance_info
-        except Exception as e:
-            ttk.Label(frame, text=f"Error calculating balances: {e}",
-                      foreground='red', font=('Arial', 10, 'bold')).grid(
-                row=1, column=0, sticky=tk.W, pady=20)
-            return
-
-        # Initial Balance Input (moved from Step 4)
-        initial_balance_frame = ttk.LabelFrame(
-            frame, text="Initial Balance", padding="5")
-        initial_balance_frame.grid(
-            row=1, column=0, sticky=(tk.W, tk.E), pady=5)
-
-        balance_input_frame = ttk.Frame(initial_balance_frame)
-        balance_input_frame.pack(fill=tk.X, padx=5, pady=5)
-
-        ttk.Label(balance_input_frame, text="Starting Balance:", font=('Arial', 10, 'bold')).pack(
-            side=tk.LEFT, padx=5)
-        # Register numeric validation command
-        vcmd_numeric = (self.root.register(
-            self._validate_numeric_input), '%d', '%P')
-        self.initial_balance_entry = ttk.Entry(
-            balance_input_frame, textvariable=self.initial_balance,
-            width=20, validate='key', validatecommand=vcmd_numeric)
-        self.initial_balance_entry.pack(side=tk.LEFT, padx=5)
-        ttk.Button(balance_input_frame, text="Recalculate",
-                   command=self._recalculate_balance_preview).pack(side=tk.LEFT, padx=5)
-        ttk.Label(balance_input_frame, text="(Enter starting balance and click Recalculate)",
-                  font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
-
-        # Balance summary frame (compact layout)
-        summary_frame = ttk.LabelFrame(
-            frame, text="Balance Summary", padding="5")
-        summary_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
-        summary_frame.columnconfigure(1, weight=1)
-
-        # Total Credits
-        credits_text = f"Total Credits (+): {balance_info['total_credits']:.2f}"
-        self.total_credits_label = ttk.Label(
-            summary_frame, text=credits_text,
-            font=('Arial', 10), foreground='green')
-        self.total_credits_label.grid(
-            row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
-
-        # Total Debits
-        debits_text = f"Total Debits (-): {balance_info['total_debits']:.2f}"
-        self.total_debits_label = ttk.Label(
-            summary_frame, text=debits_text,
-            font=('Arial', 10), foreground='red')
-        self.total_debits_label.grid(
-            row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
-
-        # Calculated Final Balance
-        ttk.Label(summary_frame, text="Calculated Final Balance:", font=('Arial', 10, 'bold')).grid(
-            row=2, column=0, sticky=tk.W, padx=5, pady=2)
-        self.calculated_balance_label = ttk.Label(
-            summary_frame,
-            text=f"{balance_info['calculated_final_balance']:.2f}",
-            font=('Arial', 11, 'bold'),
-            foreground='blue'
-        )
-        self.calculated_balance_label.grid(
-            row=2, column=1, sticky=tk.W, padx=5, pady=2)
-
-        ttk.Separator(summary_frame, orient='horizontal').grid(
-            row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
-
-        # Final Balance Mode Selection
-        mode_frame = ttk.Frame(summary_frame)
-        mode_frame.grid(row=4, column=0, columnspan=2,
-                        sticky=(tk.W, tk.E), pady=5)
-
-        ttk.Checkbutton(
-            mode_frame,
-            text="Automatically use calculated final balance",
-            variable=self.auto_calculate_final_balance,
-            command=self._toggle_final_balance_mode
-        ).pack(anchor=tk.W, pady=2)
-
-        # Manual Final Balance Entry
-        manual_frame = ttk.Frame(summary_frame)
-        manual_frame.grid(row=5, column=0, columnspan=2,
-                          sticky=(tk.W, tk.E), pady=2)
-
-        ttk.Label(manual_frame, text="Manual Final Balance:", font=('Arial', 10, 'bold')).pack(
-            side=tk.LEFT, padx=5)
-        # Set initial state based on auto_calculate_final_balance value
-        initial_state = 'disabled' if self.auto_calculate_final_balance.get() else 'normal'
-        # Register numeric validation command
-        vcmd_numeric = (self.root.register(
-            self._validate_numeric_input), '%d', '%P')
-        self.final_balance_entry = ttk.Entry(
-            manual_frame, textvariable=self.final_balance,
-            width=20, state=initial_state,
-            validate='key', validatecommand=vcmd_numeric)
-        self.final_balance_entry.pack(side=tk.LEFT, padx=5)
-        ttk.Label(manual_frame, text="(Uncheck above to edit manually)",
-                  font=('Arial', 8), foreground='gray').pack(side=tk.LEFT, padx=5)
-
-        # Transaction count
-        count_text = f"Total Transactions: {balance_info['transaction_count']}"
-        self.transaction_count_label = ttk.Label(
-            summary_frame, text=count_text,
-            font=('Arial', 9), foreground='gray')
-        self.transaction_count_label.grid(
-            row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
-
-        # Transaction preview (scrollable list)
-        preview_frame = ttk.LabelFrame(
-            frame, text="Transaction Preview (All Transactions)", padding="5")
-        preview_frame.grid(row=3, column=0, sticky=(
-            tk.W, tk.E, tk.N, tk.S), pady=5)
-        preview_frame.columnconfigure(0, weight=1)
-        preview_frame.rowconfigure(0, weight=1)
-
-        # Create treeview
-        tree_container = ttk.Frame(preview_frame)
-        tree_container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        tree_container.columnconfigure(0, weight=1)
-        tree_container.rowconfigure(0, weight=1)
-
-        vsb = ttk.Scrollbar(tree_container, orient="vertical")
-        hsb = ttk.Scrollbar(tree_container, orient="horizontal")
-
-        self.balance_preview_tree = ttk.Treeview(
-            tree_container,
-            columns=('date', 'description', 'amount', 'type'),
-            show='headings',
-            yscrollcommand=vsb.set,
-            xscrollcommand=hsb.set
-        )
-        vsb.configure(command=self.balance_preview_tree.yview)
-        hsb.configure(command=self.balance_preview_tree.xview)
-
-        self.balance_preview_tree.heading('date', text='Date')
-        self.balance_preview_tree.heading('description', text='Description')
-        self.balance_preview_tree.heading('amount', text='Amount')
-        self.balance_preview_tree.heading('type', text='Type')
-
-        self.balance_preview_tree.column('date', width=120, anchor=tk.W)
-        self.balance_preview_tree.column('description', width=300, anchor=tk.W)
-        self.balance_preview_tree.column('amount', width=100, anchor=tk.E)
-        self.balance_preview_tree.column('type', width=80, anchor=tk.CENTER)
-
-        self.balance_preview_tree.grid(
-            row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        vsb.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        hsb.grid(row=1, column=0, sticky=(tk.W, tk.E))
-
-        # Configure tags for date validation status
-        self.balance_preview_tree.tag_configure(
-            'date_before', background='#ffcccc')  # Light red
-        self.balance_preview_tree.tag_configure(
-            'date_after', background='#ffe6cc')   # Light orange
-
-        # Bind context menu for deleting transactions
-        self.balance_preview_tree.bind(
-            "<Button-3>", self._show_transaction_context_menu_wrapper)
-
-        # Populate transaction preview
-        self.transaction_tree_items.clear()  # Clear previous mappings
-        for trans in balance_info['transactions']:
-            # Get the original row index from transaction data
-            row_idx = trans.get('row_idx')
-
-            # Skip if no row_idx (shouldn't happen, but be safe)
-            if row_idx is None:
-                continue
-
-            # Determine tag based on date status
-            tags = []
-            if trans.get('date_status') == 'before':
-                tags.append('date_before')
-            elif trans.get('date_status') == 'after':
-                tags.append('date_after')
-
-            item_id = self.balance_preview_tree.insert('', tk.END, values=(
-                trans['date'],
-                trans['description'][:50],
-                f"{trans['amount']:.2f}",
-                trans['type']
-            ), tags=tags)
-            # Store mapping of row_idx to tree item ID
-            self.transaction_tree_items[row_idx] = item_id
-
-        # Initialize final balance
-        self._update_final_balance_display(
-            balance_info['calculated_final_balance'])
-
-        # Confirmation message
-        ttk.Label(frame, text="[OK] Review complete! Click 'Convert to OFX' to generate the file.",
-                  font=('Arial', 10, 'bold'), foreground='green').grid(
-            row=4, column=0, sticky=tk.W, pady=(10, 0))
+    # ==================== HELPER METHODS (used by step classes and conversion) ====================
 
     def _recalculate_balance_preview(self):
         """

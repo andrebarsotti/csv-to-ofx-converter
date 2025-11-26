@@ -230,6 +230,9 @@ class TestAdvancedOptionsStepDateFormatting(unittest.TestCase):
         self.step = AdvancedOptionsStep(self.parent)
         self.container = ttk.Frame(self.root)
         self.step.create(self.container)
+        # Enable date entries for formatting tests
+        self.step._widgets['start_date_entry'].configure(state='normal')
+        self.step._widgets['end_date_entry'].configure(state='normal')
 
     def tearDown(self):
         """Clean up after tests."""
