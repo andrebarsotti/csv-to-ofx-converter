@@ -123,10 +123,10 @@ class BalancePreviewStep(WizardStep):
         self._create_initial_balance_section()
         self._create_balance_summary_section(balance_info)
         self._create_transaction_preview_section(balance_info)
-        self._create_confirmation_label()
 
         # Initialize final balance display
-        self._update_final_balance_display(balance_info['calculated_final_balance'])
+        self._update_final_balance_display(
+            balance_info['calculated_final_balance'])
 
     def _create_initial_balance_section(self):
         """
@@ -219,7 +219,8 @@ class BalancePreviewStep(WizardStep):
             font=('Arial', 10),
             foreground='green'
         )
-        credits_label.grid(row=0, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
+        credits_label.grid(row=0, column=0, columnspan=2,
+                           sticky=tk.W, padx=5, pady=2)
         self._widgets['total_credits_label'] = credits_label
 
         # Total Debits
@@ -230,7 +231,8 @@ class BalancePreviewStep(WizardStep):
             font=('Arial', 10),
             foreground='red'
         )
-        debits_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
+        debits_label.grid(row=1, column=0, columnspan=2,
+                          sticky=tk.W, padx=5, pady=2)
         self._widgets['total_debits_label'] = debits_label
 
         # Calculated Final Balance
@@ -256,7 +258,8 @@ class BalancePreviewStep(WizardStep):
 
         # Auto-calculate checkbox
         mode_frame = ttk.Frame(frame)
-        mode_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        mode_frame.grid(row=4, column=0, columnspan=2,
+                        sticky=(tk.W, tk.E), pady=5)
 
         ttk.Checkbutton(
             mode_frame,
@@ -267,7 +270,8 @@ class BalancePreviewStep(WizardStep):
 
         # Manual Final Balance entry
         manual_frame = ttk.Frame(frame)
-        manual_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
+        manual_frame.grid(row=5, column=0, columnspan=2,
+                          sticky=(tk.W, tk.E), pady=2)
 
         ttk.Label(
             manual_frame,
@@ -310,7 +314,8 @@ class BalancePreviewStep(WizardStep):
             font=('Arial', 9),
             foreground='gray'
         )
-        count_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
+        count_label.grid(row=6, column=0, columnspan=2,
+                         sticky=tk.W, pady=(10, 0))
         self._widgets['transaction_count_label'] = count_label
 
     def _create_transaction_preview_section(self, balance_info: Dict):
@@ -331,7 +336,7 @@ class BalancePreviewStep(WizardStep):
             text="Transaction Preview (All Transactions)",
             padding="5"
         )
-        frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=6)
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
 
@@ -426,15 +431,6 @@ class BalancePreviewStep(WizardStep):
             # Store mapping of row_idx to tree item ID
             self.parent.transaction_tree_items[row_idx] = item_id
 
-    def _create_confirmation_label(self):
-        """Create confirmation message label."""
-        ttk.Label(
-            self.container,
-            text="[OK] Review complete! Click 'Convert to OFX' to generate the file.",
-            font=('Arial', 10, 'bold'),
-            foreground='green'
-        ).grid(row=4, column=0, sticky=tk.W, pady=(10, 0))
-
     # === Helper Methods ===
 
     def _recalculate_balance_preview(self):
@@ -496,7 +492,8 @@ class BalancePreviewStep(WizardStep):
             field_mappings[key] = var.get()
 
         # Get description columns as list of strings
-        description_columns = [var.get() for var in self.parent.description_columns]
+        description_columns = [var.get()
+                               for var in self.parent.description_columns]
 
         # Use BalanceManager to calculate preview
         balance_data = self.parent.balance_manager.calculate_balance_preview(
@@ -570,7 +567,8 @@ class BalancePreviewStep(WizardStep):
         Args:
             calculated_balance: Calculated balance value to display
         """
-        formatted = self.parent.balance_manager.format_final_balance(calculated_balance)
+        formatted = self.parent.balance_manager.format_final_balance(
+            calculated_balance)
         self.parent.final_balance.set(formatted)
 
     def _show_transaction_context_menu_wrapper(self, event):
@@ -626,7 +624,8 @@ class BalancePreviewStep(WizardStep):
         """
         # Validate initial balance
         initial_balance_str = data.get('initial_balance', '')
-        is_valid, error_msg = gui_utils.validate_balance_value(initial_balance_str)
+        is_valid, error_msg = gui_utils.validate_balance_value(
+            initial_balance_str)
         if not is_valid:
             return False, f"Invalid initial balance: {error_msg}"
 
@@ -634,7 +633,8 @@ class BalancePreviewStep(WizardStep):
         auto_calculate = data.get('auto_calculate_final_balance', True)
         if not auto_calculate:
             final_balance_str = data.get('final_balance', '')
-            is_valid, error_msg = gui_utils.validate_balance_value(final_balance_str)
+            is_valid, error_msg = gui_utils.validate_balance_value(
+                final_balance_str)
             if not is_valid:
                 return False, f"Invalid final balance: {error_msg}"
 
