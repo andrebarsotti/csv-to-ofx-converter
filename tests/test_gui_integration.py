@@ -102,11 +102,12 @@ class TestGUIIntegration(unittest.TestCase):
 
     def test_csv_data_loading(self):
         """Test that CSV data loads correctly."""
-        # Set CSV file
+        # Set CSV file (step 1)
         self.gui.csv_file.set(self.temp_csv.name)
 
-        # Load CSV data
-        self.gui._load_csv_data()
+        # Navigate to step 3 (data preview) which loads CSV data
+        self.gui._show_step(1)  # CSV format step
+        self.gui._show_step(2)  # Data preview step - triggers auto-load
 
         # Verify data loaded
         self.assertEqual(len(self.gui.csv_headers), 3)
@@ -117,13 +118,17 @@ class TestGUIIntegration(unittest.TestCase):
 
     def test_field_mappings_initialization(self):
         """Test that field mappings are initialized."""
-        # Load CSV data first
+        # Set CSV file
         self.gui.csv_file.set(self.temp_csv.name)
-        self.gui._load_csv_data()
 
-        # Progress to field mapping step (step 4, index 4)
-        for _ in range(4):
-            self.gui._show_step(self.gui.current_step + 1)
+        # Progress to field mapping step (step 5, index 4)
+        # Step 0: File selection
+        # Step 1: CSV format
+        # Step 2: Data preview (loads CSV data automatically)
+        # Step 3: OFX config
+        # Step 4: Field mapping
+        for i in range(5):
+            self.gui._show_step(i)
 
         # Field mappings should exist
         self.assertIn('date', self.gui.field_mappings)

@@ -286,6 +286,9 @@ class ConverterGUI:
         # Always create fresh UI (step container was destroyed above)
         step.create(self.step_container)
 
+        # Show the step (triggers auto-loading logic in step.show())
+        step.show()
+
         # Update navigation buttons
         self._update_navigation_buttons()
 
