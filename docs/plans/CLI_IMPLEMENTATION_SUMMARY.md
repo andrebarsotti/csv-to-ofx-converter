@@ -12,15 +12,16 @@ This document provides a high-level summary of the comprehensive technical imple
 
 | Metric | Value |
 |--------|-------|
-| **Total Estimated Effort** | 23-24 working days (1 developer) |
-| **New Code** | ~5,500 lines |
+| **Total Estimated Effort** | 24 working days (1 developer) |
+| **New Code** | ~6,000 lines |
 | **New Tests** | 155 tests (623 total) |
 | **Test Coverage** | ~90% for CLI modules |
 | **Code Reuse** | 75% (6/8 core modules) |
 | **Feature Parity** | 87% (13/15 features) |
 | **New Dependencies** | 0 (argparse from stdlib) |
 | **Phases** | 5 distinct phases |
-| **Documentation** | ~3,500 lines (EN + PT-BR) |
+| **Documentation** | ~4,000 lines (EN + PT-BR) |
+| **Class Docs** | 10 new files (5 EN + 5 PT-BR) |
 
 ---
 
@@ -79,12 +80,13 @@ This document provides a high-level summary of the comprehensive technical imple
 - **Acceptance:** 6 executables (3 GUI + 3 CLI) per release
 
 ### Phase 5: Documentation and Polish (P1 - High Priority)
-- **Duration:** 5-6 days
+- **Duration:** 6 days
 - **Deliverables:**
   - CLI_USAGE.md (English + Portuguese)
   - Updated CLAUDE.md, README.md, README.pt-BR.md
-  - Updated docs/en/ technical documentation (README, classes/CLI.md, architecture.md, overview.md)
-  - Updated docs/pt-BR/ technical documentation (all mirrored from English)
+  - Updated docs/en/ technical documentation (README, architecture.md, overview.md)
+  - 5 new class docs in docs/en/classes/ (CLIParser, CLIWizard, CLIConverter, CLIOutput, CLIUtils)
+  - 5 new class docs in docs/pt-BR/classes/ (all Portuguese translations)
   - RELEASE_CHECKLIST.md and CHANGELOG for v4.0.0
 - **Tests:** Documentation review
 - **Acceptance:** All documentation complete, accurate, and approved

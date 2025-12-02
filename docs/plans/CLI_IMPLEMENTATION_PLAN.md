@@ -718,7 +718,7 @@ python cli.py -i sample.csv -o output.ofx \
 
 **Goal:** Complete user documentation, update project docs (including technical docs in docs/en/ and docs/pt-BR/), prepare for release.
 
-**Duration:** 5-6 days
+**Duration:** 6 days
 **Priority:** P1 (Required for release)
 
 #### Tasks
@@ -732,18 +732,26 @@ python cli.py -i sample.csv -o output.ofx \
 | 5.5: Update README.pt-BR.md (CLI section) | 3 hours | Tech Writer | README.md |
 | 5.6: Update docs/en/README.md (add CLI to index) | 1 hour | Tech Writer | CLI_USAGE.md |
 | 5.7: Update docs/pt-BR/README.md (add CLI to index) | 1 hour | Tech Writer | docs/en/README.md |
-| 5.8: Create docs/en/classes/CLI.md (CLI modules documentation) | 3 hours | Tech Writer | Phase 1-3 |
-| 5.9: Create docs/pt-BR/classes/CLI.md (Portuguese) | 3 hours | Tech Writer | docs/en/classes/CLI.md |
-| 5.10: Update docs/en/architecture.md (CLI layer) | 2 hours | Tech Lead | Phase 1-4 |
-| 5.11: Update docs/pt-BR/architecture.md (CLI layer) | 2 hours | Tech Writer | docs/en/architecture.md |
-| 5.12: Update docs/en/overview.md (CLI usage flows) | 2 hours | Tech Writer | CLI_USAGE.md |
-| 5.13: Update docs/pt-BR/overview.md (CLI usage flows) | 2 hours | Tech Writer | docs/en/overview.md |
-| 5.14: Add CLI examples to docs/ | 2 hours | Tech Writer | CLI_USAGE.md |
-| 5.15: Update RELEASE_CHECKLIST.md | 1 hour | Tech Lead | Phase 4 |
-| 5.16: Create CHANGELOG entry for v4.0.0 | 1 hour | Tech Lead | All phases |
-| 5.17: Review all documentation | 3 hours | Product Mgr | All docs |
-| 5.18: Final QA and acceptance testing | 4 hours | QA | All |
-| **Total** | **43 hours (~5-6 days)** | | |
+| 5.8: Create docs/en/classes/CLIParser.md | 1 hour | Tech Writer | Phase 1 |
+| 5.9: Create docs/en/classes/CLIWizard.md | 1.5 hours | Tech Writer | Phase 2 |
+| 5.10: Create docs/en/classes/CLIConverter.md | 1 hour | Tech Writer | Phase 1-3 |
+| 5.11: Create docs/en/classes/CLIOutput.md | 0.5 hour | Tech Writer | Phase 1-2 |
+| 5.12: Create docs/en/classes/CLIUtils.md | 0.5 hour | Tech Writer | Phase 1-3 |
+| 5.13: Create docs/pt-BR/classes/CLIParser.md | 1 hour | Tech Writer | docs/en |
+| 5.14: Create docs/pt-BR/classes/CLIWizard.md | 1.5 hours | Tech Writer | docs/en |
+| 5.15: Create docs/pt-BR/classes/CLIConverter.md | 1 hour | Tech Writer | docs/en |
+| 5.16: Create docs/pt-BR/classes/CLIOutput.md | 0.5 hour | Tech Writer | docs/en |
+| 5.17: Create docs/pt-BR/classes/CLIUtils.md | 0.5 hour | Tech Writer | docs/en |
+| 5.18: Update docs/en/architecture.md (CLI layer) | 2 hours | Tech Lead | Phase 1-4 |
+| 5.19: Update docs/pt-BR/architecture.md (CLI layer) | 2 hours | Tech Writer | docs/en/architecture.md |
+| 5.20: Update docs/en/overview.md (CLI usage flows) | 2 hours | Tech Writer | CLI_USAGE.md |
+| 5.21: Update docs/pt-BR/overview.md (CLI usage flows) | 2 hours | Tech Writer | docs/en/overview.md |
+| 5.22: Add CLI examples to docs/ | 2 hours | Tech Writer | CLI_USAGE.md |
+| 5.23: Update RELEASE_CHECKLIST.md | 1 hour | Tech Lead | Phase 4 |
+| 5.24: Create CHANGELOG entry for v4.0.0 | 1 hour | Tech Lead | All phases |
+| 5.25: Review all documentation | 3 hours | Product Mgr | All docs |
+| 5.26: Final QA and acceptance testing | 4 hours | QA | All |
+| **Total** | **48 hours (~6 days)** | | |
 
 #### Deliverables
 
@@ -754,14 +762,22 @@ python cli.py -i sample.csv -o output.ofx \
 - ✅ Updated README.pt-BR.md with CLI section
 
 **Technical Documentation (docs/en/):**
-- ✅ Updated docs/en/README.md (add CLI to index)
-- ✅ New docs/en/classes/CLI.md (5 CLI modules documented)
+- ✅ Updated docs/en/README.md (add CLI classes to index)
+- ✅ New docs/en/classes/CLIParser.md (argument parsing and validation)
+- ✅ New docs/en/classes/CLIWizard.md (interactive 7-step wizard)
+- ✅ New docs/en/classes/CLIConverter.md (conversion orchestration)
+- ✅ New docs/en/classes/CLIOutput.md (terminal output formatting)
+- ✅ New docs/en/classes/CLIUtils.md (utility functions)
 - ✅ Updated docs/en/architecture.md (add CLI layer diagram)
 - ✅ Updated docs/en/overview.md (add CLI usage flows)
 
 **Technical Documentation (docs/pt-BR/):**
-- ✅ Updated docs/pt-BR/README.md (add CLI to index)
-- ✅ New docs/pt-BR/classes/CLI.md (Portuguese)
+- ✅ Updated docs/pt-BR/README.md (add CLI classes to index)
+- ✅ New docs/pt-BR/classes/CLIParser.md (Portuguese)
+- ✅ New docs/pt-BR/classes/CLIWizard.md (Portuguese)
+- ✅ New docs/pt-BR/classes/CLIConverter.md (Portuguese)
+- ✅ New docs/pt-BR/classes/CLIOutput.md (Portuguese)
+- ✅ New docs/pt-BR/classes/CLIUtils.md (Portuguese)
 - ✅ Updated docs/pt-BR/architecture.md (CLI layer diagram)
 - ✅ Updated docs/pt-BR/overview.md (CLI usage flows)
 
@@ -781,11 +797,15 @@ python cli.py -i sample.csv -o output.ofx \
 - README quick start gets users running in <5 minutes
 
 **Technical Documentation (docs/):**
-- docs/en/README.md includes CLI in module index
-- docs/en/classes/CLI.md documents all 5 CLI modules with code examples
+- docs/en/README.md includes 5 CLI classes in module index
+- docs/en/classes/CLIParser.md documents argument parsing (following CSVParser.md pattern)
+- docs/en/classes/CLIWizard.md documents interactive wizard (following ConverterGUI.md pattern)
+- docs/en/classes/CLIConverter.md documents conversion orchestration
+- docs/en/classes/CLIOutput.md documents terminal output formatting
+- docs/en/classes/CLIUtils.md documents utility functions
 - docs/en/architecture.md includes CLI layer in system architecture diagram
 - docs/en/overview.md explains CLI usage flows (interactive and non-interactive)
-- docs/pt-BR/ mirrors all English documentation accurately
+- docs/pt-BR/ mirrors all English documentation accurately (10 class files)
 
 **Project Documentation:**
 - CLAUDE.md reflects actual CLI module structure and file organization
@@ -1858,10 +1878,18 @@ Before marking any phase complete:
 - [ ] CLAUDE.md reflects CLI architecture and test commands
 - [ ] README.md includes CLI Quick Start
 - [ ] README.pt-BR.md includes translated CLI section
-- [ ] docs/en/README.md includes CLI in index
-- [ ] docs/pt-BR/README.md includes CLI in index
-- [ ] docs/en/classes/CLI.md documents 5 CLI modules
-- [ ] docs/pt-BR/classes/CLI.md translated
+- [ ] docs/en/README.md includes 5 CLI classes in index
+- [ ] docs/pt-BR/README.md includes 5 CLI classes in index
+- [ ] docs/en/classes/CLIParser.md created (following existing pattern)
+- [ ] docs/en/classes/CLIWizard.md created (following existing pattern)
+- [ ] docs/en/classes/CLIConverter.md created (following existing pattern)
+- [ ] docs/en/classes/CLIOutput.md created (following existing pattern)
+- [ ] docs/en/classes/CLIUtils.md created (following existing pattern)
+- [ ] docs/pt-BR/classes/CLIParser.md translated
+- [ ] docs/pt-BR/classes/CLIWizard.md translated
+- [ ] docs/pt-BR/classes/CLIConverter.md translated
+- [ ] docs/pt-BR/classes/CLIOutput.md translated
+- [ ] docs/pt-BR/classes/CLIUtils.md translated
 - [ ] docs/en/architecture.md includes CLI layer diagram
 - [ ] docs/pt-BR/architecture.md includes CLI layer diagram
 - [ ] docs/en/overview.md explains CLI usage flows
@@ -2075,10 +2103,10 @@ Total Tests: 623
 | Phase 2: Interactive Wizard | 6 days | 45 | ~600 lines |
 | Phase 3: Advanced Features | 4 days | 0 (overlap) | ~200 lines |
 | Phase 4: Build & Deployment | 3 days | 0 | ~100 lines |
-| Phase 5: Documentation | 5-6 days | 0 | ~3,500 lines |
-| **Total** | **23-24 days** | **155** | **~5,500 lines** |
+| Phase 5: Documentation | 6 days | 0 | ~4,000 lines |
+| **Total** | **24 days** | **155** | **~6,000 lines** |
 
-**Note:** Effort assumes 1 developer working full-time. With 2 developers, timeline could be 14-17 days.
+**Note:** Effort assumes 1 developer working full-time. With 2 developers, timeline could be 15-17 days.
 
 ### 9.6 Dependencies Summary
 
