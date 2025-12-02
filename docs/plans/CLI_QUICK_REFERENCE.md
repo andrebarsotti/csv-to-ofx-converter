@@ -28,16 +28,20 @@
 
 | Metric | Value |
 |--------|-------|
-| **Effort** | 24 days (1 dev) |
-| **New Code** | ~6,000 lines |
-| **New Tests** | 155 tests |
+| **MVP Effort** | 16 days (1 dev) |
+| **Complete Effort** | 25 days (1 dev) |
+| **New Code (MVP)** | ~5,500 lines |
+| **New Code (Complete)** | ~6,250 lines |
+| **New Tests (MVP)** | 130 tests |
+| **New Tests (Complete)** | 190 tests |
 | **Test Coverage** | ~90% |
 | **Code Reuse** | 75% |
-| **Phases** | 5 |
+| **Phases (MVP)** | 3 (Phase 1+4+5) |
+| **Phases (Complete)** | 5 (all phases) |
 | **New Dependencies** | 0 |
 | **Documentation** | ~4,000 lines |
 | **Class Docs** | 10 files (5 EN + 5 PT-BR) |
-| **Feature Parity** | 87% |
+| **Feature Parity (MVP)** | 100% (non-interactive) |
 
 ---
 
@@ -103,29 +107,31 @@ tests/test_cli/
 ## Implementation Phases
 
 ### Phase 1: Foundation (5 days) - P0
-- cli_utils, cli_parser, cli_output, cli_converter (non-interactive)
-- 110 tests
-- Basic conversion working
+- cli_parser with ALL args (composite desc, value inversion, date validation)
+- cli_output, cli_converter, cli_utils
+- Complete non-interactive mode with 100% feature parity
+- 130 tests
 
-### Phase 2: Interactive Wizard (6 days) - P0
-- CLIWizard with 7 steps
+### Phase 2: Interactive Wizard (6 days) - P1 (Not MVP)
+- CLIWizard with 7 steps reusing Phase 1 logic
 - 45 tests
-- Feature parity with GUI
 
-### Phase 3: Advanced Features (4 days) - P1
-- Composite descriptions, value inversion, date validation
-- Balance preview integration
-- 25 tests (overlap with Phase 2)
+### Phase 3: Polish & Edge Cases (3 days) - P2 (Optional)
+- Preview, dry-run, verbose/quiet modes
+- Progress indicators, enhanced errors
+- 15 tests
 
-### Phase 4: Build & Deploy (3 days) - P1
+### Phase 4: Build & Deploy (3 days) - P1 MVP ✨
 - cli.spec, build scripts, GitHub Actions
 - 6 executables (3 GUI + 3 CLI)
 
-### Phase 5: Documentation (6 days) - P1
+### Phase 5: Documentation (6 days) - P1 MVP ✨
 - CLI_USAGE.md (English + Portuguese)
 - Update CLAUDE.md, README.md, README.pt-BR.md
 - Create 5 class docs per language (CLIParser, CLIWizard, CLIConverter, CLIOutput, CLIUtils)
 - Update docs/en/ and docs/pt-BR/ (architecture, overview)
+
+**MVP Timeline: Phase 1 + Phase 4 + Phase 5 = 16 days**
 
 ---
 

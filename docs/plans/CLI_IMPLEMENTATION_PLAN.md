@@ -503,9 +503,9 @@ class CLIOutput:
 
 ### Phase 1: Foundation and Non-Interactive Core (P0 - MVP)
 
-**Goal:** Establish CLI infrastructure and implement non-interactive mode with basic features.
+**Goal:** Establish CLI infrastructure and implement non-interactive mode with ALL core features (including value inversion, date validation, and composite descriptions).
 
-**Duration:** 4-5 days  
+**Duration:** 6-7 days
 **Priority:** P0 (Critical for MVP)
 
 #### Tasks
@@ -515,22 +515,30 @@ class CLIOutput:
 | 1.1: Create src/cli/ package structure | 1 hour | Dev | None |
 | 1.2: Implement cli_utils.py (10 pure functions) | 4 hours | Dev | None |
 | 1.3: Implement CLIOutput class (basic formatting) | 4 hours | Dev | cli_utils |
-| 1.4: Implement CLIParser class (argparse setup) | 6 hours | Dev | None |
-| 1.5: Create cli.py entry point (basic) | 2 hours | Dev | CLIParser, CLIOutput |
-| 1.6: Implement CLIConverter (non-interactive only) | 6 hours | Dev | All above |
-| 1.7: Write unit tests for cli_utils (30 tests) | 4 hours | Dev | cli_utils |
-| 1.8: Write unit tests for CLIParser (30 tests) | 4 hours | Dev | CLIParser |
-| 1.9: Write unit tests for CLIOutput (25 tests) | 4 hours | Dev | CLIOutput |
-| 1.10: Write unit tests for CLIConverter (20 tests) | 4 hours | Dev | CLIConverter |
-| 1.11: End-to-end testing (5 integration tests) | 3 hours | Dev | All |
-| **Total** | **42 hours (~5 days)** | | |
+| 1.4: Implement CLIParser class (ALL args including advanced) | 8 hours | Dev | None |
+| 1.5: Add composite description support to CLIParser | 2 hours | Dev | CLIParser |
+| 1.6: Add value inversion support to CLIParser | 1 hour | Dev | CLIParser |
+| 1.7: Add date validation args to CLIParser | 2 hours | Dev | CLIParser |
+| 1.8: Create cli.py entry point (basic) | 2 hours | Dev | CLIParser, CLIOutput |
+| 1.9: Implement CLIConverter (non-interactive with all features) | 8 hours | Dev | All above |
+| 1.10: Write unit tests for cli_utils (30 tests) | 4 hours | Dev | cli_utils |
+| 1.11: Write unit tests for CLIParser (40 tests) | 5 hours | Dev | CLIParser |
+| 1.12: Write unit tests for CLIOutput (25 tests) | 4 hours | Dev | CLIOutput |
+| 1.13: Write unit tests for CLIConverter (25 tests) | 5 hours | Dev | CLIConverter |
+| 1.14: Integration tests for advanced features (10 tests) | 4 hours | Dev | All |
+| **Total** | **54 hours (~7 days)** | | |
 
 #### Deliverables
 
 - ✅ Complete src/cli/ package with 4 modules
 - ✅ cli.py entry point (non-interactive mode only)
-- ✅ 110 tests passing (30+30+25+20+5)
-- ✅ Non-interactive CLI fully functional
+- ✅ 130 tests passing (30+40+25+25+10)
+- ✅ Non-interactive CLI fully functional with ALL features:
+  - Basic field mapping (date, amount, description)
+  - Composite descriptions with separator choice
+  - Value inversion (--invert-values)
+  - Date validation with keep/adjust/exclude actions
+  - Initial balance and currency support
 - ✅ Zero regressions in existing GUI tests
 
 #### Acceptance Criteria
@@ -540,6 +548,24 @@ class CLIOutput:
 python cli.py -i sample.csv -o output.ofx \
   --date-column date --amount-column amount \
   --description-column description
+
+# Must work: Composite descriptions (MVP feature)
+python cli.py -i sample.csv -o output.ofx \
+  --date-column date --amount-column amount \
+  --description-columns "category,merchant,notes" \
+  --description-separator dash
+
+# Must work: Value inversion (MVP feature)
+python cli.py -i sample.csv -o output.ofx \
+  --date-column date --amount-column amount \
+  --description-column desc --invert-values
+
+# Must work: Date validation (MVP feature)
+python cli.py -i sample.csv -o output.ofx \
+  --date-column date --amount-column amount \
+  --description-column desc \
+  --validate-dates --start-date 2025-01-01 \
+  --end-date 2025-01-31 --date-action adjust
 
 # Must show help
 python cli.py --help
@@ -553,12 +579,12 @@ python cli.py -i missing.csv -o output.ofx ...
 # ERROR: Input file 'missing.csv' not found
 ```
 
-### Phase 2: Interactive Wizard Mode (P0 - MVP)
+### Phase 2: Interactive Wizard Mode (P1 - High Priority)
 
-**Goal:** Implement full 7-step interactive wizard with feature parity to GUI.
+**Goal:** Implement full 7-step interactive wizard reusing all Phase 1 logic.
 
-**Duration:** 5-6 days  
-**Priority:** P0 (Critical for MVP)
+**Duration:** 5-6 days
+**Priority:** P1 (High Priority - enhances usability, not MVP)
 
 #### Tasks
 
@@ -569,9 +595,9 @@ python cli.py -i missing.csv -o output.ofx ...
 | 2.3: Implement step 2 (CSV format) | 3 hours | Dev | cli_utils |
 | 2.4: Implement step 3 (data preview) | 4 hours | Dev | CLIOutput.table() |
 | 2.5: Implement step 4 (OFX config) | 4 hours | Dev | cli_utils |
-| 2.6: Implement step 5 (field mapping) | 5 hours | Dev | cli_utils |
-| 2.7: Implement step 6 (advanced options) | 4 hours | Dev | cli_utils |
-| 2.8: Implement step 7 (balance preview) | 5 hours | Dev | CLIOutput, BalanceManager |
+| 2.6: Implement step 5 (field mapping with composite desc) | 5 hours | Dev | cli_utils, Phase 1 |
+| 2.7: Implement step 6 (value inversion + date validation) | 4 hours | Dev | cli_utils, Phase 1 |
+| 2.8: Implement step 7 (balance preview) | 5 hours | Dev | CLIOutput, BalanceManager, Phase 1 |
 | 2.9: Integrate wizard with CLIConverter | 3 hours | Dev | All steps |
 | 2.10: Write unit tests for CLIWizard (35 tests) | 6 hours | Dev | CLIWizard |
 | 2.11: Write integration tests (10 tests) | 4 hours | Dev | Full workflow |
@@ -585,6 +611,7 @@ python cli.py -i missing.csv -o output.ofx ...
 - ✅ 45 additional tests (35+10)
 - ✅ Feature parity with GUI wizard
 - ✅ User-friendly prompts and error messages
+- ✅ Reuses all Phase 1 conversion logic (composite desc, value inversion, date validation)
 
 #### Acceptance Criteria
 
@@ -607,58 +634,60 @@ python cli.py --interactive
 # Invalid date format → re-prompt
 ```
 
-### Phase 3: Advanced Features (P1 - High Priority)
+### Phase 3: Polish and Edge Cases (P2 - Medium Priority)
 
-**Goal:** Add date validation, composite descriptions, value inversion, and balance preview.
+**Goal:** Add polish features (preview mode, dry-run, verbose output) and handle edge cases.
 
-**Duration:** 3-4 days  
-**Priority:** P1 (High - completes feature parity)
+**Duration:** 2-3 days
+**Priority:** P2 (Nice to have - polish features)
 
 #### Tasks
 
 | Task | Effort | Owner | Dependencies |
 |------|--------|-------|--------------|
-| 3.1: Implement composite description CLI args | 2 hours | Dev | Phase 1 |
-| 3.2: Implement composite description wizard prompts | 2 hours | Dev | Phase 2 |
-| 3.3: Implement value inversion CLI arg | 1 hour | Dev | Phase 1 |
-| 3.4: Implement value inversion wizard prompt | 1 hour | Dev | Phase 2 |
-| 3.5: Implement date validation CLI args | 3 hours | Dev | Phase 1 |
-| 3.6: Implement date validation wizard prompts | 3 hours | Dev | Phase 2 |
-| 3.7: Implement balance preview display | 4 hours | Dev | CLIOutput |
-| 3.8: Integrate BalanceManager for calculations | 3 hours | Dev | Phase 2 |
-| 3.9: Write tests for advanced features (20 tests) | 4 hours | Dev | All |
-| 3.10: Update integration tests (5 tests) | 2 hours | Dev | All |
-| 3.11: Manual testing with edge cases | 3 hours | QA | All |
-| **Total** | **28 hours (~4 days)** | | |
+| 3.1: Implement --preview flag (show first 10 transactions) | 2 hours | Dev | Phase 1 |
+| 3.2: Implement --dry-run flag (validation only) | 2 hours | Dev | Phase 1 |
+| 3.3: Implement --verbose flag (detailed logging) | 2 hours | Dev | Phase 1 |
+| 3.4: Implement --quiet flag (silent mode) | 1 hour | Dev | Phase 1 |
+| 3.5: Add progress indicators for large files | 3 hours | Dev | CLIOutput |
+| 3.6: Improve error messages with suggestions | 2 hours | Dev | CLIParser |
+| 3.7: Add color output support (optional ANSI colors) | 2 hours | Dev | CLIOutput |
+| 3.8: Write tests for polish features (15 tests) | 3 hours | Dev | All |
+| 3.9: Manual testing with edge cases | 3 hours | QA | All |
+| **Total** | **20 hours (~3 days)** | | |
 
 #### Deliverables
 
-- ✅ Composite descriptions working in both modes
-- ✅ Value inversion working in both modes
-- ✅ Date validation with keep/adjust/exclude in both modes
-- ✅ Balance preview in Step 7 of interactive mode
-- ✅ 25 additional tests (20+5)
+- ✅ Preview mode for quick data inspection
+- ✅ Dry-run mode for validation without conversion
+- ✅ Verbose and quiet modes for different use cases
+- ✅ Progress indicators for better UX
+- ✅ Enhanced error messages
+- ✅ Optional color output
+- ✅ 15 additional tests
 
 #### Acceptance Criteria
 
 ```bash
-# Composite descriptions
-python cli.py -i sample.csv -o output.ofx \
+# Preview mode - show first 10 transactions without saving
+python cli.py -i sample.csv -o /dev/null \
   --date-column date --amount-column amount \
-  --description-columns "category,merchant,notes" \
-  --description-separator dash
+  --description-column desc --preview
 
-# Value inversion
+# Dry-run mode - validate without conversion
 python cli.py -i sample.csv -o output.ofx \
   --date-column date --amount-column amount \
-  --description-column desc --invert-values
+  --description-column desc --dry-run
 
-# Date validation
+# Verbose mode - detailed logging
 python cli.py -i sample.csv -o output.ofx \
   --date-column date --amount-column amount \
-  --description-column desc \
-  --validate-dates --start-date 2025-01-01 \
-  --end-date 2025-01-31 --date-action adjust
+  --description-column desc --verbose
+
+# Quiet mode - silent operation
+python cli.py -i sample.csv -o output.ofx \
+  --date-column date --amount-column amount \
+  --description-column desc --quiet
 ```
 
 ### Phase 4: Build and Deployment (P1 - High Priority)
@@ -2070,7 +2099,7 @@ sequenceDiagram
 ### 9.4 Test Distribution
 
 ```
-Total Tests: 623
+Total Tests: 658
 ├── Core Tests: 94 (15.1%)
 │   ├── CSV Parser: 8
 │   ├── OFX Generator: 19
@@ -2086,27 +2115,33 @@ Total Tests: 623
 │   ├── GUI Integration: 15
 │   ├── Wizard Step Base: 32
 │   └── Wizard Steps: 206
-└── CLI Tests: 155 (24.9%) ← NEW
+└── CLI Tests: 190 (30.5%) ← NEW
     ├── cli_utils: 30
-    ├── CLIParser: 30
+    ├── CLIParser: 40
     ├── CLIOutput: 25
     ├── CLIWizard: 35
-    ├── CLIConverter: 20
-    └── CLI Integration: 15
+    ├── CLIConverter: 25
+    ├── CLI Integration: 20
+    └── CLI Polish Features: 15
 ```
 
 ### 9.5 Estimated Effort Summary
 
 | Phase | Duration | Tests Added | Code Added |
 |-------|----------|-------------|------------|
-| Phase 1: Non-Interactive Core | 5 days | 110 | ~1,100 lines |
+| Phase 1: Non-Interactive Core (MVP) | 7 days | 130 | ~1,400 lines |
 | Phase 2: Interactive Wizard | 6 days | 45 | ~600 lines |
-| Phase 3: Advanced Features | 4 days | 0 (overlap) | ~200 lines |
+| Phase 3: Polish & Edge Cases (Optional) | 3 days | 15 | ~150 lines |
 | Phase 4: Build & Deployment | 3 days | 0 | ~100 lines |
 | Phase 5: Documentation | 6 days | 0 | ~4,000 lines |
-| **Total** | **24 days** | **155** | **~6,000 lines** |
+| **Total (MVP: Phase 1+4+5)** | **16 days** | **130** | **~5,500 lines** |
+| **Total (Complete: All Phases)** | **25 days** | **190** | **~6,250 lines** |
 
-**Note:** Effort assumes 1 developer working full-time. With 2 developers, timeline could be 15-17 days.
+**Note:**
+- Effort assumes 1 developer working full-time
+- MVP (Phase 1+4+5): 16 days to production-ready CLI with all core features
+- Complete (All phases): 25 days for interactive wizard + polish features
+- With 2 developers: MVP 10-12 days, Complete 16-18 days
 
 ### 9.6 Dependencies Summary
 

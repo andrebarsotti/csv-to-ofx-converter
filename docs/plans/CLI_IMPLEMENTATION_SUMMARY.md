@@ -12,14 +12,17 @@ This document provides a high-level summary of the comprehensive technical imple
 
 | Metric | Value |
 |--------|-------|
-| **Total Estimated Effort** | 24 working days (1 developer) |
-| **New Code** | ~6,000 lines |
-| **New Tests** | 155 tests (623 total) |
+| **MVP Effort** | 16 working days (1 developer) |
+| **Complete Effort** | 25 working days (all phases) |
+| **New Code (MVP)** | ~5,500 lines |
+| **New Code (Complete)** | ~6,250 lines |
+| **New Tests (MVP)** | 130 tests (598 total) |
+| **New Tests (Complete)** | 190 tests (658 total) |
 | **Test Coverage** | ~90% for CLI modules |
 | **Code Reuse** | 75% (6/8 core modules) |
-| **Feature Parity** | 87% (13/15 features) |
+| **Feature Parity** | 100% (non-interactive MVP) |
 | **New Dependencies** | 0 (argparse from stdlib) |
-| **Phases** | 5 distinct phases |
+| **Phases** | 3 MVP phases + 2 optional |
 | **Documentation** | ~4,000 lines (EN + PT-BR) |
 | **Class Docs** | 10 new files (5 EN + 5 PT-BR) |
 
@@ -56,30 +59,39 @@ This document provides a high-level summary of the comprehensive technical imple
 ## Implementation Phases
 
 ### Phase 1: Foundation and Non-Interactive Core (P0 - MVP)
-- **Duration:** 4-5 days
-- **Deliverables:** cli_parser, cli_output, cli_converter, cli_utils, cli.py entry point
-- **Tests:** 110 tests
-- **Acceptance:** Basic non-interactive conversion working
+- **Duration:** 7 days
+- **Deliverables:**
+  - cli_parser with ALL arguments (composite desc, value inversion, date validation)
+  - cli_output, cli_converter, cli_utils, cli.py entry point
+  - Complete non-interactive mode with full feature parity
+- **Tests:** 130 tests
+- **Acceptance:** Non-interactive CLI with ALL core features working
 
-### Phase 2: Interactive Wizard Mode (P0 - MVP)
-- **Duration:** 5-6 days
-- **Deliverables:** CLIWizard class with 7 interactive steps
+### Phase 2: Interactive Wizard Mode (P1 - High Priority, Not MVP)
+- **Duration:** 6 days
+- **Deliverables:**
+  - CLIWizard class with 7 interactive steps
+  - Reuses ALL Phase 1 conversion logic
 - **Tests:** 45 tests
 - **Acceptance:** Interactive mode with feature parity to GUI wizard
 
-### Phase 3: Advanced Features (P1 - High Priority)
-- **Duration:** 3-4 days
-- **Deliverables:** Composite descriptions, value inversion, date validation, balance preview
-- **Tests:** 25 tests (some overlap with Phase 2)
-- **Acceptance:** All advanced features working in both modes
+### Phase 3: Polish & Edge Cases (P2 - Optional, Not MVP)
+- **Duration:** 3 days
+- **Deliverables:**
+  - Preview mode (--preview)
+  - Dry-run mode (--dry-run)
+  - Verbose/quiet modes (--verbose, --quiet)
+  - Progress indicators and enhanced error messages
+- **Tests:** 15 tests
+- **Acceptance:** Polish features enhance usability
 
-### Phase 4: Build and Deployment (P1 - High Priority)
-- **Duration:** 2-3 days
+### Phase 4: Build and Deployment (P1 - MVP Required)
+- **Duration:** 3 days
 - **Deliverables:** cli.spec, updated build scripts, GitHub Actions updates
 - **Tests:** Build verification
 - **Acceptance:** 6 executables (3 GUI + 3 CLI) per release
 
-### Phase 5: Documentation and Polish (P1 - High Priority)
+### Phase 5: Documentation and Polish (P1 - MVP Required)
 - **Duration:** 6 days
 - **Deliverables:**
   - CLI_USAGE.md (English + Portuguese)
