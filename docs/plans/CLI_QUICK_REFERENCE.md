@@ -28,13 +28,14 @@
 
 | Metric | Value |
 |--------|-------|
-| **Effort** | 15-20 days |
-| **New Code** | ~4,000 lines |
+| **Effort** | 23-24 days (1 dev) |
+| **New Code** | ~5,500 lines |
 | **New Tests** | 155 tests |
 | **Test Coverage** | ~90% |
 | **Code Reuse** | 75% |
 | **Phases** | 5 |
 | **New Dependencies** | 0 |
+| **Documentation** | ~3,500 lines |
 | **Feature Parity** | 87% |
 
 ---
@@ -119,9 +120,10 @@ tests/test_cli/
 - cli.spec, build scripts, GitHub Actions
 - 6 executables (3 GUI + 3 CLI)
 
-### Phase 5: Documentation (3 days) - P1
+### Phase 5: Documentation (5-6 days) - P1
 - CLI_USAGE.md (English + Portuguese)
-- Update CLAUDE.md, README.md
+- Update CLAUDE.md, README.md, README.pt-BR.md
+- Update docs/en/ and docs/pt-BR/ (architecture, classes, overview)
 
 ---
 

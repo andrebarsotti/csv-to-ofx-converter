@@ -716,9 +716,9 @@ python cli.py -i sample.csv -o output.ofx \
 
 ### Phase 5: Documentation and Polish (P1 - High Priority)
 
-**Goal:** Complete user documentation, update project docs, prepare for release.
+**Goal:** Complete user documentation, update project docs (including technical docs in docs/en/ and docs/pt-BR/), prepare for release.
 
-**Duration:** 2-3 days  
+**Duration:** 5-6 days
 **Priority:** P1 (Required for release)
 
 #### Tasks
@@ -727,34 +727,77 @@ python cli.py -i sample.csv -o output.ofx \
 |------|--------|-------|--------------|
 | 5.1: Write CLI_USAGE.md (English) | 4 hours | Tech Writer | Phase 1-3 |
 | 5.2: Write CLI_USAGE.pt-BR.md (Portuguese) | 4 hours | Tech Writer | CLI_USAGE.md |
-| 5.3: Update CLAUDE.md (module structure, tests) | 2 hours | Tech Lead | Phase 1-4 |
+| 5.3: Update CLAUDE.md (module structure, tests, CLI commands) | 2 hours | Tech Lead | Phase 1-4 |
 | 5.4: Update README.md (CLI section, examples) | 3 hours | Tech Writer | CLI_USAGE.md |
 | 5.5: Update README.pt-BR.md (CLI section) | 3 hours | Tech Writer | README.md |
-| 5.6: Add CLI examples to docs/ | 2 hours | Tech Writer | CLI_USAGE.md |
-| 5.7: Update RELEASE_CHECKLIST.md | 1 hour | Tech Lead | Phase 4 |
-| 5.8: Create CHANGELOG entry for v4.0.0 | 1 hour | Tech Lead | All phases |
-| 5.9: Review all documentation | 2 hours | Product Mgr | All docs |
-| 5.10: Final QA and acceptance testing | 4 hours | QA | All |
-| **Total** | **26 hours (~3 days)** | | |
+| 5.6: Update docs/en/README.md (add CLI to index) | 1 hour | Tech Writer | CLI_USAGE.md |
+| 5.7: Update docs/pt-BR/README.md (add CLI to index) | 1 hour | Tech Writer | docs/en/README.md |
+| 5.8: Create docs/en/classes/CLI.md (CLI modules documentation) | 3 hours | Tech Writer | Phase 1-3 |
+| 5.9: Create docs/pt-BR/classes/CLI.md (Portuguese) | 3 hours | Tech Writer | docs/en/classes/CLI.md |
+| 5.10: Update docs/en/architecture.md (CLI layer) | 2 hours | Tech Lead | Phase 1-4 |
+| 5.11: Update docs/pt-BR/architecture.md (CLI layer) | 2 hours | Tech Writer | docs/en/architecture.md |
+| 5.12: Update docs/en/overview.md (CLI usage flows) | 2 hours | Tech Writer | CLI_USAGE.md |
+| 5.13: Update docs/pt-BR/overview.md (CLI usage flows) | 2 hours | Tech Writer | docs/en/overview.md |
+| 5.14: Add CLI examples to docs/ | 2 hours | Tech Writer | CLI_USAGE.md |
+| 5.15: Update RELEASE_CHECKLIST.md | 1 hour | Tech Lead | Phase 4 |
+| 5.16: Create CHANGELOG entry for v4.0.0 | 1 hour | Tech Lead | All phases |
+| 5.17: Review all documentation | 3 hours | Product Mgr | All docs |
+| 5.18: Final QA and acceptance testing | 4 hours | QA | All |
+| **Total** | **43 hours (~5-6 days)** | | |
 
 #### Deliverables
 
-- ✅ CLI_USAGE.md with comprehensive guide
+**User Documentation:**
+- ✅ CLI_USAGE.md with comprehensive guide (English)
 - ✅ CLI_USAGE.pt-BR.md (Portuguese translation)
-- ✅ Updated CLAUDE.md with CLI architecture
 - ✅ Updated README.md with CLI quick start
-- ✅ Updated README.pt-BR.md
+- ✅ Updated README.pt-BR.md with CLI section
+
+**Technical Documentation (docs/en/):**
+- ✅ Updated docs/en/README.md (add CLI to index)
+- ✅ New docs/en/classes/CLI.md (5 CLI modules documented)
+- ✅ Updated docs/en/architecture.md (add CLI layer diagram)
+- ✅ Updated docs/en/overview.md (add CLI usage flows)
+
+**Technical Documentation (docs/pt-BR/):**
+- ✅ Updated docs/pt-BR/README.md (add CLI to index)
+- ✅ New docs/pt-BR/classes/CLI.md (Portuguese)
+- ✅ Updated docs/pt-BR/architecture.md (CLI layer diagram)
+- ✅ Updated docs/pt-BR/overview.md (CLI usage flows)
+
+**Project Documentation:**
+- ✅ Updated CLAUDE.md with CLI module structure and test commands
+- ✅ Updated RELEASE_CHECKLIST.md for dual executables
 - ✅ CHANGELOG for v4.0.0
 - ✅ All documentation reviewed and approved
 
 #### Acceptance Criteria
 
-- Documentation covers all CLI features
-- Examples work without modification
-- Screenshots/GIFs demonstrate interactive mode
-- Portuguese translation is accurate
-- CLAUDE.md reflects actual code structure
+**User Documentation:**
+- CLI_USAGE.md covers all CLI features comprehensively
+- All code examples work without modification
+- Screenshots/GIFs demonstrate interactive mode effectively
+- Portuguese translation (CLI_USAGE.pt-BR.md) is accurate and complete
 - README quick start gets users running in <5 minutes
+
+**Technical Documentation (docs/):**
+- docs/en/README.md includes CLI in module index
+- docs/en/classes/CLI.md documents all 5 CLI modules with code examples
+- docs/en/architecture.md includes CLI layer in system architecture diagram
+- docs/en/overview.md explains CLI usage flows (interactive and non-interactive)
+- docs/pt-BR/ mirrors all English documentation accurately
+
+**Project Documentation:**
+- CLAUDE.md reflects actual CLI module structure and file organization
+- CLAUDE.md includes CLI test commands and examples
+- RELEASE_CHECKLIST.md updated for dual executables (GUI + CLI)
+- CHANGELOG for v4.0.0 lists all CLI features
+
+**Quality Standards:**
+- All documentation reviewed and approved by Product Manager
+- No broken links or missing cross-references
+- Consistent terminology across all documents (English and Portuguese)
+- Code examples tested and verified working
 
 ---
 
@@ -1810,11 +1853,21 @@ Before marking any phase complete:
 - [ ] 6 executables attached to release
 
 **Phase 5 (Documentation):**
-- [ ] CLI_USAGE.md complete and accurate
-- [ ] CLI_USAGE.pt-BR.md translated
-- [ ] CLAUDE.md reflects CLI architecture
+- [ ] CLI_USAGE.md complete and accurate (English)
+- [ ] CLI_USAGE.pt-BR.md translated (Portuguese)
+- [ ] CLAUDE.md reflects CLI architecture and test commands
 - [ ] README.md includes CLI Quick Start
 - [ ] README.pt-BR.md includes translated CLI section
+- [ ] docs/en/README.md includes CLI in index
+- [ ] docs/pt-BR/README.md includes CLI in index
+- [ ] docs/en/classes/CLI.md documents 5 CLI modules
+- [ ] docs/pt-BR/classes/CLI.md translated
+- [ ] docs/en/architecture.md includes CLI layer diagram
+- [ ] docs/pt-BR/architecture.md includes CLI layer diagram
+- [ ] docs/en/overview.md explains CLI usage flows
+- [ ] docs/pt-BR/overview.md explains CLI usage flows
+- [ ] RELEASE_CHECKLIST.md updated for dual executables
+- [ ] CHANGELOG for v4.0.0 created
 - [ ] All examples tested and working
 
 ### 8.4 Definition of Done
@@ -2022,10 +2075,10 @@ Total Tests: 623
 | Phase 2: Interactive Wizard | 6 days | 45 | ~600 lines |
 | Phase 3: Advanced Features | 4 days | 0 (overlap) | ~200 lines |
 | Phase 4: Build & Deployment | 3 days | 0 | ~100 lines |
-| Phase 5: Documentation | 3 days | 0 | ~2,000 lines |
-| **Total** | **21 days** | **155** | **~4,000 lines** |
+| Phase 5: Documentation | 5-6 days | 0 | ~3,500 lines |
+| **Total** | **23-24 days** | **155** | **~5,500 lines** |
 
-**Note:** Effort assumes 1 developer working full-time. With 2 developers, timeline could be 12-15 days.
+**Note:** Effort assumes 1 developer working full-time. With 2 developers, timeline could be 14-17 days.
 
 ### 9.6 Dependencies Summary
 
