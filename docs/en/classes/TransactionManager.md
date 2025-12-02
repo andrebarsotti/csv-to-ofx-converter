@@ -71,9 +71,9 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    A[Right Click] --> B{Transaction<br/>selected?}
+    A[Right Click] --> B{Transaction selected?}
     B -->|No| C[Empty menu]
-    B -->|Yes| D{Date out<br/>of range?}
+    B -->|Yes| D{Date out of range?}
     
     D -->|Yes| E[Date Actions]
     E --> E1[Keep Original]
@@ -83,7 +83,7 @@ flowchart TD
     D -->|No| F[Standard Actions]
     F --> F1[Delete Selected]
     
-    G{Are there<br/>deleted transactions?}
+    G{Deleted transactions exist?}
     G -->|Yes| H[Restore All]
 ```
 

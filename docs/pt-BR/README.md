@@ -70,7 +70,7 @@ Esta documentação é destinada a **desenvolvedores** que desejam:
 ```mermaid
 flowchart TB
     subgraph User Interface
-        GUI[ConverterGUI<br/>Wizard Orchestrator]
+        GUI[ConverterGUI - Wizard Orchestrator]
         subgraph Wizard Steps
             Step1[FileSelectionStep]
             Step2[CSVFormatStep]

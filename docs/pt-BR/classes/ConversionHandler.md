@@ -112,12 +112,12 @@ classDiagram
 ```mermaid
 flowchart TD
     A[convert] --> B[Criar Parser e Generator]
-    B --> C{Validação de<br/>data ativa?}
+    B --> C{Validação de data ativa?}
     C -->|Sim| D[Criar DateValidator]
     C -->|Não| E[Processar linhas]
     D --> E
     
-    E --> F{Para cada<br/>linha CSV}
+    E --> F{Para cada linha CSV}
     F --> G{Excluída?}
     G -->|Sim| H[Pular]
     G -->|Não| I[Normalizar valor]

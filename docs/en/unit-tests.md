@@ -50,14 +50,14 @@ flowchart LR
 
     subgraph Testing
         WriteTests --> Run[Run Tests]
-        Run --> Evaluate{Evaluate<br/>Results}
+        Run --> Evaluate{Evaluate Results}
         Evaluate -->|Failed| Fix[Fix Code]
         Fix --> Run
         Evaluate -->|Passed| Coverage[Check Coverage]
     end
 
     subgraph Improvement
-        Coverage --> Review{Adequate<br/>Coverage?}
+        Coverage --> Review{Adequate Coverage?}
         Review -->|No| AddTests[Add Tests]
         AddTests --> Run
         Review -->|Yes| Complete[Complete]

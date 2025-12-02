@@ -257,7 +257,7 @@ flowchart TD
     A[Exibir Passo 7] --> B[Calcular Saldo]
     B --> C[Exibir Resumo]
     C --> D[Carregar Transações]
-    D --> E{Usuário<br/>interage}
+    D --> E{Usuário interage}
     
     E -->|Excluir| F[Remover da lista]
     F --> G[Recalcular saldo]

@@ -257,7 +257,7 @@ flowchart TD
     A[Display Step 7] --> B[Calculate Balance]
     B --> C[Display Summary]
     C --> D[Load Transactions]
-    D --> E{User<br/>interacts}
+    D --> E{User interacts}
     
     E -->|Delete| F[Remove from list]
     F --> G[Recalculate balance]

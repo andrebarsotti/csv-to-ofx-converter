@@ -71,9 +71,9 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    A[Clique Direito] --> B{Transação<br/>selecionada?}
+    A[Clique Direito] --> B{Transação selecionada?}
     B -->|Não| C[Menu vazio]
-    B -->|Sim| D{Data fora<br/>do período?}
+    B -->|Sim| D{Data fora do período?}
     
     D -->|Sim| E[Ações de Data]
     E --> E1[Manter Original]
@@ -83,7 +83,7 @@ flowchart TD
     D -->|Não| F[Ações Padrão]
     F --> F1[Excluir Selecionadas]
     
-    G{Há transações<br/>excluídas?}
+    G{Há transações excluídas?}
     G -->|Sim| H[Restaurar Todas]
 ```
 

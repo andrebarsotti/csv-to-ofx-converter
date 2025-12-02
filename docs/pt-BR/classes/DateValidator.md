@@ -139,13 +139,13 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    A[Data da Transação] --> B{Dentro do<br/>período?}
+    A[Data da Transação] --> B{Dentro do período?}
     B -->|Sim| C[Status: within]
-    B -->|Não| D{Antes do<br/>início?}
+    B -->|Não| D{Antes do início?}
     D -->|Sim| E[Status: before]
     D -->|Não| F[Status: after]
     
-    E --> G{Ação do<br/>usuário?}
+    E --> G{Ação do usuário?}
     F --> G
     
     G -->|Manter| H[Usa data original]

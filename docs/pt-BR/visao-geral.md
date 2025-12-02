@@ -180,10 +180,10 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A[Transação] --> B{Coluna Type<br/>mapeada?}
-    B -->|Sim| C{Valor da coluna<br/>= DEBIT ou CREDIT?}
-    C -->|Sim| D[Usa valor<br/>da coluna]
-    C -->|Não| E{Valor < 0?}
+    A[Transação] --> B{Coluna Type mapeada?}
+    B -->|Sim| C{Valor = DEBIT ou CREDIT?}
+    C -->|Sim| D[Usa valor da coluna]
+    C -->|Não| E{Valor menor que 0?}
     B -->|Não| E
     E -->|Sim| F[DEBIT]
     E -->|Não| G[CREDIT]
@@ -203,14 +203,14 @@ Quando habilitada, a validação de datas verifica se cada transação está den
 
 ```mermaid
 flowchart TD
-    A[Construir Descrição] --> B{Descrição<br/>composta?}
-    B -->|Sim| C[Combina colunas<br/>selecionadas]
-    C --> D[Aplica separador<br/>escolhido]
-    D --> E[Retorna descrição<br/>combinada]
-    B -->|Não| F{Coluna description<br/>mapeada?}
-    F -->|Sim| G[Usa valor<br/>da coluna]
-    F -->|Não| H[Usa "Transaction"<br/>como padrão]
-    E --> I[Limita a<br/>255 caracteres]
+    A[Construir Descrição] --> B{Descrição composta?}
+    B -->|Sim| C[Combina colunas selecionadas]
+    C --> D[Aplica separador escolhido]
+    D --> E[Retorna descrição combinada]
+    B -->|Não| F{Coluna description mapeada?}
+    F -->|Sim| G[Usa valor da coluna]
+    F -->|Não| H[Usa 'Transaction' como padrão]
+    E --> I[Limita a 255 caracteres]
     G --> I
     H --> I
 ```

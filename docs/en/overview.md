@@ -180,10 +180,10 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A[Transaction] --> B{Type column<br/>mapped?}
-    B -->|Yes| C{Column value<br/>= DEBIT or CREDIT?}
-    C -->|Yes| D[Use column<br/>value]
-    C -->|No| E{Amount < 0?}
+    A[Transaction] --> B{Type column mapped?}
+    B -->|Yes| C{Value = DEBIT or CREDIT?}
+    C -->|Yes| D[Use column value]
+    C -->|No| E{Amount less than 0?}
     B -->|No| E
     E -->|Yes| F[DEBIT]
     E -->|No| G[CREDIT]
@@ -203,14 +203,14 @@ When enabled, date validation checks if each transaction is within the statement
 
 ```mermaid
 flowchart TD
-    A[Build Description] --> B{Composite<br/>description?}
-    B -->|Yes| C[Combine selected<br/>columns]
-    C --> D[Apply chosen<br/>separator]
-    D --> E[Return combined<br/>description]
-    B -->|No| F{Description column<br/>mapped?}
-    F -->|Yes| G[Use column<br/>value]
-    F -->|No| H[Use "Transaction"<br/>as default]
-    E --> I[Limit to<br/>255 characters]
+    A[Build Description] --> B{Composite description?}
+    B -->|Yes| C[Combine selected columns]
+    C --> D[Apply chosen separator]
+    D --> E[Return combined description]
+    B -->|No| F{Description column mapped?}
+    F -->|Yes| G[Use column value]
+    F -->|No| H[Use 'Transaction' as default]
+    E --> I[Limit to 255 characters]
     G --> I
     H --> I
 ```
