@@ -2,19 +2,110 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Navigation
+
+**Essential Guides:**
+- 🏗️ [Architecture Details](docs/CLAUDE-ARCHITECTURE.md) - Module structure, classes, data flow
+- 🧪 [Testing Strategy](docs/CLAUDE-TESTING.md) - 468 tests, patterns, test organization
+- 🚀 [Release Process](docs/CLAUDE-RELEASE.md) - Complete release checklist and procedures
+- 🔧 [Common Patterns](docs/CLAUDE-PATTERNS.md) - Recipes for frequent development tasks
+
+**Quick Jumps:**
+- [Development Commands](#development-commands) - Run, test, build
+- [Environment Requirements](#environment-requirements) - Python versions, dependencies, OS support
+- [Core Principles](#core-principles) - Key development guidelines
+- [Troubleshooting](#troubleshooting) - Common issues and solutions
+
+---
+
 ## Project Overview
 
 CSV to OFX Converter - A Python application that converts CSV files to OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. Features a Tkinter-based wizard interface with 7 steps guiding users through CSV import, data preview, field mapping, balance preview, and conversion.
 
 **Current Version**: 3.1.0 (November 2025)
 
-**Key characteristics:**
+**Key Characteristics:**
 - Pure Python 3.7+ with standard library only (no external dependencies for runtime)
 - GUI application using Tkinter with DPI awareness for Windows
 - Multi-step wizard interface with data preview
 - Support for both standard (comma, dot) and Brazilian (semicolon, comma) CSV formats
 - Context menu for transaction management with date validation
 - Automatic window maximization on startup (cross-platform compatible)
+
+**Project Structure:**
+```
+csv-to-ofx-converter/
+├── main.py                      # Entry point
+├── src/                         # Source code
+│   ├── csv_to_ofx_converter.py  # Main module
+│   ├── csv_parser.py            # CSV parsing
+│   ├── ofx_generator.py         # OFX generation
+│   ├── date_validator.py        # Date validation
+│   ├── converter_gui.py         # GUI orchestrator (750 lines)
+│   ├── transaction_utils.py     # Transaction utilities
+│   ├── gui_utils.py             # GUI utilities
+│   ├── gui_balance_manager.py   # Balance calculations
+│   ├── gui_conversion_handler.py # Conversion orchestration
+│   ├── gui_transaction_manager.py # Transaction operations
+│   ├── gui_wizard_step.py       # Base class for wizard steps
+│   ├── constants.py             # Shared constants
+│   └── gui_steps/               # 7 wizard step implementations
+│       ├── file_selection_step.py
+│       ├── csv_format_step.py
+│       ├── data_preview_step.py
+│       ├── ofx_config_step.py
+│       ├── field_mapping_step.py
+│       ├── advanced_options_step.py
+│       └── balance_preview_step.py
+├── tests/                       # 468 tests total
+│   ├── test_csv_parser.py       # 8 tests
+│   ├── test_ofx_generator.py    # 19 tests
+│   ├── test_date_validator.py   # 12 tests
+│   ├── test_transaction_utils.py # 50 tests
+│   ├── test_gui_utils.py        # 58 tests
+│   ├── test_gui_integration.py  # 15 tests
+│   ├── test_gui_balance_manager.py # 14 tests
+│   ├── test_gui_conversion_handler.py # 23 tests
+│   ├── test_gui_transaction_manager.py # 26 tests
+│   ├── test_gui_wizard_step.py  # 32 tests
+│   ├── test_integration.py      # 5 tests
+│   └── test_gui_steps/          # 206 tests (7 step test files)
+├── docs/                        # Documentation
+│   ├── CLAUDE-ARCHITECTURE.md   # Architecture details
+│   ├── CLAUDE-TESTING.md        # Testing strategy
+│   ├── CLAUDE-RELEASE.md        # Release process
+│   └── CLAUDE-PATTERNS.md       # Common patterns
+└── examples/                    # Sample CSV files
+```
+
+---
+
+## Environment Requirements
+
+**Python Version**: 3.7+ (tested on 3.7, 3.8, 3.9, 3.10, 3.11)
+
+**Runtime Dependencies**: None (pure Python standard library)
+
+**Development Dependencies**:
+- PyInstaller (building executables only)
+- unittest (included in standard library)
+
+**Operating System Support**:
+- ✅ Linux (Ubuntu 20.04+, Debian 10+, Fedora 34+)
+- ✅ macOS (10.14 Mojave and later)
+- ✅ Windows (10, 11)
+
+**GUI Requirements**:
+- Tkinter (included in most Python distributions)
+- Display server for GUI tests (use `xvfb-run` for headless CI environments)
+
+**Recommended Development Environment**:
+- Python 3.8+ for best compatibility
+- Git for version control
+- GitHub CLI (`gh`) for release management
+- Code editor with Python support (VS Code, PyCharm, etc.)
+
+---
 
 ## Development Commands
 
@@ -38,21 +129,12 @@ python3 -m unittest discover tests -v
 python3 -m unittest tests.test_csv_parser
 python3 -m unittest tests.test_ofx_generator
 python3 -m unittest tests.test_date_validator
-python3 -m unittest tests.test_transaction_utils
-python3 -m unittest tests.test_gui_wizard_step
-python3 -m unittest tests.test_integration
-
-# Run specific test classes
-python3 -m unittest tests.test_csv_parser.TestCSVParser
-python3 -m unittest tests.test_ofx_generator.TestOFXGenerator
-python3 -m unittest tests.test_date_validator.TestDateValidator
-python3 -m unittest tests.test_transaction_utils.TestBuildTransactionDescription
-python3 -m unittest tests.test_gui_wizard_step.TestWizardStepLifecycle
-python3 -m unittest tests.test_integration.TestIntegration
 
 # Alternative: Run using convenience script
 python3 tests/run_all_tests.py
 ```
+
+See [Testing Strategy](docs/CLAUDE-TESTING.md) for comprehensive testing documentation.
 
 ### Building Executables
 
@@ -70,577 +152,171 @@ build.bat
 # Output goes to dist/ directory
 ```
 
-## Code Architecture
+---
 
-### Module Structure
+## Core Principles
 
-The codebase is organized into separate modules under `src/`:
+1. **Pure Python Standard Library**: No external runtime dependencies. PyInstaller is dev-only.
 
-```
-main.py                    # Entry point, imports from src
-src/
-  csv_to_ofx_converter.py  # Main module, initializes logging and exports all classes
-  csv_parser.py            # CSVParser class - handles CSV file parsing
-  ofx_generator.py         # OFXGenerator class - generates OFX files
-  date_validator.py        # DateValidator class - validates transaction dates
-  converter_gui.py         # ConverterGUI class - Tkinter wizard orchestrator (750 lines)
-  transaction_utils.py     # Utility functions for transaction processing (no UI dependencies)
-  gui_utils.py             # GUI utility functions (pure functions, no Tkinter dependencies)
-  gui_balance_manager.py   # BalanceManager class - balance calculations and preview
-  gui_conversion_handler.py # ConversionHandler class - CSV to OFX conversion orchestration
-  gui_transaction_manager.py # TransactionManager class - transaction operations and context menus
-  gui_wizard_step.py       # WizardStep base class - abstract base for wizard steps (~355 lines)
-  constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
-  gui_steps/               # Wizard step implementations package (Phase D complete - all 7 steps)
-    __init__.py            # Package initialization, exports all step classes
-    file_selection_step.py # FileSelectionStep - Step 1: File selection (174 lines, 7 tests)
-    csv_format_step.py     # CSVFormatStep - Step 2: CSV format config (197 lines, 31 tests)
-    data_preview_step.py   # DataPreviewStep - Step 3: Data preview (285 lines, 31 tests)
-    ofx_config_step.py     # OFXConfigStep - Step 4: OFX configuration (271 lines, 40 tests)
-    field_mapping_step.py  # FieldMappingStep - Step 5: Field mapping (390 lines, 38 tests)
-    advanced_options_step.py # AdvancedOptionsStep - Step 6: Advanced options (354 lines, 30 tests)
-    balance_preview_step.py # BalancePreviewStep - Step 7: Balance preview (641 lines, 29 tests)
-tests/
-  __init__.py              # Test package initialization
-  test_csv_parser.py       # CSV parser tests (8 tests)
-  test_ofx_generator.py    # OFX generator tests (19 tests)
-  test_date_validator.py   # Date validator tests (12 tests)
-  test_transaction_utils.py # Transaction utilities tests (50 tests)
-  test_gui_utils.py        # GUI utilities tests (58 tests)
-  test_gui_integration.py  # GUI integration tests (15 tests)
-  test_gui_balance_manager.py # Balance Manager tests (14 tests)
-  test_gui_conversion_handler.py # Conversion Handler tests (23 tests)
-  test_gui_transaction_manager.py # Transaction Manager tests (26 tests)
-  test_gui_wizard_step.py  # WizardStep base class tests (32 tests)
-  test_integration.py      # Integration tests (5 tests)
-  test_gui_steps/          # Wizard step tests package (Phase D complete - 206 tests)
-    __init__.py            # Test package initialization
-    test_file_selection_step.py # FileSelectionStep tests (7 tests)
-    test_csv_format_step.py # CSVFormatStep tests (31 tests)
-    test_data_preview_step.py # DataPreviewStep tests (31 tests)
-    test_ofx_config_step.py # OFXConfigStep tests (40 tests)
-    test_field_mapping_step.py # FieldMappingStep tests (38 tests)
-    test_advanced_options_step.py # AdvancedOptionsStep tests (30 tests)
-    test_balance_preview_step.py # BalancePreviewStep tests (29 tests)
-  run_all_tests.py         # Convenience script to run all tests
-```
+2. **Modular Architecture**: Separate concerns into focused modules. Use companion classes for complex subsystems (BalanceManager, ConversionHandler, TransactionManager).
 
-### Key Classes and Responsibilities
+3. **Testability First**: Write tests for all business logic. Use dependency injection to enable testing without GUI dependencies.
 
-**CSVParser** (`src/csv_parser.py`):
-- Parses CSV files with configurable delimiter and decimal separator
-- Method `parse_file()` returns tuple of (headers, rows)
-- Method `normalize_amount()` converts string amounts to floats, handling Brazilian format (1.234,56) and standard format (1,234.56)
-- Supports negative amounts with currency symbols in any position: `-R$ 100,00`, `R$ -100,00`
-- Supports parentheses notation for negative amounts: `(R$ 100,00)` = `-100.00`
-- Handles UTF-8 and BOM encoding
+4. **Brazilian Format Support**: First-class support for Brazilian banking CSV formats (semicolon delimiter, comma decimal separator).
 
-**OFXGenerator** (`src/ofx_generator.py`):
-- Generates OFX 1.0.2 format (SGML, not XML)
-- Initialized with optional `invert_values` flag to swap debits/credits
-- Method `add_transaction()` queues transactions
-- Method `generate()` produces final OFX file with credit card statement format (CREDITCARDMSGSRSV1)
-- Automatically infers transaction type from amount sign
-- Generates UUID for transaction IDs if not provided
-- Limits description to 255 characters per OFX spec
+5. **User-Friendly GUI**: Multi-step wizard with clear validation and helpful error messages at each step.
 
-**DateValidator** (`src/date_validator.py`):
-- Validates transaction dates against statement period (start_date to end_date)
-- Method `is_within_range()` checks if date is valid
-- Method `get_date_status()` returns 'before', 'within', or 'after'
-- Method `adjust_date_to_boundary()` moves out-of-range dates to nearest boundary
-- Supports multiple date formats (YYYY-MM-DD, DD/MM/YYYY, etc.)
+6. **Comprehensive Testing**: 468 tests covering all modules. GUI tests use mocks to avoid display server dependencies.
 
-**TransactionUtils** (`src/transaction_utils.py`):
-- Pure utility functions with no UI dependencies (fully testable)
-- Function `build_transaction_description()` creates single or composite descriptions from CSV columns
-- Function `determine_transaction_type()` determines DEBIT/CREDIT from column value or amount sign
-- Function `extract_transaction_id()` extracts transaction ID from mapped column
-- Function `calculate_balance_summary()` computes balance totals from transaction list
-- Function `validate_field_mappings()` validates required field mappings
-- Function `parse_balance_value()` safely parses balance strings to floats with defaults
+7. **CI/CD Integration**: Automated builds for Linux/macOS/Windows. SonarCloud quality analysis on every push.
 
-**GUIUtils** (`src/gui_utils.py`):
-- Pure utility functions with no Tkinter dependencies (fully testable)
-- File validation, field mapping validation, date formatting
-- Numeric validation, balance calculations, statistics formatting
-- 16 functions organized into 8 sections
-- Used by ConverterGUI and BalanceManager
+8. **Documentation Sync**: Always update CLAUDE.md, README.md, and README.pt-BR.md when making changes.
 
-**BalanceManager** (`src/gui_balance_manager.py`):
-- Companion class for ConverterGUI using dependency injection pattern
-- Handles all balance calculations and preview generation
-- Returns BalancePreviewData dataclass with calculation results
-- No direct Tkinter dependencies (independently testable)
-- Methods: calculate_balance_preview(), format_balance_labels(), validate_balance_input()
-
-**ConversionHandler** (`src/gui_conversion_handler.py`):
-- Companion class for ConverterGUI using dependency injection pattern
-- Orchestrates CSV to OFX conversion workflow
-- Uses ConversionConfig dataclass to bundle 19 conversion parameters
-- Returns tuple: (success: bool, message: str, stats: dict)
-- Handles row processing, date validation, description building, OFX generation
-- No direct widget manipulation (independently testable)
-- Methods: convert(), _process_csv_rows(), _validate_and_adjust_date(), _generate_ofx_file()
-
-**TransactionManager** (`src/gui_transaction_manager.py`):
-- Companion class for ConverterGUI using dependency injection pattern
-- Manages transaction operations and context menu for balance preview
-- Handles transaction deletion, restoration, and date action decisions
-- Shows context menu with date actions (keep/adjust/exclude) for out-of-range transactions
-- Displays out-of-range transaction dialog for user decision
-- Methods: show_context_menu(), delete_selected_transactions(), restore_all_transactions(), show_out_of_range_dialog()
-
-**WizardStep** (`src/gui_wizard_step.py`):
-- Abstract base class for wizard step implementations
-- Provides lifecycle management: create(), show(), hide(), destroy()
-- Enforces implementation via abstract methods: _build_ui(), _collect_data(), _validate_data()
-- Helper methods for safe parent access: get_parent_data(), set_parent_data(), log()
-- Uses StepConfig dataclass for step configuration
-- Returns StepData dataclass from validate() method
-- Designed for dependency injection pattern (receives parent via constructor)
-
-**ConverterGUI** (`src/converter_gui.py`):
-- Multi-step wizard orchestrator (7 steps) - reduced from 1,400+ lines to 750 lines in Phase D
-- Uses Tkinter ttk widgets for modern appearance
-- Delegates balance operations to BalanceManager
-- Delegates conversion operations to ConversionHandler
-- Delegates transaction operations to TransactionManager
-- All 7 wizard steps extracted to gui_steps package (Phase A-D complete):
-  - Step 1: FileSelectionStep - File selection
-  - Step 2: CSVFormatStep - CSV format configuration (delimiter, decimal separator)
-  - Step 3: DataPreviewStep - Data preview (Treeview showing first 100 rows)
-  - Step 4: OFXConfigStep - OFX configuration (account ID, bank name, currency, initial balance)
-  - Step 5: FieldMappingStep - Field mapping with composite description support (combine up to 4 columns)
-  - Step 6: AdvancedOptionsStep - Advanced options (value inversion, date validation with Keep/Adjust/Exclude)
-  - Step 7: BalancePreviewStep - Balance preview & confirmation (shows balance summary and transaction preview)
-- Orchestrates UI workflow, delegates business logic to companion classes and step instances
-
-### Data Flow
-
-```
-CSV File → CSVParser.parse_file()
-  → Preview in GUI (Step 3)
-  → User maps columns (Step 5)
-  → OFXGenerator.add_transaction() (with optional DateValidator)
-  → OFXGenerator.generate()
-  → OFX File
-```
-
-### Important Implementation Details
-
-**Value Inversion**: When enabled, OFXGenerator multiplies all amounts by -1 and swaps DEBIT↔CREDIT types. This is handled in `add_transaction()` before type-based sign adjustments.
-
-**Composite Descriptions**: GUI allows combining up to 4 columns with separator (space, dash, comma, pipe). The combined string is passed as the `description` parameter to `add_transaction()`.
-
-**Date Validation Dialog**: When a transaction falls outside the statement period, GUI displays a dialog with three options:
-- Keep original date (use as-is)
-- Adjust to boundary (move to start_date or end_date)
-- Exclude transaction (skip it entirely)
-
-**OFX Format**: Generates credit card statement format (CREDITCARDMSGSRSV1) with:
-- Header: OFX version, SGML format
-- Sign-on message with bank info
-- Statement with account details
-- Transaction list (BANKTRANLIST)
-- Each transaction has: type, date, amount, UUID, memo
-
-### Logging
-
-Application logs to both:
-- File: `csv_to_ofx_converter.log` (INFO level)
-- Console: stdout (INFO level)
-
-Logger is configured in `src/csv_to_ofx_converter.py` main module.
-
-## Build System
-
-**PyInstaller Configuration** (`csv_to_ofx_converter.spec`):
-- Entry point: `main.py`
-- Bundles README.md, README.pt-BR.md, LICENSE
-- Console mode: False (GUI app, no terminal window)
-- Single-file executable with UPX compression
-- Output name: `csv-to-ofx-converter`
-
-**GitHub Actions** (`.github/workflows/`):
-- `build-and-release.yml`: Multi-platform builds (Linux, macOS, Windows) with matrix strategy
-- `sonar.yml`: SonarCloud code quality analysis
-  - Runs on every push to main branch
-  - Executes 215 tests (excludes GUI tests that require display server)
-  - Excludes: `test_gui_integration.py` (15 tests), `test_gui_wizard_step.py` (32 tests), `test_gui_steps/*` (206 tests)
-  - Total excluded GUI tests: 253 tests
-  - Generates coverage report for SonarCloud analysis
-  - **IMPORTANT**: After each push to main, verify the SonarCloud workflow passes by checking GitHub Actions
-  - GUI tests should NOT execute in this workflow (CI environment has no display server)
-
-## Testing Strategy
-
-Test suite is organized into separate modules (468 tests total, Phase D complete):
-
-**test_csv_parser.py** (8 tests):
-- CSV parsing (standard and Brazilian formats)
-- Amount normalization with various edge cases including negative values with currency symbols
-- Support for parentheses notation for negative amounts
-- BOM handling and error cases
-
-**test_ofx_generator.py** (19 tests):
-- OFX generation and transaction formatting
-- Date parsing in multiple formats
-- Value inversion logic
-- Transaction sorting and auto-correction
-- Multiple currency support
-
-**test_date_validator.py** (12 tests):
-- Date validation (before/within/after range)
-- Date adjustment to boundaries
-- Edge cases (year boundaries, leap years)
-
-**test_transaction_utils.py** (50 tests):
-- Building transaction descriptions (single column and composite)
-- Determining transaction types from columns or amounts
-- Extracting transaction IDs from row data
-- Calculating balance summaries from transaction lists
-- Validating field mappings
-- Parsing balance values with fallback defaults
-- Tests cover edge cases, empty values, and error handling
-
-**test_gui_utils.py** (58 tests):
-- File validation, field mapping validation, date formatting
-- Numeric validation, balance calculations
-- Date parsing for sorting, conversion validation
-- Statistics formatting, edge cases
-
-**test_gui_integration.py** (15 tests):
-- GUI wizard navigation and data loading
-- Field mapping and validation workflows
-- Integration between GUI components
-- Note: Skipped in CI environments without display server
-
-**test_gui_balance_manager.py** (14 tests):
-- Balance calculations with various transaction sets
-- Preview generation with different currencies
-- Balance input validation, date status checking
-- Edge cases: empty transactions, deleted transactions, value inversion
-
-**test_gui_conversion_handler.py** (23 tests):
-- Conversion workflow with standard and Brazilian CSV formats
-- Row processing with deleted transactions and value inversion
-- Date validation scenarios (keep, adjust, exclude actions)
-- Description building (single and composite columns)
-- Transaction type and ID determination
-- Error handling for malformed data and invalid date ranges
-
-**test_gui_transaction_manager.py** (26 tests):
-- Transaction manager initialization with parent GUI
-- Context menu creation for valid and out-of-range transactions
-- Transaction CRUD operations (delete single/multiple, restore all)
-- Getting selected row info from Treeview
-- Date status determination for transactions
-- Date action handling (keep/adjust/exclude)
-- Date action menu item creation based on current selection
-- Out-of-range dialog display logic
-- Uses mock Treeview and parent GUI to avoid display dependencies
-
-**test_gui_wizard_step.py** (32 tests):
-- WizardStep base class lifecycle (create, show, hide, destroy)
-- StepConfig and StepData dataclasses
-- Helper methods (get_parent_data, set_parent_data, log)
-- Validation orchestration
-- Concrete implementation with MockWizardStep
-
-**test_integration.py** (5 tests):
-- Complete end-to-end conversion workflows
-- Composite descriptions with various separators
-- Value inversion in full workflow
-
-**test_gui_steps/** (206 tests, Phase D complete):
-- **test_file_selection_step.py** (7 tests): File selection UI, validation, data collection
-- **test_csv_format_step.py** (31 tests): CSV format configuration, delimiter/separator selection, preview
-- **test_data_preview_step.py** (31 tests): Data preview Treeview, column display, pagination
-- **test_ofx_config_step.py** (40 tests): OFX configuration, account ID, bank name, currency, balance inputs
-- **test_field_mapping_step.py** (38 tests): Field mapping, composite descriptions, column selection, validation
-- **test_advanced_options_step.py** (30 tests): Value inversion, date validation, date entry formatting
-- **test_balance_preview_step.py** (29 tests): Balance calculations, transaction preview, deletion, restoration
-
-**Test Patterns**:
-- Uses `unittest` framework with test discovery
-- Creates temporary files in `setUp()`, cleans in `tearDown()`
-- Tests both positive cases and error conditions
-- Each test class in its own file for better maintainability
-- Utility functions tested independently without UI dependencies
-- GUI component tests use mock objects to avoid display server requirements
-
-## Common Patterns
-
-**When adding new date formats**:
-1. Add format string to `date_formats` list in both `OFXGenerator._parse_date()` and `DateValidator._parse_date_to_datetime()`
-2. Add test case in `test_ofx_generator.py` or `test_date_validator.py` as appropriate
-
-**When modifying GUI steps**:
-- GUI step methods are named `_create_step_1()`, `_create_step_2()`, etc.
-- Navigation handled by `_next_step()` and `_previous_step()`
-- Step visibility controlled by `_show_step(step_number)`
-- Validation happens in `_next_step()` before allowing progression
-
-**When adding new OFX fields**:
-- Modify `add_transaction()` signature in `OFXGenerator`
-- Update transaction dictionary in `add_transaction()`
-- Add field to OFX template in `generate()`
-- Update GUI field mapping UI (Step 5)
-- Add tests for new field
-
-**When extracting functions from GUI**:
-- Create pure utility functions without UI dependencies in `transaction_utils.py` or `gui_utils.py`
-- For complex subsystems, create companion classes (e.g., `BalanceManager`)
-- Use dependency injection pattern: companion receives ConverterGUI as parameter
-- Return data structures instead of directly manipulating widgets
-- Functions should accept all needed data as parameters (no `self.parent` access in calculations)
-- Write comprehensive unit tests for each utility function or companion class
-- Update GUI code to import and use the utility functions/companion classes
-- Ensure all tests pass after refactoring
-
-**Companion Class Pattern** (established in Phase 3 refactoring):
-- Create companion class in `src/gui_*.py` (e.g., `gui_balance_manager.py`)
-- Initialize in ConverterGUI: `self.manager = ManagerClass(self)`
-- Companion returns data structures (e.g., BalancePreviewData dataclass)
-- No direct Tkinter widget creation in companion (keeps it testable)
-- ConverterGUI extracts data and updates its own widgets
-- Test with mock ConverterGUI to avoid GUI dependencies
-
-## Important Notes
-
-- **No External Dependencies**: Application uses only Python standard library for runtime. PyInstaller is dev-only dependency for building executables.
-- **Brazilian Format**: Semicolon delimiter, comma decimal separator. Examples: `01/10/2025;100,50;Compra`
-- **OFX Version**: Generates OFX 1.0.2 SGML format (not the newer XML format). Uses CREDITCARDMSGSRSV1 message type.
-- **Encoding**: All CSV files read as UTF-8 with BOM handling
-- **Account Type**: Currently only supports credit card statements. Does not support checking/savings accounts (BANKMSGSRSV1) or investment accounts.
-- **GUI Design**: Wizard follows step-by-step pattern with clear Back/Next navigation. Each step validates before allowing progression.
+---
 
 ## Coding Style
 
-- Follow PEP8 guidelines.
-- Use descriptive variable and function names.
-- Keep the code modular and easy to maintain.
-- Separate classes in diferent files.
-- Maintain consistency with the project's existing structure and GUI framework.
+- Follow PEP8 guidelines
+- Use descriptive variable and function names
+- Keep code modular and maintainable
+- Separate classes into different files
+- Maintain consistency with existing structure and GUI framework
+- Document non-obvious logic with inline comments
+- Update docstrings when function signatures change
+
+---
+
+## Troubleshooting
+
+### GUI Tests Failing in CI
+
+**Problem**: `_tkinter.TclError: couldn't connect to display`
+
+**Solution**: Use `xvfb-run` for headless environments or skip GUI tests in CI. Already configured in `.github/workflows/sonar.yml`:
+```bash
+# Run tests without GUI tests in CI
+xvfb-run -a python3 -m unittest discover tests -v
+```
+
+### PyInstaller Build Fails
+
+**Problem**: `ModuleNotFoundError` in built executable
+
+**Solution**:
+1. Verify all modules listed in `csv_to_ofx_converter.spec` under `hiddenimports`
+2. Check that data files are included in `datas` array
+3. Run `pyinstaller --clean csv_to_ofx_converter.spec` to rebuild from scratch
+
+### OFX File Not Accepted by Bank Software
+
+**Problem**: Bank software rejects generated OFX file
+
+**Solution**:
+1. Verify OFX 1.0.2 SGML format compatibility with target software
+2. Check that account ID format matches bank requirements
+3. Ensure dates are in YYYYMMDD format
+4. Verify transaction types (DEBIT/CREDIT) are correct
+5. Check that amounts don't have currency symbols in OFX output
+
+### Date Validation Not Working
+
+**Problem**: Dates not validating correctly or transactions marked as out-of-range
+
+**Solution**:
+1. Check date format matches patterns in `DateValidator._parse_date_to_datetime()` (see CLAUDE-ARCHITECTURE.md)
+2. Supported formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, YYYYMMDD
+3. Ensure statement start/end dates are valid and in correct order
+4. Verify transaction dates fall within expected range
+
+### Brazilian CSV Format Not Detected
+
+**Problem**: Amounts parsed incorrectly from Brazilian CSVs (e.g., 1.234,56 becomes wrong value)
+
+**Solution**:
+1. Verify semicolon delimiter selected in Step 2 (CSV Format)
+2. Verify comma decimal separator selected in Step 2
+3. Check that CSV file uses consistent formatting
+4. Brazilian format example: `01/10/2025;100,50;Compra` (semicolon delimiter, comma decimal)
+5. See `CSVParser.normalize_amount()` in CLAUDE-ARCHITECTURE.md for parsing logic
+
+### Tkinter Not Found
+
+**Problem**: `ModuleNotFoundError: No module named '_tkinter'`
+
+**Solution**:
+- **Ubuntu/Debian**: `sudo apt-get install python3-tk`
+- **macOS**: Tkinter included with Python from python.org installer
+- **Windows**: Tkinter included with standard Python installation
+
+### Tests Running Slowly
+
+**Problem**: Test suite takes too long to complete
+
+**Solution**:
+1. Run specific test modules instead of entire suite
+2. Skip GUI integration tests during development: `python3 -m unittest discover tests -k "not gui_integration"`
+3. Use test discovery with pattern: `python3 -m unittest discover tests -p "test_csv*.py"`
+
+---
 
 ## Documentation Requirements
 
-**IMPORTANT**: When making changes to the codebase, ALWAYS update the relevant documentation files:
+**IMPORTANT**: When making changes to the codebase, ALWAYS update relevant documentation:
 
-1. **CLAUDE.md** - This file:
-   - Update module structure if files are added/removed/renamed
-   - Update test commands if test organization changes
-   - Add new sections for new features or patterns
-   - Keep test counts accurate
+1. **CLAUDE.md** (this file):
+   - Update project overview if major features added
+   - Keep environment requirements current
+   - Add new troubleshooting entries as needed
 
-2. **README.md** (English):
+2. **docs/CLAUDE-*.md** files:
+   - Update architecture docs when adding/removing modules
+   - Update testing docs when adding test modules
+   - Update patterns docs when establishing new patterns
+   - Update release docs if release process changes
+
+3. **README.md** (English):
    - Update usage instructions for user-facing changes
-   - Update test commands if test structure changes
    - Add examples for new features
    - Keep feature list up to date
+   - Update version number for releases
 
-3. **README.pt-BR.md** (Portuguese):
+4. **README.pt-BR.md** (Portuguese):
    - Mirror all changes from README.md
    - Maintain translation consistency
    - Ensure examples are culturally appropriate
 
-4. **Code Comments and Docstrings**:
+5. **Code Comments and Docstrings**:
    - Update docstrings when function signatures change
    - Keep inline comments accurate
    - Document non-obvious logic
 
-**When adding tests**:
-- Place in the appropriate test module (test_csv_parser.py, test_ofx_generator.py, etc.)
-- Update test counts in documentation
-- Ensure test discovery works: `python3 -m unittest discover tests`
+---
 
-## CI/CD Workflow Verification
+## Key Resources
 
-**IMPORTANT**: After pushing commits to the main branch, always verify that GitHub Actions workflows pass:
+- **Architecture**: [docs/CLAUDE-ARCHITECTURE.md](docs/CLAUDE-ARCHITECTURE.md) - Detailed module structure, class responsibilities, data flow
+- **Testing**: [docs/CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md) - Complete testing strategy, 468 tests, test patterns
+- **Release**: [docs/CLAUDE-RELEASE.md](docs/CLAUDE-RELEASE.md) - Step-by-step release process, CI/CD verification
+- **Patterns**: [docs/CLAUDE-PATTERNS.md](docs/CLAUDE-PATTERNS.md) - Common development tasks, recipes, best practices
 
-### Checking SonarCloud Workflow
+- **Release Checklist**: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) - Comprehensive release verification checklist
+- **User Documentation**: [README.md](README.md) (English), [README.pt-BR.md](README.pt-BR.md) (Portuguese)
+- **Sample Data**: [examples/](examples/) - Sample CSV files for testing
 
-After each push to main, verify the SonarCloud workflow:
+---
 
-```bash
-# List recent workflow runs
-gh run list --workflow=sonar.yml --limit 3
+## Quick Reference
 
-# View specific run details
-gh run view <run-id>
+**Run App**: `python3 main.py`
 
-# Watch workflow in real-time
-gh run watch
-```
+**Run Tests**: `python3 -m unittest discover tests`
 
-**Expected Behavior**:
-- ✓ Workflow should complete successfully (status: "completed success")
-- ✓ Should run 215 tests (94 non-GUI + 121 GUI utility tests)
-- ✓ GUI tests requiring display server should be excluded:
-  - `test_gui_integration.py` (15 tests) - skipped
-  - `test_gui_wizard_step.py` (32 tests) - not executed
-- ✓ Coverage report should be generated successfully
-- ✓ SonarCloud scan should complete without errors
+**Build**: `./build.sh` (Linux/macOS) or `build.bat` (Windows)
 
-**If Workflow Fails**:
-1. Check the workflow logs: `gh run view <run-id> --log`
-2. Look for test failures or Tkinter display errors
-3. Verify that GUI tests are properly excluded in `.github/workflows/sonar.yml`
-4. Verify exclusions in `sonar-project.properties`
+**Release**: See [docs/CLAUDE-RELEASE.md](docs/CLAUDE-RELEASE.md)
 
-### Checking Build Workflow
-
-For releases, also verify the build-and-release workflow completes successfully for all platforms (Linux, macOS, Windows).
-
-## Release Process
-
-**IMPORTANT**: Follow the comprehensive checklist in `RELEASE_CHECKLIST.md` for all releases.
-
-### Pre-Release Verification
-
-Before creating a release, ensure all of the following are complete:
-
-1. **Code Quality & Testing**:
-   - All tests passing: `python3 -m unittest discover tests -v`
-   - Verify 262 tests run successfully
-   - Test individual modules work correctly
-   - Code follows PEP8 standards
-   - No debugging code or print statements
-
-2. **Documentation Updates**:
-   - **CLAUDE.md**: Update module structure, test counts, new features
-   - **README.md**: Update version, changelog, examples, last updated date
-   - **README.pt-BR.md**: Mirror all changes from README.md in Portuguese
-   - **RELEASE_CHECKLIST.md**: Update if release process changed
-   - All code comments and docstrings are accurate
-
-3. **Version Management**:
-   - Decide version number using semantic versioning:
-     - **Patch** (1.0.X): Bug fixes only
-     - **Minor** (1.X.0): New features, backward compatible
-     - **Major** (X.0.0): Breaking changes
-   - Update version in README.md and README.pt-BR.md
-   - Update changelog in both README files
-
-4. **Functional Testing**:
-   - Test with sample CSV files (both Brazilian and standard formats)
-   - Test date validation feature
-   - Verify OFX output in financial software
-   - Test error handling
-   - Test GUI on target platform if possible
-
-5. **Build Testing**:
-   - Local build succeeds: `./build.sh` (Linux/macOS) or `build.bat` (Windows)
-   - Executable runs without errors
-   - Executable size is reasonable (< 50MB)
-   - GUI elements render correctly
-
-### Release Steps
-
-1. **Prepare Repository**:
-   ```bash
-   # Ensure everything is committed and up to date
-   git status  # Should be clean
-   git pull origin main
-   ```
-
-2. **Create and Push Tag**:
-   ```bash
-   # Create annotated tag with version
-   git tag -a v1.x.x -m "Release version 1.x.x: Brief description"
-
-   # Push tag to trigger GitHub Actions workflow
-   git push origin v1.x.x
-   ```
-
-3. **Monitor Build**:
-   - Go to GitHub Actions: `https://github.com/YOUR_USERNAME/csv-to-ofx-converter/actions`
-   - Watch workflow execution for all platforms:
-     - Ubuntu (Linux x64)
-     - Windows (x64)
-     - macOS (x64)
-   - Verify all jobs complete successfully
-   - Check for errors in logs
-
-4. **Verify Release**:
-   - Check Release page for new release
-   - Verify all executables are attached:
-     - `csv-to-ofx-converter-linux-x64`
-     - `csv-to-ofx-converter-windows-x64.exe`
-     - `csv-to-ofx-converter-macos-x64`
-   - Verify checksums file is attached
-   - Verify release notes are complete
-   - Test download links work
-
-5. **Post-Release Testing**:
-   - Download and test each platform's executable
-   - Verify SHA256 checksums match
-   - Test functionality on actual system
-
-### Rollback Procedure
-
-If issues are discovered after release:
-
-```bash
-# Delete the release on GitHub (via web interface)
-
-# Delete local tag
-git tag -d v1.x.x
-
-# Delete remote tag
-git push origin :refs/tags/v1.x.x
-
-# Fix issues, commit, and create new tag
-git tag -a v1.x.y -m "Release version 1.x.y: Bug fixes"
-git push origin v1.x.y
-```
-
-### Important Files for Releases
-
-1. **RELEASE_CHECKLIST.md**: Complete step-by-step checklist
-2. **README.md**: Version number, changelog, last updated date
-3. **README.pt-BR.md**: Version number, changelog (Portuguese)
-4. **CLAUDE.md**: Technical documentation updates
-5. **.github/workflows/build-and-release.yml**: Automated build workflow
-
-### Release Notes Template
-
-Include in git tag message and GitHub release:
-
-```markdown
-Release version X.Y.Z: Brief title
-
-Changes:
-- New Feature: Description of feature
-- Bug Fix: Description of fix
-- Improvement: Description of improvement
-- Documentation: Updates to docs
-
-Testing:
-- All 262 tests passing
-- Tested on [platforms]
-- Compatible with [software versions]
-```
-
-### Quick Release Reference
-
-```bash
-# 1. Run tests
-python3 -m unittest discover tests -v
-
-# 2. Update documentation (README.md, README.pt-BR.md, CLAUDE.md)
-
-# 3. Commit changes
-git add -A
-git commit -m "chore: Prepare release v1.x.x"
-git push origin main
-
-# 4. Create and push tag
-git tag -a v1.x.x -m "Release v1.x.x: Description"
-git push origin v1.x.x
-
-# 5. Monitor GitHub Actions and verify release
-```
-
-**Remember**: Always consult `RELEASE_CHECKLIST.md` for the complete and detailed release process.
+**Need Help?**
+- 🏗️ Understanding code structure? → [CLAUDE-ARCHITECTURE.md](docs/CLAUDE-ARCHITECTURE.md)
+- 🧪 Writing tests? → [CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md)
+- 🚀 Creating release? → [CLAUDE-RELEASE.md](docs/CLAUDE-RELEASE.md)
+- 🔧 Common tasks? → [CLAUDE-PATTERNS.md](docs/CLAUDE-PATTERNS.md)
