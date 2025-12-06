@@ -110,6 +110,8 @@ class BalancePreviewStep(WizardStep):
         try:
             balance_info = self._calculate_balance_preview()
             self._cached_balance_info = balance_info
+            # Share cache with parent for TransactionManager access
+            self.parent._cached_balance_info = balance_info
         except Exception as e:
             ttk.Label(
                 self.container,
@@ -444,6 +446,8 @@ class BalancePreviewStep(WizardStep):
             # Recalculate balance information
             balance_info = self._calculate_balance_preview()
             self._cached_balance_info = balance_info
+            # Share cache with parent for TransactionManager access
+            self.parent._cached_balance_info = balance_info
 
             # Update labels
             self._widgets['total_credits_label'].configure(

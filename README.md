@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.0** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -774,11 +774,27 @@ For issues, questions, or suggestions:
 ---
 
 **Version**: 2.1.2 - Enhanced Edition
-**Last Updated**: November 2025
+**Last Updated**: December 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 3.1.1 (December 2025) - Bug Fix Release
+
+**Bug Fix**: Fixed context menu not appearing for out-of-range transactions in balance preview step
+- **Issue**: Context menu (right-click) was not appearing for transactions marked as out-of-range in the balance preview step
+- **Root Cause**: `_cached_balance_info` containing date validation information was not being shared with the parent GUI, preventing the TransactionManager from accessing it
+- **Fix**: Modified `BalancePreviewStep` to share the cache with parent in two locations:
+  - Line 114: After initial balance calculation in `_create_ui()`
+  - Line 450: After recalculation in `_recalculate_balance()`
+- **Testing**: All 468 tests pass, including specific validation in:
+  - 29 tests in test_balance_preview_step.py
+  - 26 tests in test_gui_transaction_manager.py
+
+**Impact**: Users can now properly access the context menu for all transactions in the balance preview step, including those with date validation issues.
+
+**Upgrade Notes**: Direct upgrade from v3.1.0. No breaking changes.
 
 ### Version 3.1.0 (November 2025) - Architectural Refactoring Release
 
