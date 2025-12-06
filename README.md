@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.2** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -773,12 +773,24 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 2.1.2 - Enhanced Edition
+**Version**: 3.1.2 - Enhanced Edition
 **Last Updated**: December 2025
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 3.1.2 (December 2025) - Bug Fix Release
+
+**Bug Fix**: Fixed critical issue with context menu behavior for out-of-range transactions
+- **Issue**: Context menu (right-click) would not appear for transactions marked as out-of-range when the date validation information hadn't been properly cached
+- **Root Cause**: In rare cases, the balance preview cache wasn't being properly shared with the transaction manager
+- **Fix**: Improved cache synchronization in `BalancePreviewStep` to ensure date validation information is always available
+- **Testing**: All 468 tests pass, verifying the fix works correctly
+
+**Impact**: Enhanced reliability of the context menu functionality in the balance preview step.
+
+**Upgrade Notes**: Direct upgrade from v3.1.1. No breaking changes. Recommended for all users.
 
 ### Version 3.1.1 (December 2025) - Bug Fix Release
 

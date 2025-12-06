@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.2** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -773,12 +773,24 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 2.1.2 - Edição Aprimorada
+**Versão**: 3.1.2 - Edição Aprimorada
 **Última Atualização**: Dezembro de 2025
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.1.2 (Dezembro de 2025) - Correção de Bug
+
+**Correção de Bug**: Corrigido problema crítico com o comportamento do menu de contexto para transações fora do intervalo
+- **Problema**: O menu de contexto (clique direito) não aparecia para transações marcadas como fora do intervalo quando a informação de validação de data não estava devidamente armazenada em cache
+- **Causa Raiz**: Em casos raros, o cache de visualização de saldo não estava sendo compartilhado corretamente com o gerenciador de transações
+- **Correção**: Melhorada a sincronização do cache em `BalancePreviewStep` para garantir que as informações de validação de data estejam sempre disponíveis
+- **Testes**: Todos os 468 testes passam, verificando que a correção funciona corretamente
+
+**Impacto**: Confiabilidade aprimorada da funcionalidade do menu de contexto na etapa de visualização de saldo.
+
+**Notas de Atualização**: Atualização direta de v3.1.1. Sem mudanças incompatíveis. Recomendado para todos os usuários.
 
 ### Versão 3.1.1 (Dezembro de 2025) - Correção de Bug
 
