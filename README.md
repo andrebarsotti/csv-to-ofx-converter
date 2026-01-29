@@ -774,7 +774,7 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 3.1.3 - Enhanced Edition
+**Version**: 3.2.0 - Enhanced Edition
 **Last Updated**: January 2026
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
@@ -801,7 +801,7 @@ When no ID column is mapped in Step 5 (Field Mapping), the system now generates 
 
 **Impact**: Significantly improves user experience when regenerating OFX files or exporting multiple periods, eliminating duplicate transaction issues in financial software.
 
-**Upgrade Notes**: Direct upgrade from v3.1.3. No breaking changes. All existing functionality preserved. Users with mapped ID columns will see no change in behavior.
+**Upgrade Notes**: Direct upgrade from v3.1.x. No breaking changes. All existing functionality preserved. Users with mapped ID columns will see no change in behavior.
 
 **Test Suite**: All 499 tests passing (26 new tests added for deterministic FITID generation, including integration tests).
 

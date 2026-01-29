@@ -774,7 +774,7 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 3.1.3 - Edição Aprimorada
+**Versão**: 3.2.0 - Edição Aprimorada
 **Última Atualização**: Janeiro de 2026
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
@@ -801,7 +801,7 @@ Quando nenhuma coluna de ID é mapeada na Etapa 5 (Mapeamento de Campos), o sist
 
 **Impacto**: Melhora significativamente a experiência do usuário ao regerar arquivos OFX ou exportar múltiplos períodos, eliminando problemas de transações duplicadas em softwares financeiros.
 
-**Notas de Atualização**: Atualização direta da v3.1.3. Sem alterações que quebrem compatibilidade. Toda funcionalidade existente preservada. Usuários com colunas de ID mapeadas não verão mudanças no comportamento.
+**Notas de Atualização**: Atualização direta da v3.1.x. Sem alterações que quebrem compatibilidade. Toda funcionalidade existente preservada. Usuários com colunas de ID mapeadas não verão mudanças no comportamento.
 
 **Suite de Testes**: Todos os 499 testes passando (26 novos testes adicionados para geração de FITID determinístico, incluindo testes de integração).
 
