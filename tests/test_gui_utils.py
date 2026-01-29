@@ -379,6 +379,41 @@ class TestConversionValidation(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertIn("Invalid end date", error)
 
+    def test_validate_date_range_inputs_end_before_start(self):
+        """Test validation with end date before start date."""
+        is_valid, error = gui_utils.validate_date_range_inputs(
+            '31/10/2025', '01/10/2025')
+        self.assertFalse(is_valid)
+        self.assertEqual(error, "End date must be greater than or equal to start date")
+
+    def test_validate_date_range_inputs_same_dates(self):
+        """Test validation with same start and end date."""
+        is_valid, error = gui_utils.validate_date_range_inputs(
+            '15/10/2025', '15/10/2025')
+        self.assertTrue(is_valid)
+        self.assertIsNone(error)
+
+    def test_validate_date_range_inputs_end_before_start_different_months(self):
+        """Test validation with end date in earlier month than start date."""
+        is_valid, error = gui_utils.validate_date_range_inputs(
+            '01/11/2025', '31/10/2025')
+        self.assertFalse(is_valid)
+        self.assertEqual(error, "End date must be greater than or equal to start date")
+
+    def test_validate_date_range_inputs_impossible_start_date(self):
+        """Test validation with impossible calendar start date (Feb 31)."""
+        is_valid, error = gui_utils.validate_date_range_inputs(
+            '31/02/2025', '31/03/2025')
+        self.assertFalse(is_valid)
+        self.assertIn("Invalid start date", error)
+
+    def test_validate_date_range_inputs_impossible_end_date(self):
+        """Test validation with impossible calendar end date (Feb 30)."""
+        is_valid, error = gui_utils.validate_date_range_inputs(
+            '01/02/2025', '30/02/2025')
+        self.assertFalse(is_valid)
+        self.assertIn("Invalid end date", error)
+
 
 class TestStatisticsFormatting(unittest.TestCase):
     """Test statistics formatting functions."""

@@ -386,6 +386,21 @@ def validate_date_range_inputs(start_date: str, end_date: str) -> Tuple[bool, Op
     if not is_valid:
         return False, f"Invalid end date: {error}"
 
+    # Parse dates for comparison (strptime catches impossible calendar dates
+    # like 31/02/2025 that pass the basic format check above)
+    try:
+        start_dt = datetime.strptime(start_date.strip(), '%d/%m/%Y')
+    except ValueError:
+        return False, "Invalid start date: date does not exist"
+
+    try:
+        end_dt = datetime.strptime(end_date.strip(), '%d/%m/%Y')
+    except ValueError:
+        return False, "Invalid end date: date does not exist"
+
+    if end_dt < start_dt:
+        return False, "End date must be greater than or equal to start date"
+
     return True, None
 
 
