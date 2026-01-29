@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.3** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.2.0** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -780,6 +780,30 @@ Para problemas, questões ou sugestões:
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.2.0 (Janeiro de 2026) - Nova Funcionalidade
+
+**Nova Funcionalidade**: IDs de Transação Determinísticos (FITIDs)
+
+Quando nenhuma coluna de ID é mapeada na Etapa 5 (Mapeamento de Campos), o sistema agora gera **FITIDs determinísticos** usando UUID v5 baseado nos dados da transação. Isso garante que a mesma transação sempre receba o mesmo FITID em múltiplas exportações.
+
+**Principais Benefícios**:
+1. **IDs Consistentes**: Mesmos dados de transação → mesmo FITID todas as vezes
+2. **Reconciliação Confiável**: Softwares financeiros podem identificar corretamente transações duplicadas ao regerar arquivos
+3. **Regeneração Parcial de Arquivos**: Exporte subconjuntos de transações sem criar entradas duplicadas
+4. **Compatível com Versões Anteriores**: Colunas de ID explícitas ainda são respeitadas quando mapeadas
+
+**Implementação Técnica**:
+- Usa UUID v5 com namespace dedicado: `NAMESPACE_CSV_TO_OFX`
+- Dados de entrada: data da transação (AAAAMMDD), valor (normalizado para 2 casas decimais), memo (normalizado), ID da conta
+- Implementado em `transaction_utils.generate_deterministic_fitid()`
+- Usado por `OFXGenerator.add_transaction()` quando `transaction_id=None`
+
+**Impacto**: Melhora significativamente a experiência do usuário ao regerar arquivos OFX ou exportar múltiplos períodos, eliminando problemas de transações duplicadas em softwares financeiros.
+
+**Notas de Atualização**: Atualização direta da v3.1.3. Sem alterações que quebrem compatibilidade. Toda funcionalidade existente preservada. Usuários com colunas de ID mapeadas não verão mudanças no comportamento.
+
+**Suite de Testes**: Todos os 499 testes passando (26 novos testes adicionados para geração de FITID determinístico, incluindo testes de integração).
 
 ### Versão 3.1.3 (Janeiro de 2026) - Correção de Bug
 

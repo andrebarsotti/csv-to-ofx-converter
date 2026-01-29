@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.3** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.2.0** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -780,6 +780,30 @@ For issues, questions, or suggestions:
 **License**: MIT
 
 ## Changelog
+
+### Version 3.2.0 (January 2026) - New Feature Release
+
+**New Feature**: Deterministic Transaction IDs (FITIDs)
+
+When no ID column is mapped in Step 5 (Field Mapping), the system now generates **deterministic FITIDs** using UUID v5 based on transaction data. This ensures the same transaction always receives the same FITID across multiple exports.
+
+**Key Benefits**:
+1. **Consistent IDs**: Same transaction data → same FITID every time
+2. **Reliable Reconciliation**: Financial software can properly identify duplicate transactions when regenerating files
+3. **Partial File Regeneration**: Export subsets of transactions without creating duplicate entries
+4. **Backward Compatible**: Explicit ID columns are still honored when mapped
+
+**Technical Implementation**:
+- Uses UUID v5 with dedicated namespace: `NAMESPACE_CSV_TO_OFX`
+- Input data: transaction date (YYYYMMDD), amount (normalized to 2 decimals), memo (normalized), account ID
+- Implemented in `transaction_utils.generate_deterministic_fitid()`
+- Used by `OFXGenerator.add_transaction()` when `transaction_id=None`
+
+**Impact**: Significantly improves user experience when regenerating OFX files or exporting multiple periods, eliminating duplicate transaction issues in financial software.
+
+**Upgrade Notes**: Direct upgrade from v3.1.3. No breaking changes. All existing functionality preserved. Users with mapped ID columns will see no change in behavior.
+
+**Test Suite**: All 499 tests passing (26 new tests added for deterministic FITID generation, including integration tests).
 
 ### Version 3.1.3 (January 2026) - Bug Fix Release
 
