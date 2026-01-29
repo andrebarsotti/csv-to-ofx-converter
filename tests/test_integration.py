@@ -247,6 +247,326 @@ class TestIntegration(unittest.TestCase):
 
             self.assertIn(f'<MEMO>{expected_desc}</MEMO>', content)
 
+    def test_deterministic_fitid_consistency(self):
+        """Test that same transaction data produces same FITID across multiple conversions."""
+        # Create test CSV with consistent data
+        csv_content = """date,amount,description
+2025-10-01,-100.50,Restaurant Purchase
+2025-10-02,-50.25,Gas Station
+2025-10-03,1000.00,Salary Payment"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_fitid.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        # Parse CSV
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Generate OFX twice with same data
+        fitids_first = []
+        fitids_second = []
+
+        for run in range(2):
+            generator = OFXGenerator()
+            for row in rows:
+                generator.add_transaction(
+                    date=row['date'],
+                    amount=parser.normalize_amount(row['amount']),
+                    description=row['description']
+                )
+
+            output_file = os.path.join(self.temp_dir, f'output_fitid_{run}.ofx')
+            generator.generate(
+                output_path=output_file,
+                account_id='TEST123',
+                bank_name='Test Bank'
+            )
+
+            # Extract FITIDs from generated file
+            with open(output_file, 'r') as f:
+                content = f.read()
+                import re
+                fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
+                if run == 0:
+                    fitids_first = fitids
+                else:
+                    fitids_second = fitids
+
+        # Verify FITIDs are identical across both runs
+        self.assertEqual(len(fitids_first), 3, "Should have 3 transactions")
+        self.assertEqual(len(fitids_second), 3, "Should have 3 transactions")
+        self.assertEqual(fitids_first, fitids_second, "FITIDs should be deterministic")
+
+        # Verify FITIDs are valid UUIDs
+        import uuid
+        for fitid in fitids_first:
+            try:
+                uuid.UUID(fitid)
+            except ValueError:
+                self.fail(f"Invalid UUID format: {fitid}")
+
+    def test_deterministic_fitid_different_data(self):
+        """Test that different transaction data produces different FITIDs."""
+        csv_content = """date,amount,description
+2025-10-01,-100.50,Purchase A
+2025-10-01,-100.50,Purchase B
+2025-10-01,-200.50,Purchase A
+2025-10-02,-100.50,Purchase A"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_diff.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        generator = OFXGenerator()
+        for row in rows:
+            generator.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description']
+            )
+
+        output_file = os.path.join(self.temp_dir, 'output_different.ofx')
+        generator.generate(
+            output_path=output_file,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Extract FITIDs
+        with open(output_file, 'r') as f:
+            content = f.read()
+            import re
+            fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
+
+        # Verify all FITIDs are unique (different data = different IDs)
+        self.assertEqual(len(fitids), 4, "Should have 4 transactions")
+        self.assertEqual(len(set(fitids)), 4, "All FITIDs should be unique")
+
+    def test_deterministic_fitid_backward_compatibility(self):
+        """Test that explicit transaction IDs are preserved (backward compatibility)."""
+        csv_content = """date,amount,description,id
+2025-10-01,-100.50,Purchase 1,CUSTOM-ID-001
+2025-10-02,-50.25,Purchase 2,CUSTOM-ID-002
+2025-10-03,1000.00,Salary,CUSTOM-ID-003"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_explicit_id.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        generator = OFXGenerator()
+        for row in rows:
+            generator.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description'],
+                transaction_id=row['id']  # Explicit ID provided
+            )
+
+        output_file = os.path.join(self.temp_dir, 'output_explicit.ofx')
+        generator.generate(
+            output_path=output_file,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Verify explicit IDs are preserved
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        self.assertIn('<FITID>CUSTOM-ID-001</FITID>', content)
+        self.assertIn('<FITID>CUSTOM-ID-002</FITID>', content)
+        self.assertIn('<FITID>CUSTOM-ID-003</FITID>', content)
+
+    def test_deterministic_fitid_partial_file_regeneration(self):
+        """Test use case: regenerating partial CSV files produces consistent FITIDs."""
+        # Simulate user exporting January 1-15, then January 1-31
+        # Transactions from Jan 1-15 should have same FITIDs in both exports
+
+        # First export: Jan 1-15
+        csv_content_partial = """date,amount,description
+2025-01-05,-100.50,Restaurant
+2025-01-10,-50.25,Gas Station
+2025-01-15,1000.00,Salary"""
+
+        csv_file_partial = os.path.join(self.temp_dir, 'jan_1_15.csv')
+        with open(csv_file_partial, 'w') as f:
+            f.write(csv_content_partial)
+
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows_partial = parser.parse_file(csv_file_partial)
+
+        generator_partial = OFXGenerator()
+        for row in rows_partial:
+            generator_partial.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description']
+            )
+
+        output_partial = os.path.join(self.temp_dir, 'jan_1_15.ofx')
+        generator_partial.generate(
+            output_path=output_partial,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Extract FITIDs from partial export
+        with open(output_partial, 'r') as f:
+            content_partial = f.read()
+            import re
+            fitids_partial = re.findall(r'<FITID>(.*?)</FITID>', content_partial)
+
+        # Second export: Jan 1-31 (includes all previous transactions plus new ones)
+        csv_content_full = """date,amount,description
+2025-01-05,-100.50,Restaurant
+2025-01-10,-50.25,Gas Station
+2025-01-15,1000.00,Salary
+2025-01-20,-75.00,Shopping
+2025-01-25,-125.50,Utilities"""
+
+        csv_file_full = os.path.join(self.temp_dir, 'jan_1_31.csv')
+        with open(csv_file_full, 'w') as f:
+            f.write(csv_content_full)
+
+        headers, rows_full = parser.parse_file(csv_file_full)
+
+        generator_full = OFXGenerator()
+        for row in rows_full:
+            generator_full.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description']
+            )
+
+        output_full = os.path.join(self.temp_dir, 'jan_1_31.ofx')
+        generator_full.generate(
+            output_path=output_full,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Extract FITIDs from full export
+        with open(output_full, 'r') as f:
+            content_full = f.read()
+            fitids_full = re.findall(r'<FITID>(.*?)</FITID>', content_full)
+
+        # Verify: First 3 FITIDs should match (overlapping transactions)
+        self.assertEqual(len(fitids_partial), 3, "Partial export should have 3 transactions")
+        self.assertEqual(len(fitids_full), 5, "Full export should have 5 transactions")
+        self.assertEqual(fitids_partial, fitids_full[:3],
+                        "Overlapping transactions should have same FITIDs")
+
+    def test_deterministic_fitid_with_value_inversion(self):
+        """Test deterministic FITID generation when value inversion is enabled."""
+        csv_content = """date,amount,description
+2025-10-01,100.50,Expense
+2025-10-02,50.25,Purchase"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_invert_fitid.csv')
+        with open(csv_file, 'w') as f:
+            f.write(csv_content)
+
+        parser = CSVParser(delimiter=',', decimal_separator='.')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Generate without inversion
+        generator_no_invert = OFXGenerator(invert_values=False)
+        for row in rows:
+            generator_no_invert.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description']
+            )
+
+        output_no_invert = os.path.join(self.temp_dir, 'no_invert.ofx')
+        generator_no_invert.generate(
+            output_path=output_no_invert,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Generate with inversion
+        generator_invert = OFXGenerator(invert_values=True)
+        for row in rows:
+            generator_invert.add_transaction(
+                date=row['date'],
+                amount=parser.normalize_amount(row['amount']),
+                description=row['description']
+            )
+
+        output_invert = os.path.join(self.temp_dir, 'with_invert.ofx')
+        generator_invert.generate(
+            output_path=output_invert,
+            account_id='TEST123',
+            bank_name='Test Bank'
+        )
+
+        # Extract FITIDs from both files
+        import re
+        with open(output_no_invert, 'r') as f:
+            fitids_no_invert = re.findall(r'<FITID>(.*?)</FITID>', f.read())
+
+        with open(output_invert, 'r') as f:
+            fitids_invert = re.findall(r'<FITID>(.*?)</FITID>', f.read())
+
+        # FITIDs should be different because inverted amounts are used in FITID calculation
+        self.assertEqual(len(fitids_no_invert), 2)
+        self.assertEqual(len(fitids_invert), 2)
+        self.assertNotEqual(fitids_no_invert[0], fitids_invert[0],
+                           "FITIDs should differ when amounts are inverted")
+        self.assertNotEqual(fitids_no_invert[1], fitids_invert[1],
+                           "FITIDs should differ when amounts are inverted")
+
+    def test_deterministic_fitid_brazilian_format(self):
+        """Test deterministic FITID generation with Brazilian CSV format."""
+        csv_content = """data;valor;descricao
+01/10/2025;-100,50;Restaurante
+02/10/2025;-50,25;Posto de Gasolina
+03/10/2025;1.000,00;Salário"""
+
+        csv_file = os.path.join(self.temp_dir, 'test_br_fitid.csv')
+        with open(csv_file, 'w', encoding='utf-8') as f:
+            f.write(csv_content)
+
+        parser = CSVParser(delimiter=';', decimal_separator=',')
+        headers, rows = parser.parse_file(csv_file)
+
+        # Generate twice to verify determinism
+        fitids_runs = []
+        for run in range(2):
+            generator = OFXGenerator()
+            for row in rows:
+                generator.add_transaction(
+                    date=row['data'],
+                    amount=parser.normalize_amount(row['valor']),
+                    description=row['descricao']
+                )
+
+            output_file = os.path.join(self.temp_dir, f'output_br_fitid_{run}.ofx')
+            generator.generate(
+                output_path=output_file,
+                account_id='BR123',
+                bank_name='Banco Teste',
+                currency='BRL'
+            )
+
+            with open(output_file, 'r') as f:
+                content = f.read()
+                import re
+                fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
+                fitids_runs.append(fitids)
+
+        # Verify FITIDs are consistent across runs
+        self.assertEqual(fitids_runs[0], fitids_runs[1],
+                        "Brazilian format should produce deterministic FITIDs")
+
 
 if __name__ == '__main__':
     unittest.main()
