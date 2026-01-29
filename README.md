@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.2** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.1.3** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -773,12 +773,32 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 3.1.2 - Enhanced Edition
-**Last Updated**: December 2025
+**Version**: 3.1.3 - Enhanced Edition
+**Last Updated**: January 2026
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 3.1.3 (January 2026) - Bug Fix Release
+
+**Bug Fixes**: Enhanced date validation robustness in Advanced Options (Step 6)
+
+1. **End Date Validation**: Fixed issue where end date could be set before start date
+   - **Issue**: Date range validation only checked format but allowed end dates earlier than start dates
+   - **Fix**: Added comparison check to ensure end date >= start date
+   - **Testing**: Added 21 new test cases in test_gui_utils.py
+
+2. **Impossible Calendar Dates**: Fixed handling of impossible dates like 31/02/2025
+   - **Issue**: validate_date_format() only checked rough ranges (day<=31, month<=12), allowing impossible dates that caused datetime.strptime() to raise ValueError
+   - **Fix**: Wrapped date parsing in try/except to return clean error messages instead of throwing exceptions
+   - **Testing**: Added 14 new test cases for impossible date scenarios
+
+**Impact**: Improves reliability of date validation feature by preventing invalid date ranges and gracefully handling impossible calendar dates.
+
+**Upgrade Notes**: Direct upgrade from v3.1.2. No breaking changes. Recommended for all users who use the date validation feature.
+
+**Test Suite**: All 473 tests passing (5 new tests added for these fixes).
 
 ### Version 3.1.2 (December 2025) - Bug Fix Release
 

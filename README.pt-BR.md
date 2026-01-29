@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.2** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.1.3** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -773,12 +773,32 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 3.1.2 - Edição Aprimorada
-**Última Atualização**: Dezembro de 2025
+**Versão**: 3.1.3 - Edição Aprimorada
+**Última Atualização**: Janeiro de 2026
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.1.3 (Janeiro de 2026) - Correção de Bug
+
+**Correções de Bug**: Robustez aprimorada na validação de data nas Opções Avançadas (Etapa 6)
+
+1. **Validação de Data Final**: Corrigido problema onde a data final poderia ser definida antes da data inicial
+   - **Problema**: A validação de intervalo de datas verificava apenas o formato, mas permitia datas finais anteriores às datas iniciais
+   - **Correção**: Adicionada verificação de comparação para garantir que data final >= data inicial
+   - **Testes**: Adicionados 21 novos casos de teste em test_gui_utils.py
+
+2. **Datas Calendáricas Impossíveis**: Corrigido tratamento de datas impossíveis como 31/02/2025
+   - **Problema**: validate_date_format() verificava apenas intervalos gerais (dia<=31, mês<=12), permitindo datas impossíveis que causavam erro ValueError no datetime.strptime()
+   - **Correção**: Envolvida a análise de data em try/except para retornar mensagens de erro claras ao invés de lançar exceções
+   - **Testes**: Adicionados 14 novos casos de teste para cenários de datas impossíveis
+
+**Impacto**: Melhora a confiabilidade do recurso de validação de data, prevenindo intervalos de datas inválidos e tratando graciosamente datas calendáricas impossíveis.
+
+**Notas de Atualização**: Atualização direta da v3.1.2. Sem alterações que quebrem compatibilidade. Recomendado para todos os usuários que utilizam o recurso de validação de data.
+
+**Suite de Testes**: Todos os 473 testes passando (5 novos testes adicionados para essas correções).
 
 ### Versão 3.1.2 (Dezembro de 2025) - Correção de Bug
 
