@@ -140,11 +140,12 @@ class TestIntegration(unittest.TestCase):
                     description_parts.append(row[col].strip())
             composite_description = ' - '.join(description_parts)
 
+            amount = parser.normalize_amount(row['amount'])
             generator.add_transaction(
                 date=row['date'],
-                amount=parser.normalize_amount(row['amount']),
+                amount=amount,
                 description=composite_description,
-                transaction_type='DEBIT' if parser.normalize_amount(row['amount']) < 0 else 'CREDIT'
+                transaction_type='DEBIT' if amount < 0 else 'CREDIT'
             )
 
         output_file = os.path.join(self.temp_dir, 'output_composite.ofx')
@@ -239,7 +240,9 @@ class TestIntegration(unittest.TestCase):
                 description=composite_description
             )
 
-            output_file = os.path.join(self.temp_dir, f'output_sep_{len(generator.transactions)}.ofx')
+            output_file = os.path.join(
+                self.temp_dir, f'output_sep_{len(generator.transactions)}.ofx'
+            )
             generator.generate(output_path=output_file, account_id='TEST')
 
             with open(output_file, 'r') as f:

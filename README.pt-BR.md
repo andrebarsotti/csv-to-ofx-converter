@@ -527,8 +527,8 @@ O projeto inclui testes unitários abrangentes (94 testes) organizados em módul
 - **test_csv_parser.py**: Análise de CSV com diferentes formatos e normalização de valores (8 testes)
 - **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (20 testes)
 - **test_date_validator.py**: Validação de data e tratamento de limites (12 testes)
-- **test_transaction_utils.py**: Funções utilitárias de transação (50 testes)
-- **test_integration.py**: Fluxos completos de ponta a ponta e descrições compostas (5 testes)
+- **test_transaction_utils.py**: Funções utilitárias de transação (68 testes)
+- **test_integration.py**: Fluxos completos de ponta a ponta e descrições compostas (10 testes)
 
 ### Executar todos os testes (recomendado):
 ```bash
@@ -966,7 +966,7 @@ Para problemas, questões ou sugestões:
   - Melhor modularidade e reusabilidade do código
   - Adicionada cobertura abrangente de testes para utilitários
 - **Testes**: Melhor organização da suíte de testes
-  - Adicionado `test_transaction_utils.py` com 50 testes abrangentes
+  - Adicionado `test_transaction_utils.py` com 68 testes abrangentes
   - Total de testes agora em 94 (anteriormente documentado como 44)
   - Todos os testes passando com cobertura melhorada
   - Melhor estrutura e manutenibilidade dos testes

@@ -275,8 +275,12 @@ def generate_deterministic_fitid(
         Deterministic UUID v5 string (format: 8-4-4-4-12 hex digits with hyphens)
 
     Examples:
-        >>> fitid1 = generate_deterministic_fitid("20260115000000[-3:BRT]", -100.50, "Restaurant Purchase")
-        >>> fitid2 = generate_deterministic_fitid("20260115", -100.50, "restaurant purchase")
+        >>> fitid1 = generate_deterministic_fitid(
+        ...     "20260115000000[-3:BRT]", -100.50, "Restaurant Purchase"
+        ... )
+        >>> fitid2 = generate_deterministic_fitid(
+        ...     "20260115", -100.50, "restaurant purchase"
+        ... )
         >>> # Same transaction data produces same ID despite format differences
         >>> len(fitid1) == 36  # UUID format length
         True

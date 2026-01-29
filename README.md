@@ -527,8 +527,8 @@ The project includes comprehensive unit tests (94 tests) organized in separate m
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
 - **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
 - **test_date_validator.py**: Date validation and boundary handling (12 tests)
-- **test_transaction_utils.py**: Transaction utility functions (50 tests)
-- **test_integration.py**: Complete end-to-end workflows and composite descriptions (5 tests)
+- **test_transaction_utils.py**: Transaction utility functions (68 tests)
+- **test_integration.py**: Complete end-to-end workflows and composite descriptions (10 tests)
 
 ### Run all tests (recommended):
 ```bash
@@ -966,7 +966,7 @@ For issues, questions, or suggestions:
   - Improved code modularity and reusability
   - Added comprehensive test coverage for utilities
 - **Testing**: Enhanced test suite organization
-  - Added `test_transaction_utils.py` with 50 comprehensive tests
+  - Added `test_transaction_utils.py` with 68 comprehensive tests
   - Total test count now at 94 tests (previously documented as 44)
   - All tests passing with improved coverage
   - Better test structure and maintainability

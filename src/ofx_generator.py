@@ -11,9 +11,10 @@ License: MIT
 """
 
 import logging
-import uuid
 from datetime import datetime
 from typing import Optional
+
+from .transaction_utils import generate_deterministic_fitid
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,6 @@ class OFXGenerator:
             transaction_id: Unique transaction ID (deterministic UUID generated if not provided)
         """
         parsed_date = self._parse_date(date)
-        
         # Apply value inversion if enabled
         if self.invert_values:
             amount = -amount
@@ -66,7 +66,6 @@ class OFXGenerator:
         if transaction_id is None:
             # Generate deterministic FITID instead of random UUID
             # Same transaction data always produces same ID, enabling reliable reconciliation
-            from .transaction_utils import generate_deterministic_fitid
             transaction_id = generate_deterministic_fitid(
                 date=parsed_date,  # Already in OFX format YYYYMMDD000000[-3:BRT]
                 amount=amount,  # Already adjusted for type and inversion

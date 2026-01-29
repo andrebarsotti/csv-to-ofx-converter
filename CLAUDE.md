@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Essential Guides:**
 - 🏗️ [Architecture Details](docs/CLAUDE-ARCHITECTURE.md) - Module structure, classes, data flow
-- 🧪 [Testing Strategy](docs/CLAUDE-TESTING.md) - 493 tests, patterns, test organization
+- 🧪 [Testing Strategy](docs/CLAUDE-TESTING.md) - 499 tests, patterns, test organization
 - 🚀 [Release Process](docs/CLAUDE-RELEASE.md) - Complete release checklist and procedures
 - 🔧 [Common Patterns](docs/CLAUDE-PATTERNS.md) - Recipes for frequent development tasks
 
@@ -58,18 +58,18 @@ csv-to-ofx-converter/
 │       ├── field_mapping_step.py
 │       ├── advanced_options_step.py
 │       └── balance_preview_step.py
-├── tests/                       # 493 tests total
+├── tests/                       # 499 tests total
 │   ├── test_csv_parser.py       # 8 tests
-│   ├── test_ofx_generator.py    # 19 tests
+│   ├── test_ofx_generator.py    # 21 tests
 │   ├── test_date_validator.py   # 12 tests
-│   ├── test_transaction_utils.py # 50 tests
+│   ├── test_transaction_utils.py # 68 tests
 │   ├── test_gui_utils.py        # 58 tests
 │   ├── test_gui_integration.py  # 15 tests
 │   ├── test_gui_balance_manager.py # 14 tests
 │   ├── test_gui_conversion_handler.py # 23 tests
 │   ├── test_gui_transaction_manager.py # 26 tests
 │   ├── test_gui_wizard_step.py  # 32 tests
-│   ├── test_integration.py      # 5 tests
+│   ├── test_integration.py      # 10 tests
 │   └── test_gui_steps/          # 206 tests (7 step test files)
 ├── docs/                        # Documentation
 │   ├── CLAUDE-ARCHITECTURE.md   # Architecture details
@@ -167,7 +167,7 @@ build.bat
 
 5. **User-Friendly GUI**: Multi-step wizard with clear validation and helpful error messages at each step.
 
-6. **Comprehensive Testing**: 493 tests covering all modules. GUI tests use mocks to avoid display server dependencies.
+6. **Comprehensive Testing**: 499 tests covering all modules. GUI tests use mocks to avoid display server dependencies.
 
 7. **CI/CD Integration**: Automated builds for Linux/macOS/Windows. SonarCloud quality analysis on every push.
 
@@ -323,7 +323,7 @@ When no ID column is mapped in Step 5, the system generates deterministic FITIDs
 ## Key Resources
 
 - **Architecture**: [docs/CLAUDE-ARCHITECTURE.md](docs/CLAUDE-ARCHITECTURE.md) - Detailed module structure, class responsibilities, data flow
-- **Testing**: [docs/CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md) - Complete testing strategy, 493 tests, test patterns
+- **Testing**: [docs/CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md) - Complete testing strategy, 499 tests, test patterns
 - **Release**: [docs/CLAUDE-RELEASE.md](docs/CLAUDE-RELEASE.md) - Step-by-step release process, CI/CD verification
 - **Patterns**: [docs/CLAUDE-PATTERNS.md](docs/CLAUDE-PATTERNS.md) - Common development tasks, recipes, best practices
 
