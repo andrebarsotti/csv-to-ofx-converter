@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Essential Guides:**
 - 🏗️ [Architecture Details](docs/CLAUDE-ARCHITECTURE.md) - Module structure, classes, data flow
-- 🧪 [Testing Strategy](docs/CLAUDE-TESTING.md) - 468 tests, patterns, test organization
+- 🧪 [Testing Strategy](docs/CLAUDE-TESTING.md) - 493 tests, patterns, test organization
 - 🚀 [Release Process](docs/CLAUDE-RELEASE.md) - Complete release checklist and procedures
 - 🔧 [Common Patterns](docs/CLAUDE-PATTERNS.md) - Recipes for frequent development tasks
 
@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CSV to OFX Converter - A Python application that converts CSV files to OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. Features a Tkinter-based wizard interface with 7 steps guiding users through CSV import, data preview, field mapping, balance preview, and conversion.
 
-**Current Version**: 3.1.1 (December 2025)
+**Current Version**: 3.1.3 (January 2026)
 
 **Key Characteristics:**
 - Pure Python 3.7+ with standard library only (no external dependencies for runtime)
@@ -31,6 +31,7 @@ CSV to OFX Converter - A Python application that converts CSV files to OFX (Open
 - Support for both standard (comma, dot) and Brazilian (semicolon, comma) CSV formats
 - Context menu for transaction management with date validation
 - Automatic window maximization on startup (cross-platform compatible)
+- Deterministic transaction IDs using UUID v5 (consistent FITIDs on regeneration)
 
 **Project Structure:**
 ```
@@ -57,7 +58,7 @@ csv-to-ofx-converter/
 │       ├── field_mapping_step.py
 │       ├── advanced_options_step.py
 │       └── balance_preview_step.py
-├── tests/                       # 468 tests total
+├── tests/                       # 493 tests total
 │   ├── test_csv_parser.py       # 8 tests
 │   ├── test_ofx_generator.py    # 19 tests
 │   ├── test_date_validator.py   # 12 tests
@@ -166,7 +167,7 @@ build.bat
 
 5. **User-Friendly GUI**: Multi-step wizard with clear validation and helpful error messages at each step.
 
-6. **Comprehensive Testing**: 468 tests covering all modules. GUI tests use mocks to avoid display server dependencies.
+6. **Comprehensive Testing**: 493 tests covering all modules. GUI tests use mocks to avoid display server dependencies.
 
 7. **CI/CD Integration**: Automated builds for Linux/macOS/Windows. SonarCloud quality analysis on every push.
 
@@ -259,6 +260,33 @@ xvfb-run -a python3 -m unittest discover tests -v
 
 ---
 
+## Important Implementation Details
+
+### Deterministic Transaction IDs (FITID)
+
+When no ID column is mapped in Step 5, the system generates deterministic FITIDs using UUID v5 based on transaction data. This ensures the same transaction always receives the same FITID.
+
+**Namespace:** `NAMESPACE_CSV_TO_OFX` in `transaction_utils.py`
+
+**Input Data:**
+- Transaction date (normalized to YYYYMMDD)
+- Transaction amount (normalized to 2 decimals)
+- Transaction memo (normalized: stripped, lowercase, max 255 chars)
+- Account ID (optional, empty string for v1)
+- Disambiguation (optional, empty string for v1)
+
+**Benefits:**
+- Same transaction → same FITID on every export
+- Enables reliable reconciliation in financial software
+- Supports partial file regeneration without duplicates
+- Maintains backward compatibility (explicit IDs still honored)
+
+**Implementation:**
+- `generate_deterministic_fitid()` in `transaction_utils.py`
+- Used by `OFXGenerator.add_transaction()` when `transaction_id=None`
+
+---
+
 ## Documentation Requirements
 
 **IMPORTANT**: When making changes to the codebase, ALWAYS update relevant documentation:
@@ -295,7 +323,7 @@ xvfb-run -a python3 -m unittest discover tests -v
 ## Key Resources
 
 - **Architecture**: [docs/CLAUDE-ARCHITECTURE.md](docs/CLAUDE-ARCHITECTURE.md) - Detailed module structure, class responsibilities, data flow
-- **Testing**: [docs/CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md) - Complete testing strategy, 468 tests, test patterns
+- **Testing**: [docs/CLAUDE-TESTING.md](docs/CLAUDE-TESTING.md) - Complete testing strategy, 493 tests, test patterns
 - **Release**: [docs/CLAUDE-RELEASE.md](docs/CLAUDE-RELEASE.md) - Step-by-step release process, CI/CD verification
 - **Patterns**: [docs/CLAUDE-PATTERNS.md](docs/CLAUDE-PATTERNS.md) - Common development tasks, recipes, best practices
 

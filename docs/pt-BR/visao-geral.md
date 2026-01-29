@@ -15,6 +15,7 @@ O **CSV to OFX Converter** é uma aplicação desktop que permite aos usuários 
 | **Inversão de Valores** | Opção para inverter débitos/créditos |
 | **Validação de Datas** | Validação de transações contra período do extrato |
 | **Gestão de Saldo** | Cálculo automático ou manual de saldo inicial/final |
+| **IDs de Transação Determinísticos** | FITIDs em UUID v5 gerados automaticamente quando nenhuma coluna de ID é mapeada |
 | **Exportação OFX** | Geração de arquivo OFX 1.0.2 (SGML) compatível |
 
 ### 1.2 Formatos Suportados
@@ -152,6 +153,7 @@ sequenceDiagram
 2. Mapeia coluna de Valor (obrigatório)
 3. Mapeia coluna de Descrição ou configura descrição composta
 4. Opcionalmente mapeia Tipo e ID da transação
+5. Se nenhuma coluna de ID for mapeada, a geração determinística de FITIDs (UUID v5) é aplicada automaticamente
 
 #### Passo 6: Opções Avançadas
 1. Usuário habilita inversão de valores (se necessário)
@@ -198,6 +200,22 @@ Quando habilitada, a validação de datas verifica se cada transação está den
 | **Antes do início** | Ajusta para data inicial | Manter / Ajustar / Excluir |
 | **Dentro do período** | Processa normalmente | - |
 | **Após o fim** | Mantém data original | Manter / Ajustar / Excluir |
+
+### 3.4 Geração Determinística de FITID
+
+Quando o usuário não mapeia uma coluna de ID no Passo 5, o conversor gera FITIDs determinísticos usando o helper `generate_deterministic_fitid()` de `transaction_utils.py`.
+
+**Componentes de entrada:**
+- Data normalizada (`YYYYMMDD` extraída do timestamp OFX)
+- Valor normalizado (duas casas decimais, já invertido se aplicável)
+- Memo normalizado (sem espaços extras, minúsculo, máximo 255 caracteres)
+- ID da conta (quando informado) e um campo reservado de desambiguação
+
+**Comportamento:**
+- Utiliza UUID v5 com o namespace da aplicação `NAMESPACE_CSV_TO_OFX`
+- Mesmos dados normalizados → mesmo FITID em exportações futuras
+- IDs explícitos vindos do CSV sempre têm precedência
+- Garante que arquivos regerados não criem duplicidades em softwares financeiros
 
 ### 3.4 Construção de Descrição
 

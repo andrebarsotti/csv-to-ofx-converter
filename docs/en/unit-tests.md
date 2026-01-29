@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-**CSV to OFX Converter** has a comprehensive test suite using the `unittest` framework from Python's standard library. The suite contains **468 tests** organized in separate modules.
+**CSV to OFX Converter** has a comprehensive test suite using the `unittest` framework from Python's standard library. The suite contains **493 tests** organized in separate modules.
 
 ### 1.1 Testing Tools
 
@@ -20,10 +20,10 @@ tests/
 ├── __init__.py                  # Package initialization
 ├── run_all_tests.py             # Convenience script
 ├── test_csv_parser.py           # CSVParser tests (8 tests)
-├── test_ofx_generator.py        # OFXGenerator tests (19 tests)
+├── test_ofx_generator.py        # OFXGenerator tests (21 tests)
 ├── test_date_validator.py       # DateValidator tests (12 tests)
-├── test_transaction_utils.py    # Utility tests (50 tests)
-├── test_gui_utils.py            # GUI utility tests (58 tests)
+├── test_transaction_utils.py    # Utility tests (68 tests)
+├── test_gui_utils.py            # GUI utility tests (63 tests)
 ├── test_gui_integration.py      # GUI integration tests (15 tests)
 ├── test_gui_balance_manager.py  # BalanceManager tests (14 tests)
 ├── test_gui_conversion_handler.py # ConversionHandler tests (23 tests)
@@ -141,7 +141,7 @@ Tests CSV file parsing and value normalization.
 | `test_file_not_found` | Error when file doesn't exist |
 | `test_empty_file` | Error when file is empty |
 
-### 4.2 test_ofx_generator.py (19 tests)
+### 4.2 test_ofx_generator.py (21 tests)
 
 Tests OFX file generation.
 
@@ -155,6 +155,8 @@ Tests OFX file generation.
 | `test_multiple_currencies` | Multiple currency support |
 | `test_description_limit` | 255 character description limit |
 | `test_transaction_sorting` | Transaction sorting by date |
+| `test_deterministic_fitid_with_value_inversion` | Ensures deterministic IDs survive value inversion |
+| `test_deterministic_fitid_with_long_description` | Verifies memo normalization/truncation for deterministic IDs |
 
 ### 4.3 test_date_validator.py (12 tests)
 
@@ -170,7 +172,7 @@ Tests date validation.
 | `test_invalid_date_format` | Invalid date format |
 | `test_year_boundary` | Year transition |
 
-### 4.4 test_transaction_utils.py (50 tests)
+### 4.4 test_transaction_utils.py (68 tests)
 
 Tests transaction utility functions.
 
@@ -182,8 +184,9 @@ Tests transaction utility functions.
 | **calculate_balance_summary** | Balance calculations, edge cases |
 | **validate_field_mappings** | Required mapping validation |
 | **parse_balance_value** | Balance value parsing |
+| **generate_deterministic_fitid** | Deterministic FITID generation, normalization, collision tests |
 
-### 4.5 test_gui_utils.py (58 tests)
+### 4.5 test_gui_utils.py (63 tests)
 
 Tests GUI utility functions.
 

@@ -43,6 +43,7 @@ Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Value
   - Arquivos delimitados por tabulação
 - **Mapeamento Inteligente de Colunas**: Mapeie qualquer coluna CSV para campos OFX
 - **Descrições Compostas**: Combine até 4 colunas para criar descrições ricas de transações
+- **IDs de Transação Determinísticos**: As mesmas transações recebem IDs idênticos em exportações repetidas, permitindo reconciliação confiável ao regerar arquivos
 - **Inversão de Valores**: Opção para inverter todos os valores de transação (trocar débitos e créditos)
 - **Detecção Automática de Tipo**: Infere débito/crédito pelo sinal do valor
 - **Múltiplos Formatos de Data**: Suporta vários formatos de data (DD/MM/AAAA, AAAA-MM-DD, etc.)

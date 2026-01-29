@@ -43,6 +43,7 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
   - Tab-delimited files
 - **Smart Column Mapping**: Map any CSV column to OFX fields
 - **Composite Descriptions**: Combine up to 4 columns to create rich transaction descriptions
+- **Deterministic Transaction IDs**: Same transactions receive identical IDs across exports, enabling reliable reconciliation when regenerating files
 - **Value Inversion**: Option to invert all transaction values (swap debits and credits)
 - **Automatic Type Detection**: Infers debit/credit from amount sign
 - **Multiple Date Formats**: Supports various date formats (DD/MM/YYYY, YYYY-MM-DD, etc.)
