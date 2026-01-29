@@ -386,6 +386,12 @@ def validate_date_range_inputs(start_date: str, end_date: str) -> Tuple[bool, Op
     if not is_valid:
         return False, f"Invalid end date: {error}"
 
+    # Validate that end date is greater than or equal to start date
+    start_dt = datetime.strptime(start_date.strip(), '%d/%m/%Y')
+    end_dt = datetime.strptime(end_date.strip(), '%d/%m/%Y')
+    if end_dt < start_dt:
+        return False, "End date must be greater than or equal to start date"
+
     return True, None
 
 
