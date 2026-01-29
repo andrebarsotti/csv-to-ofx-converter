@@ -35,5 +35,5 @@
 
 ---
 
-*Documentation Version / Versão da Documentação: 1.0.0*
-*Last Updated / Última Atualização: December 2025*
+*Documentation Version / Versão da Documentação: 1.1.0*
+*Last Updated / Última Atualização: January 2026*

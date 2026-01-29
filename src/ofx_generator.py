@@ -11,9 +11,10 @@ License: MIT
 """
 
 import logging
-import uuid
 from datetime import datetime
 from typing import Optional
+
+from .transaction_utils import generate_deterministic_fitid
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +48,9 @@ class OFXGenerator:
             amount: Transaction amount (negative for debits)
             description: Transaction description/memo
             transaction_type: Type of transaction (DEBIT or CREDIT)
-            transaction_id: Unique transaction ID (UUID generated if not provided)
+            transaction_id: Unique transaction ID (deterministic UUID generated if not provided)
         """
         parsed_date = self._parse_date(date)
-        if transaction_id is None:
-            transaction_id = str(uuid.uuid4())
-
         # Apply value inversion if enabled
         if self.invert_values:
             amount = -amount
@@ -64,6 +62,17 @@ class OFXGenerator:
             amount = -amount
         elif transaction_type == 'CREDIT' and amount < 0:
             amount = abs(amount)
+
+        if transaction_id is None:
+            # Generate deterministic FITID instead of random UUID
+            # Same transaction data always produces same ID, enabling reliable reconciliation
+            transaction_id = generate_deterministic_fitid(
+                date=parsed_date,  # Already in OFX format YYYYMMDD000000[-3:BRT]
+                amount=amount,  # Already adjusted for type and inversion
+                memo=description[:255],  # Already truncated
+                account_id="",  # Not available in add_transaction, could be added later
+                disambiguation=""  # No disambiguation for v1
+            )
 
         transaction = {
             'type': transaction_type,

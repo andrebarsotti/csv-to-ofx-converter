@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-O **CSV to OFX Converter** possui uma suíte de testes abrangente utilizando o framework `unittest` da biblioteca padrão do Python. A suíte contém **468 testes** organizados em módulos separados.
+O **CSV to OFX Converter** possui uma suíte de testes abrangente utilizando o framework `unittest` da biblioteca padrão do Python. A suíte contém **493 testes** organizados em módulos separados.
 
 ### 1.1 Ferramentas de Teste
 
@@ -20,10 +20,10 @@ tests/
 ├── __init__.py                  # Inicialização do pacote
 ├── run_all_tests.py             # Script de conveniência
 ├── test_csv_parser.py           # Testes do CSVParser (8 testes)
-├── test_ofx_generator.py        # Testes do OFXGenerator (19 testes)
+├── test_ofx_generator.py        # Testes do OFXGenerator (21 testes)
 ├── test_date_validator.py       # Testes do DateValidator (12 testes)
-├── test_transaction_utils.py    # Testes das utilities (50 testes)
-├── test_gui_utils.py            # Testes das GUI utilities (58 testes)
+├── test_transaction_utils.py    # Testes das utilities (68 testes)
+├── test_gui_utils.py            # Testes das GUI utilities (63 testes)
 ├── test_gui_integration.py      # Testes de integração GUI (15 testes)
 ├── test_gui_balance_manager.py  # Testes do BalanceManager (14 testes)
 ├── test_gui_conversion_handler.py # Testes do ConversionHandler (23 testes)
@@ -141,7 +141,7 @@ Testa o parsing de arquivos CSV e normalização de valores.
 | `test_file_not_found` | Erro quando arquivo não existe |
 | `test_empty_file` | Erro quando arquivo está vazio |
 
-### 4.2 test_ofx_generator.py (19 testes)
+### 4.2 test_ofx_generator.py (21 testes)
 
 Testa a geração de arquivos OFX.
 
@@ -155,6 +155,8 @@ Testa a geração de arquivos OFX.
 | `test_multiple_currencies` | Suporte a múltiplas moedas |
 | `test_description_limit` | Limite de 255 caracteres na descrição |
 | `test_transaction_sorting` | Ordenação de transações por data |
+| `test_deterministic_fitid_with_value_inversion` | Garante IDs consistentes com inversão de valores |
+| `test_deterministic_fitid_with_long_description` | Verifica truncamento/norm. do memo para IDs determinísticos |
 
 ### 4.3 test_date_validator.py (12 testes)
 
@@ -170,7 +172,7 @@ Testa a validação de datas.
 | `test_invalid_date_format` | Formato de data inválido |
 | `test_year_boundary` | Transição entre anos |
 
-### 4.4 test_transaction_utils.py (50 testes)
+### 4.4 test_transaction_utils.py (68 testes)
 
 Testa funções utilitárias de transações.
 
@@ -182,8 +184,9 @@ Testa funções utilitárias de transações.
 | **calculate_balance_summary** | Cálculos de saldo, edge cases |
 | **validate_field_mappings** | Validação de mapeamentos obrigatórios |
 | **parse_balance_value** | Parsing de valores de saldo |
+| **generate_deterministic_fitid** | Geração determinística de FITID, normalização, colisões |
 
-### 4.5 test_gui_utils.py (58 testes)
+### 4.5 test_gui_utils.py (63 testes)
 
 Testa funções utilitárias da GUI.
 

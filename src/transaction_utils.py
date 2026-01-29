@@ -8,13 +8,22 @@ Provides utility functions for:
 - Determining transaction types (DEBIT/CREDIT)
 - Extracting transaction identifiers
 - Calculating balance summaries
+- Generating deterministic transaction IDs (FITIDs)
 
 Author: Generated for Brazilian banking compatibility
 License: MIT
 """
 
+import uuid
 from typing import List, Dict, Optional, Tuple
 from .constants import NOT_MAPPED, NOT_SELECTED
+
+# Application-specific namespace for deterministic FITID generation
+# Uses UUID v5 to ensure reproducible transaction IDs
+NAMESPACE_CSV_TO_OFX = uuid.uuid5(
+    uuid.NAMESPACE_DNS,
+    "csv-to-ofx-converter.local"
+)
 
 
 def build_transaction_description(
@@ -238,3 +247,73 @@ def parse_balance_value(balance_str: str, default: float = 0.0) -> float:
         return float(balance_str.strip() or str(default))
     except (ValueError, AttributeError):
         return default
+
+
+def generate_deterministic_fitid(
+    date: str,
+    amount: float,
+    memo: str,
+    account_id: str = "",
+    disambiguation: str = ""
+) -> str:
+    """
+    Generate deterministic FITID using UUID v5 based on transaction data.
+
+    Same inputs always produce same output, enabling reliable reconciliation
+    when regenerating OFX files. This ensures that if a user exports
+    transactions and then exports them again (fully or partially), the
+    transaction IDs remain consistent for duplicate detection.
+
+    Args:
+        date: Transaction date (any format, will be normalized to YYYYMMDD)
+        amount: Transaction amount (will be formatted to 2 decimal places)
+        memo: Transaction description/memo (will be normalized)
+        account_id: Optional account identifier for uniqueness (default: "")
+        disambiguation: Optional string to distinguish duplicate transactions (default: "")
+
+    Returns:
+        Deterministic UUID v5 string (format: 8-4-4-4-12 hex digits with hyphens)
+
+    Examples:
+        >>> fitid1 = generate_deterministic_fitid(
+        ...     "20260115000000[-3:BRT]", -100.50, "Restaurant Purchase"
+        ... )
+        >>> fitid2 = generate_deterministic_fitid(
+        ...     "20260115", -100.50, "restaurant purchase"
+        ... )
+        >>> # Same transaction data produces same ID despite format differences
+        >>> len(fitid1) == 36  # UUID format length
+        True
+
+        >>> # Different amounts produce different IDs
+        >>> id_a = generate_deterministic_fitid("20260115", -100.50, "Purchase")
+        >>> id_b = generate_deterministic_fitid("20260115", -200.50, "Purchase")
+        >>> id_a != id_b
+        True
+    """
+    # Normalize date: Extract YYYYMMDD portion if in OFX format
+    date_normalized = date.strip()
+    # Detect OFX datetime format: YYYYMMDD000000[-3:BRT]
+    if len(date_normalized) >= 14 and date_normalized[8:14] == "000000":
+        date_normalized = date_normalized[:8]
+
+    # Normalize amount: Format to 2 decimal places
+    amount_normalized = f"{amount:.2f}"
+
+    # Normalize memo: Strip whitespace, lowercase, limit length
+    memo_normalized = memo.strip().lower()[:255]
+
+    # Combine all components with pipe separator for clarity
+    components = [
+        date_normalized,
+        amount_normalized,
+        memo_normalized,
+        account_id.strip(),
+        disambiguation.strip()
+    ]
+
+    # Create deterministic string
+    data_string = "|".join(components)
+
+    # Generate UUID v5 from normalized data
+    return str(uuid.uuid5(NAMESPACE_CSV_TO_OFX, data_string))

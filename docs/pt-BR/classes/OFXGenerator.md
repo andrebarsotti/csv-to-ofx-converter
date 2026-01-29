@@ -44,7 +44,9 @@ Adiciona uma transação à lista de exportação.
 - `amount` (float): Valor da transação
 - `description` (str): Descrição/memo da transação
 - `transaction_type` (str): Tipo: 'DEBIT' ou 'CREDIT'
-- `transaction_id` (str, opcional): ID único (UUID gerado se não fornecido)
+- `transaction_id` (str, opcional): ID único (UUID v5 determinístico gerado se não fornecido)
+
+Caso `transaction_id` seja omitido, o gerador chama `transaction_utils.generate_deterministic_fitid()` para produzir um identificador consistente a partir da data, valor, memo e contexto da conta normalizados.
 
 **Comportamento de Inversão:**
 Quando `invert_values=True`:
@@ -102,8 +104,8 @@ classDiagram
         +_generate_ofx_file()
     }
 
-    class uuid {
-        +uuid4()
+    class TransactionUtils {
+        +generate_deterministic_fitid()
     }
 
     class datetime {
@@ -112,7 +114,7 @@ classDiagram
     }
 
     OFXGenerator <.. ConversionHandler : usa
-    OFXGenerator ..> uuid : importa
+    OFXGenerator ..> TransactionUtils : usa
     OFXGenerator ..> datetime : importa
     OFXGenerator ..> logging : importa
 ```
@@ -262,7 +264,7 @@ NEWFILEUID:NONE
           <TRNTYPE>DEBIT</TRNTYPE>
           <DTPOSTED>20251001000000[-3:BRT]</DTPOSTED>
           <TRNAMT>-100.50</TRNAMT>
-          <FITID>uuid-here</FITID>
+          <FITID>f15d3c9c-4f93-5d02-90a0-c2e77f8c9b6c</FITID>
           <MEMO>Supermercado ABC</MEMO>
         </STMTTRN>
       </BANKTRANLIST>

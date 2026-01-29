@@ -43,6 +43,7 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
   - Tab-delimited files
 - **Smart Column Mapping**: Map any CSV column to OFX fields
 - **Composite Descriptions**: Combine up to 4 columns to create rich transaction descriptions
+- **Deterministic Transaction IDs**: Same transactions receive identical IDs across exports, enabling reliable reconciliation when regenerating files
 - **Value Inversion**: Option to invert all transaction values (swap debits and credits)
 - **Automatic Type Detection**: Infers debit/credit from amount sign
 - **Multiple Date Formats**: Supports various date formats (DD/MM/YYYY, YYYY-MM-DD, etc.)
@@ -524,10 +525,10 @@ VERSION:102
 
 The project includes comprehensive unit tests (94 tests) organized in separate modules:
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
-- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
+- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (21 tests)
 - **test_date_validator.py**: Date validation and boundary handling (12 tests)
-- **test_transaction_utils.py**: Transaction utility functions (50 tests)
-- **test_integration.py**: Complete end-to-end workflows and composite descriptions (5 tests)
+- **test_transaction_utils.py**: Transaction utility functions (68 tests)
+- **test_integration.py**: Complete end-to-end workflows and composite descriptions (11 tests)
 
 ### Run all tests (recommended):
 ```bash
@@ -965,7 +966,7 @@ For issues, questions, or suggestions:
   - Improved code modularity and reusability
   - Added comprehensive test coverage for utilities
 - **Testing**: Enhanced test suite organization
-  - Added `test_transaction_utils.py` with 50 comprehensive tests
+  - Added `test_transaction_utils.py` with 68 comprehensive tests
   - Total test count now at 94 tests (previously documented as 44)
   - All tests passing with improved coverage
   - Better test structure and maintainability

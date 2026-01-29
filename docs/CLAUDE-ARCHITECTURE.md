@@ -531,8 +531,14 @@ Generates credit card statement format (CREDITCARDMSGSRSV1) with:
   - Type (TRNTYPE): DEBIT or CREDIT
   - Date (DTPOSTED): YYYYMMDD format
   - Amount (TRNAMT): Negative for debits, positive for credits
-  - Transaction ID (FITID): UUID if not provided
+  - Transaction ID (FITID): Deterministic UUID v5 generated from normalized data when no ID column is mapped
   - Description (MEMO): Max 255 characters
+
+#### Deterministic FITID Generation
+- Implemented in `transaction_utils.generate_deterministic_fitid()` with namespace constant `NAMESPACE_CSV_TO_OFX`
+- Inputs: normalized date (YYYYMMDD), normalized amount (two decimals), normalized memo (trimmed/lowercase/≤255 chars), optional account ID, optional disambiguation token
+- Uses UUID v5 so identical transactions across exports receive identical FITIDs; explicit IDs from CSV always override this behavior
+- Ensures regenerated OFX files do not create duplicates in downstream financial software
 
 **Example OFX Output**:
 ```

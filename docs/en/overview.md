@@ -15,6 +15,7 @@
 | **Value Inversion** | Option to invert debits/credits |
 | **Date Validation** | Transaction validation against statement period |
 | **Balance Management** | Automatic or manual initial/final balance calculation |
+| **Deterministic Transaction IDs** | UUID v5 FITIDs auto-generated from normalized data when no ID column is mapped |
 | **OFX Export** | Compatible OFX 1.0.2 (SGML) file generation |
 
 ### 1.2 Supported Formats
@@ -152,6 +153,7 @@ sequenceDiagram
 2. Maps Amount column (required)
 3. Maps Description column or configures composite description
 4. Optionally maps Type and transaction ID
+5. If no transaction ID column is mapped, deterministic FITID generation (UUID v5) will be applied automatically
 
 #### Step 6: Advanced Options
 1. User enables value inversion (if needed)
@@ -199,7 +201,23 @@ When enabled, date validation checks if each transaction is within the statement
 | **Within period** | Process normally | - |
 | **After end** | Keep original date | Keep / Adjust / Exclude |
 
-### 3.4 Description Building
+### 3.4 Deterministic FITID Generation
+
+When the user does not map a transaction ID column in Step 5, the converter generates deterministic FITIDs using the helper `generate_deterministic_fitid()` from `transaction_utils.py`.
+
+**Input components:**
+- Normalized transaction date (`YYYYMMDD` extracted from OFX date string)
+- Normalized amount (two decimal places, already inverted if applicable)
+- Normalized memo (trimmed, lowercased, max 255 chars)
+- Account ID (if provided) and a reserved disambiguation slot
+
+**Behavior:**
+- Uses UUID v5 with the application namespace constant `NAMESPACE_CSV_TO_OFX`
+- Same normalized inputs → same FITID across exports
+- Explicit transaction IDs from CSV always take precedence
+- Ensures regenerated files do not duplicate transactions in downstream financial software
+
+### 3.5 Description Building
 
 ```mermaid
 flowchart TD
@@ -215,7 +233,7 @@ flowchart TD
     H --> I
 ```
 
-### 3.5 Balance Calculation
+### 3.6 Balance Calculation
 
 | Field | Formula |
 |-------|---------|
@@ -223,7 +241,7 @@ flowchart TD
 | **Total Credits** | Sum of all positive values |
 | **Total Debits** | Sum of absolute values of all negative values |
 
-### 3.6 Transaction Exclusion
+### 3.7 Transaction Exclusion
 
 Transactions can be excluded from conversion by:
 - Manual exclusion by user in Step 7

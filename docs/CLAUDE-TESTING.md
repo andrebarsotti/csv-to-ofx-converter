@@ -4,31 +4,31 @@ This document provides comprehensive testing information for the CSV to OFX Conv
 
 ## Test Suite Overview
 
-Test suite is organized into separate modules: **468 tests total** (Phase D complete)
+Test suite is organized into separate modules: **499 tests total** (January 2026)
 
 **Test Organization**:
 ```
 tests/
 ├── __init__.py                      # Test package initialization
 ├── test_csv_parser.py               # 8 tests - CSV parsing
-├── test_ofx_generator.py            # 19 tests - OFX generation
+├── test_ofx_generator.py            # 21 tests - OFX generation
 ├── test_date_validator.py           # 12 tests - Date validation
-├── test_transaction_utils.py        # 50 tests - Transaction utilities
-├── test_gui_utils.py                # 58 tests - GUI utilities
+├── test_transaction_utils.py        # 68 tests - Transaction utilities (includes deterministic FITID coverage)
+├── test_gui_utils.py                # 63 tests - GUI utilities
 ├── test_gui_integration.py          # 15 tests - GUI integration
 ├── test_gui_balance_manager.py      # 14 tests - Balance manager
 ├── test_gui_conversion_handler.py   # 23 tests - Conversion handler
 ├── test_gui_transaction_manager.py  # 26 tests - Transaction manager
 ├── test_gui_wizard_step.py          # 32 tests - WizardStep base class
-├── test_integration.py              # 5 tests - End-to-end integration
+├── test_integration.py              # 11 tests - End-to-end integration
 ├── test_gui_steps/                  # 206 tests - Wizard step implementations
 │   ├── __init__.py
-│   ├── test_file_selection_step.py  # 7 tests
-│   ├── test_csv_format_step.py      # 31 tests
-│   ├── test_data_preview_step.py    # 31 tests
-│   ├── test_ofx_config_step.py      # 40 tests
+│   ├── test_file_selection_step.py  # 24 tests
+│   ├── test_csv_format_step.py      # 21 tests
+│   ├── test_data_preview_step.py    # 35 tests
+│   ├── test_ofx_config_step.py      # 20 tests
 │   ├── test_field_mapping_step.py   # 38 tests
-│   ├── test_advanced_options_step.py # 30 tests
+│   ├── test_advanced_options_step.py # 39 tests
 │   └── test_balance_preview_step.py # 29 tests
 └── run_all_tests.py                 # Convenience script
 ```
@@ -159,7 +159,7 @@ test_file_not_found()                 # Raises appropriate exception
 
 ---
 
-### test_ofx_generator.py (19 tests)
+### test_ofx_generator.py (21 tests)
 
 **Coverage**:
 - OFX generation and transaction formatting
@@ -213,7 +213,7 @@ test_date_format_variations()         # Multiple format support
 
 ---
 
-### test_transaction_utils.py (50 tests)
+### test_transaction_utils.py (68 tests)
 
 **Coverage**:
 - Building transaction descriptions (single column and composite)
@@ -474,7 +474,7 @@ test_validation_success()                # Validation succeeds
 
 ---
 
-### test_integration.py (5 tests)
+### test_integration.py (10 tests)
 
 **Coverage**:
 - Complete end-to-end conversion workflows
@@ -710,10 +710,10 @@ python3 -m unittest discover tests -v
 **Executed Tests** (215 total):
 - All non-GUI tests (94 tests):
   - test_csv_parser.py (8)
-  - test_ofx_generator.py (19)
+  - test_ofx_generator.py (21)
   - test_date_validator.py (12)
-  - test_transaction_utils.py (50)
-  - test_integration.py (5)
+  - test_transaction_utils.py (68)
+  - test_integration.py (10)
 
 - GUI utility tests without Tkinter dependencies (121 tests):
   - test_gui_utils.py (58)

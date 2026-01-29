@@ -44,7 +44,9 @@ Adds a transaction to the export list.
 - `amount` (float): Transaction amount
 - `description` (str): Transaction description/memo
 - `transaction_type` (str): Type: 'DEBIT' or 'CREDIT'
-- `transaction_id` (str, optional): Unique ID (UUID generated if not provided)
+- `transaction_id` (str, optional): Unique ID (deterministic UUID v5 generated if not provided)
+
+If `transaction_id` is omitted, the generator calls `transaction_utils.generate_deterministic_fitid()` to produce a consistent identifier based on normalized date, amount, memo, and account context.
 
 **Inversion Behavior:**
 When `invert_values=True`:
@@ -102,8 +104,8 @@ classDiagram
         +_generate_ofx_file()
     }
 
-    class uuid {
-        +uuid4()
+    class TransactionUtils {
+        +generate_deterministic_fitid()
     }
 
     class datetime {
@@ -112,7 +114,7 @@ classDiagram
     }
 
     OFXGenerator <.. ConversionHandler : uses
-    OFXGenerator ..> uuid : imports
+    OFXGenerator ..> TransactionUtils : uses
     OFXGenerator ..> datetime : imports
     OFXGenerator ..> logging : imports
 ```
