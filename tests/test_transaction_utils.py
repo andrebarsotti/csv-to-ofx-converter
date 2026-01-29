@@ -849,6 +849,127 @@ class TestGenerateDeterministicFitid(unittest.TestCase):
         self.assertIsInstance(fitid, str)
         self.assertEqual(len(fitid), 36)
 
+    def test_generate_deterministic_fitid_special_characters_in_memo(self):
+        """Test FITID generation with special characters in memo."""
+        from src.transaction_utils import generate_deterministic_fitid
+        
+        # Memo with special characters
+        fitid1 = generate_deterministic_fitid(
+            date="20260115",
+            amount=-100.50,
+            memo="Purchase @ Store & Co."
+        )
+        
+        # Verify function handles without errors
+        self.assertIsInstance(fitid1, str)
+        self.assertEqual(len(fitid1), 36)
+        # Verify valid UUID format
+        parts = fitid1.split('-')
+        self.assertEqual(len(parts), 5)
+        
+        # Memo with unicode characters
+        fitid2 = generate_deterministic_fitid(
+            date="20260115",
+            amount=-100.50,
+            memo="Café • Restaurant"
+        )
+        
+        # Verify function handles unicode without errors
+        self.assertIsInstance(fitid2, str)
+        self.assertEqual(len(fitid2), 36)
+        parts = fitid2.split('-')
+        self.assertEqual(len(parts), 5)
+        
+        # Verify different special characters produce different IDs
+        self.assertNotEqual(fitid1, fitid2)
+        
+        # Test more complex unicode
+        fitid3 = generate_deterministic_fitid(
+            date="20260115",
+            amount=-100.50,
+            memo="Açúcar € Café 日本語"
+        )
+        self.assertIsInstance(fitid3, str)
+        self.assertEqual(len(fitid3), 36)
+
+    def test_generate_deterministic_fitid_extreme_amounts(self):
+        """Test FITID generation with extreme amounts."""
+        from src.transaction_utils import generate_deterministic_fitid
+        
+        # Very large amount
+        fitid_large = generate_deterministic_fitid(
+            date="20260115",
+            amount=999999999.99,
+            memo="Large transaction"
+        )
+        self.assertIsInstance(fitid_large, str)
+        self.assertEqual(len(fitid_large), 36)
+        
+        # Very small amount
+        fitid_small = generate_deterministic_fitid(
+            date="20260115",
+            amount=0.01,
+            memo="Small transaction"
+        )
+        self.assertIsInstance(fitid_small, str)
+        self.assertEqual(len(fitid_small), 36)
+        
+        # Zero amount
+        fitid_zero = generate_deterministic_fitid(
+            date="20260115",
+            amount=0.00,
+            memo="Zero transaction"
+        )
+        self.assertIsInstance(fitid_zero, str)
+        self.assertEqual(len(fitid_zero), 36)
+        
+        # Negative large amount
+        fitid_neg = generate_deterministic_fitid(
+            date="20260115",
+            amount=-999999999.99,
+            memo="Large negative"
+        )
+        self.assertIsInstance(fitid_neg, str)
+        self.assertEqual(len(fitid_neg), 36)
+        
+        # Verify all produce different IDs
+        all_fitids = [fitid_large, fitid_small, fitid_zero, fitid_neg]
+        self.assertEqual(len(set(all_fitids)), 4, "All extreme amounts should produce unique IDs")
+
+    def test_generate_deterministic_fitid_date_formats(self):
+        """Test FITID generation with various OFX date formats."""
+        from src.transaction_utils import generate_deterministic_fitid
+        
+        # Various OFX date formats
+        fitid1 = generate_deterministic_fitid(
+            date="20260115000000[-3:BRT]",
+            amount=-100.50,
+            memo="Purchase"
+        )
+        self.assertIsInstance(fitid1, str)
+        self.assertEqual(len(fitid1), 36)
+        
+        fitid2 = generate_deterministic_fitid(
+            date="20260115000000",
+            amount=-100.50,
+            memo="Purchase"
+        )
+        self.assertIsInstance(fitid2, str)
+        self.assertEqual(len(fitid2), 36)
+        
+        fitid3 = generate_deterministic_fitid(
+            date="20260115",
+            amount=-100.50,
+            memo="Purchase"
+        )
+        self.assertIsInstance(fitid3, str)
+        self.assertEqual(len(fitid3), 36)
+        
+        # All three should extract YYYYMMDD correctly and produce same ID
+        self.assertEqual(fitid1, fitid2, "OFX format with timezone should match without timezone")
+        self.assertEqual(fitid2, fitid3, "OFX format with time should match date-only format")
+        self.assertEqual(fitid1, fitid3, "All date formats should normalize to same ID")
+
 
 if __name__ == '__main__':
     unittest.main()

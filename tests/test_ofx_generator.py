@@ -428,6 +428,99 @@ class TestOFXGenerator(unittest.TestCase):
         # Final should be -100 - 50 = -150
         self.assertIn('<BALAMT>-150.00</BALAMT>', content)
 
+    def test_deterministic_fitid_with_value_inversion(self):
+        """Test deterministic FITID generation with value inversion enabled."""
+        # Create generator with invert_values=True
+        generator = OFXGenerator(invert_values=True)
+        
+        # Add transaction without ID
+        generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description='Purchase',
+            transaction_type='DEBIT'
+        )
+        
+        # Verify transaction was added
+        self.assertEqual(len(generator.transactions), 1)
+        
+        # Verify transaction ID was generated
+        transaction = generator.transactions[0]
+        self.assertIn('id', transaction)
+        self.assertIsNotNone(transaction['id'])
+        
+        # Verify transaction ID is valid UUID format
+        transaction_id = transaction['id']
+        self.assertIsInstance(transaction_id, str)
+        self.assertEqual(len(transaction_id), 36)
+        parts = transaction_id.split('-')
+        self.assertEqual(len(parts), 5)
+        
+        # Verify value inversion doesn't affect transaction ID
+        # (Transaction ID should be based on inverted amount, matching actual OFX data)
+        generator2 = OFXGenerator(invert_values=False)
+        generator2.add_transaction(
+            date='2025-10-01',
+            amount=100.50,  # Opposite sign
+            description='Purchase',
+            transaction_type='CREDIT'  # Opposite type
+        )
+        
+        # Transaction IDs should be identical (same actual amount after inversion)
+        transaction_id2 = generator2.transactions[0]['id']
+        self.assertEqual(transaction_id, transaction_id2, "Value inversion should produce consistent IDs for equivalent transactions")
+
+    def test_deterministic_fitid_with_long_description(self):
+        """Test deterministic FITID with long description (>255 characters)."""
+        # Create a 300-character description
+        long_description = "A" * 300
+        
+        # Add transaction with long description (no ID)
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description=long_description,
+            transaction_type='DEBIT'
+        )
+        
+        # Verify transaction was added
+        self.assertEqual(len(self.generator.transactions), 1)
+        
+        # Verify transaction ID was generated correctly
+        transaction = self.generator.transactions[0]
+        self.assertIn('id', transaction)
+        transaction_id = transaction['id']
+        self.assertIsInstance(transaction_id, str)
+        self.assertEqual(len(transaction_id), 36)
+        
+        # Verify transaction ID is based on truncated 255 characters
+        # Add another transaction with exactly 255 A's
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description="A" * 255,
+            transaction_type='DEBIT'
+        )
+        
+        transaction_id_255 = self.generator.transactions[1]['id']
+        
+        # Transaction IDs should be identical (300 chars truncated to 255)
+        self.assertEqual(transaction_id, transaction_id_255, "Long description should be truncated to 255 characters for transaction ID")
+        
+        # Test with different character at position 254
+        description_256_diff = "A" * 254 + "B" + "A"
+        self.generator.add_transaction(
+            date='2025-10-01',
+            amount=-100.50,
+            description=description_256_diff,
+            transaction_type='DEBIT'
+        )
+        
+        transaction_id_diff = self.generator.transactions[2]['id']
+        
+        # This should produce a different transaction ID
+        self.assertNotEqual(transaction_id, transaction_id_diff, "Different character within 255 limit should produce different transaction ID")
+
 
 if __name__ == '__main__':
     unittest.main()
