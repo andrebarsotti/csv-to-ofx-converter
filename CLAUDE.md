@@ -63,13 +63,13 @@ csv-to-ofx-converter/
 │   ├── test_ofx_generator.py    # 21 tests
 │   ├── test_date_validator.py   # 12 tests
 │   ├── test_transaction_utils.py # 68 tests
-│   ├── test_gui_utils.py        # 58 tests
+│   ├── test_gui_utils.py        # 63 tests
 │   ├── test_gui_integration.py  # 15 tests
 │   ├── test_gui_balance_manager.py # 14 tests
 │   ├── test_gui_conversion_handler.py # 23 tests
 │   ├── test_gui_transaction_manager.py # 26 tests
 │   ├── test_gui_wizard_step.py  # 32 tests
-│   ├── test_integration.py      # 10 tests
+│   ├── test_integration.py      # 11 tests
 │   └── test_gui_steps/          # 206 tests (7 step test files)
 ├── docs/                        # Documentation
 │   ├── CLAUDE-ARCHITECTURE.md   # Architecture details

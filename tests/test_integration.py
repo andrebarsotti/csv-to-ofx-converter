@@ -8,7 +8,9 @@ Test cases for the complete conversion process.
 
 import unittest
 import os
+import re
 import tempfile
+import uuid
 from src.csv_to_ofx_converter import CSVParser, OFXGenerator
 
 
@@ -289,7 +291,6 @@ class TestIntegration(unittest.TestCase):
             # Extract FITIDs from generated file
             with open(output_file, 'r') as f:
                 content = f.read()
-                import re
                 fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
                 if run == 0:
                     fitids_first = fitids
@@ -302,7 +303,6 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(fitids_first, fitids_second, "FITIDs should be deterministic")
 
         # Verify FITIDs are valid UUIDs
-        import uuid
         for fitid in fitids_first:
             try:
                 uuid.UUID(fitid)
@@ -342,7 +342,6 @@ class TestIntegration(unittest.TestCase):
         # Extract FITIDs
         with open(output_file, 'r') as f:
             content = f.read()
-            import re
             fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
 
         # Verify all FITIDs are unique (different data = different IDs)
@@ -423,7 +422,6 @@ class TestIntegration(unittest.TestCase):
         # Extract FITIDs from partial export
         with open(output_partial, 'r') as f:
             content_partial = f.read()
-            import re
             fitids_partial = re.findall(r'<FITID>(.*?)</FITID>', content_partial)
 
         # Second export: Jan 1-31 (includes all previous transactions plus new ones)
@@ -512,7 +510,6 @@ class TestIntegration(unittest.TestCase):
         )
 
         # Extract FITIDs from both files
-        import re
         with open(output_no_invert, 'r') as f:
             fitids_no_invert = re.findall(r'<FITID>(.*?)</FITID>', f.read())
 
@@ -562,7 +559,6 @@ class TestIntegration(unittest.TestCase):
 
             with open(output_file, 'r') as f:
                 content = f.read()
-                import re
                 fitids = re.findall(r'<FITID>(.*?)</FITID>', content)
                 fitids_runs.append(fitids)
 

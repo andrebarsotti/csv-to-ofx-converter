@@ -217,7 +217,7 @@ When the user does not map a transaction ID column in Step 5, the converter gene
 - Explicit transaction IDs from CSV always take precedence
 - Ensures regenerated files do not duplicate transactions in downstream financial software
 
-### 3.4 Description Building
+### 3.5 Description Building
 
 ```mermaid
 flowchart TD
@@ -233,7 +233,7 @@ flowchart TD
     H --> I
 ```
 
-### 3.5 Balance Calculation
+### 3.6 Balance Calculation
 
 | Field | Formula |
 |-------|---------|
@@ -241,7 +241,7 @@ flowchart TD
 | **Total Credits** | Sum of all positive values |
 | **Total Debits** | Sum of absolute values of all negative values |
 
-### 3.6 Transaction Exclusion
+### 3.7 Transaction Exclusion
 
 Transactions can be excluded from conversion by:
 - Manual exclusion by user in Step 7

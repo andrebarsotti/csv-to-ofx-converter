@@ -217,7 +217,7 @@ Quando o usuário não mapeia uma coluna de ID no Passo 5, o conversor gera FITI
 - IDs explícitos vindos do CSV sempre têm precedência
 - Garante que arquivos regerados não criem duplicidades em softwares financeiros
 
-### 3.4 Construção de Descrição
+### 3.5 Construção de Descrição
 
 ```mermaid
 flowchart TD
@@ -233,7 +233,7 @@ flowchart TD
     H --> I
 ```
 
-### 3.5 Cálculo de Saldo
+### 3.6 Cálculo de Saldo
 
 | Campo | Fórmula |
 |-------|---------|
@@ -241,7 +241,7 @@ flowchart TD
 | **Total Créditos** | Soma de todos os valores positivos |
 | **Total Débitos** | Soma dos valores absolutos de todos os valores negativos |
 
-### 3.6 Exclusão de Transações
+### 3.7 Exclusão de Transações
 
 Transações podem ser excluídas da conversão por:
 - Exclusão manual pelo usuário no Passo 7

@@ -20,7 +20,7 @@ tests/
 ├── test_gui_conversion_handler.py   # 23 tests - Conversion handler
 ├── test_gui_transaction_manager.py  # 26 tests - Transaction manager
 ├── test_gui_wizard_step.py          # 32 tests - WizardStep base class
-├── test_integration.py              # 10 tests - End-to-end integration
+├── test_integration.py              # 11 tests - End-to-end integration
 ├── test_gui_steps/                  # 206 tests - Wizard step implementations
 │   ├── __init__.py
 │   ├── test_file_selection_step.py  # 24 tests

@@ -525,10 +525,10 @@ VERSION:102
 
 The project includes comprehensive unit tests (94 tests) organized in separate modules:
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
-- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (20 tests)
+- **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (21 tests)
 - **test_date_validator.py**: Date validation and boundary handling (12 tests)
 - **test_transaction_utils.py**: Transaction utility functions (68 tests)
-- **test_integration.py**: Complete end-to-end workflows and composite descriptions (10 tests)
+- **test_integration.py**: Complete end-to-end workflows and composite descriptions (11 tests)
 
 ### Run all tests (recommended):
 ```bash

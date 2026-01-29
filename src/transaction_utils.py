@@ -293,8 +293,8 @@ def generate_deterministic_fitid(
     """
     # Normalize date: Extract YYYYMMDD portion if in OFX format
     date_normalized = date.strip()
-    if '000000' in date_normalized:
-        # OFX format: YYYYMMDD000000[-3:BRT]
+    # Detect OFX datetime format: YYYYMMDD000000[-3:BRT]
+    if len(date_normalized) >= 14 and date_normalized[8:14] == "000000":
         date_normalized = date_normalized[:8]
 
     # Normalize amount: Format to 2 decimal places
