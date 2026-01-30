@@ -263,7 +263,7 @@ test_validate_missing_amount_field()
 
 ---
 
-### test_gui_utils.py (58 tests)
+### test_gui_utils.py (63 tests)
 
 **Coverage**:
 - File validation
@@ -474,7 +474,7 @@ test_validation_success()                # Validation succeeds
 
 ---
 
-### test_integration.py (10 tests)
+### test_integration.py (11 tests)
 
 **Coverage**:
 - Complete end-to-end conversion workflows
@@ -497,7 +497,7 @@ test_date_validation_workflow()         # Date validation integration
 
 **Test Files**:
 
-#### test_file_selection_step.py (7 tests)
+#### test_file_selection_step.py (24 tests)
 - File selection UI creation
 - Browse button functionality
 - File path validation
@@ -698,7 +698,7 @@ class TestIntegration(unittest.TestCase):
 
 **Test Execution**:
 ```bash
-# Runs 215 tests (excludes GUI tests requiring display server)
+# Runs 246 tests (excludes GUI tests requiring display server)
 python3 -m unittest discover tests -v
 ```
 
@@ -707,16 +707,16 @@ python3 -m unittest discover tests -v
 - `test_gui_wizard_step.py` (32 tests) - Not executed (Tkinter import fails in CI)
 - `test_gui_steps/*` (206 tests) - Not executed (Tkinter import fails in CI)
 
-**Executed Tests** (215 total):
-- All non-GUI tests (94 tests):
+**Executed Tests** (246 total):
+- All non-GUI tests (120 tests):
   - test_csv_parser.py (8)
   - test_ofx_generator.py (21)
   - test_date_validator.py (12)
   - test_transaction_utils.py (68)
-  - test_integration.py (10)
+  - test_integration.py (11)
 
-- GUI utility tests without Tkinter dependencies (121 tests):
-  - test_gui_utils.py (58)
+- GUI utility tests without Tkinter dependencies (126 tests):
+  - test_gui_utils.py (63)
   - test_gui_balance_manager.py (14)
   - test_gui_conversion_handler.py (23)
   - test_gui_transaction_manager.py (26)

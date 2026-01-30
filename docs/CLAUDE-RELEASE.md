@@ -51,11 +51,11 @@ Before creating a release, ensure ALL of the following are complete:
 
 **Run All Tests**:
 ```bash
-# Run all 493 tests
+# Run all 499 tests
 python3 -m unittest discover tests -v
 ```
 
-**Expected Result**: All tests pass (493 tests, 0 failures, 0 errors)
+**Expected Result**: All tests pass (499 tests, 0 failures, 0 errors)
 
 **Verify Individual Test Modules**:
 ```bash
@@ -259,7 +259,7 @@ Changes:
 - Documentation: Updates
 
 Testing:
-- All 493 tests passing
+- All 499 tests passing
 - Tested on Linux, macOS, Windows
 - Compatible with Python 3.7-3.11
 
@@ -533,7 +533,7 @@ gh run watch
 
 **Expected Behavior**:
 - ✅ Workflow status: "completed success"
-- ✅ Tests run: 215 tests (94 non-GUI + 121 GUI utility tests)
+- ✅ Tests run: 246 tests (120 non-GUI + 126 GUI utility tests)
 - ✅ GUI tests excluded:
   - `test_gui_integration.py` (15 tests) - skipped
   - `test_gui_wizard_step.py` (32 tests) - not executed
@@ -647,7 +647,7 @@ Release version X.Y.Z: Brief Title
 
 ## Testing
 
-- All 493 tests passing
+- All 499 tests passing
 - Tested on:
   - Linux (Ubuntu 20.04+)
   - macOS (10.14+)

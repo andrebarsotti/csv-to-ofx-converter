@@ -2,7 +2,7 @@
 
 > 🇧🇷 **[Leia em Português (pt-BR)](README.pt-BR.md)**
 
-A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.2.0** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
+A complete Python application that converts CSV (Comma-Separated Values) files into OFX (Open Financial Exchange) format, with full support for Brazilian banking formats. **Version 3.2.1** features a completely redesigned wizard-style interface with advanced features including balance management and preview capabilities.
 
 ## ⚠️ Important Notice
 
@@ -506,7 +506,7 @@ VERSION:102
 
 ## Running Tests
 
-The project includes comprehensive unit tests (94 tests) organized in separate modules:
+The project includes comprehensive unit tests (499 tests) organized in separate modules:
 - **test_csv_parser.py**: CSV parsing with different formats and amount normalization (8 tests)
 - **test_ofx_generator.py**: OFX generation, value inversion, and transaction handling (21 tests)
 - **test_date_validator.py**: Date validation and boundary handling (12 tests)
@@ -553,7 +553,7 @@ test_date_validator_initialization (tests.test_date_validator.TestDateValidator)
 test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 94 tests in 0.XXXs
+Ran 499 tests in 0.XXXs
 
 OK
 ```
@@ -709,7 +709,7 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 MIT License
 
-Copyright (c) 2025 André Claudinei Barsotti Salvadeo
+Copyright (c) 2026 André Claudinei Barsotti Salvadeo
 
 See [LICENSE](LICENSE) file for details.
 
@@ -737,12 +737,33 @@ For issues, questions, or suggestions:
 
 ---
 
-**Version**: 3.2.0 - Enhanced Edition
+**Version**: 3.2.1 - Enhanced Edition
 **Last Updated**: January 2026
 **Author**: André Claudinei Barsotti Salvadeo (with AI Assistance)
 **License**: MIT
 
 ## Changelog
+
+### Version 3.2.1 (January 2026) - Code Quality Release
+
+**Code Quality**: Resolved 7 SonarQube code smells across gui_utils.py and gui_conversion_handler.py
+
+1. **String Literal Duplication (S1192)**: Extracted 3 repeated string literals into named constants in `constants.py`:
+   - `DATE_FORMAT_DISPLAY` for 'DD/MM/YYYY'
+   - `DATE_FORMAT_STRPTIME` for '%d/%m/%Y'
+   - `DEFAULT_NOT_MAPPED` for '<Not Mapped>'
+
+2. **Cognitive Complexity (S3776)**: Refactored `_process_single_row()` in `gui_conversion_handler.py` to reduce cognitive complexity below threshold by extracting helper methods
+
+3. **F-string Without Placeholders (S3457)**: Replaced unnecessary f-strings with regular strings
+
+4. **Print Function Usage (S5886)**: Replaced `print()` calls with proper `logging` calls
+
+**Impact**: Improved code maintainability and SonarQube quality gate compliance. No functional changes.
+
+**Upgrade Notes**: Direct upgrade from v3.2.0. No breaking changes. All existing functionality preserved.
+
+**Test Suite**: All 499 tests passing.
 
 ### Version 3.2.0 (January 2026) - New Feature Release
 

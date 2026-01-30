@@ -2,7 +2,7 @@
 
 > 🇺🇸 **[Read in English](README.md)**
 
-Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.2.0** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
+Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Values) para o formato OFX (Open Financial Exchange), com suporte total para formatos bancários brasileiros. **Versão 3.2.1** apresenta uma interface completamente redesenhada em formato de assistente com recursos avançados incluindo gerenciamento de saldos e visualização prévia.
 
 ## ⚠️ Aviso Importante
 
@@ -506,7 +506,7 @@ VERSION:102
 
 ## Executando os Testes
 
-O projeto inclui testes unitários abrangentes (94 testes) organizados em módulos separados:
+O projeto inclui testes unitários abrangentes (499 testes) organizados em módulos separados:
 - **test_csv_parser.py**: Análise de CSV com diferentes formatos e normalização de valores (8 testes)
 - **test_ofx_generator.py**: Geração de OFX, inversão de valores e manipulação de transações (21 testes)
 - **test_date_validator.py**: Validação de data e tratamento de limites (12 testes)
@@ -553,7 +553,7 @@ test_date_validator_initialization (tests.test_date_validator.TestDateValidator)
 test_is_within_range (tests.test_date_validator.TestDateValidator) ... ok
 ...
 ----------------------------------------------------------------------
-Ran 44 tests in 0.XXXs
+Ran 499 tests in 0.XXXs
 
 OK
 ```
@@ -709,7 +709,7 @@ Contribuições são bem-vindas! Sinta-se livre para enviar pull requests ou abr
 
 Licença MIT
 
-Copyright (c) 2025 André Claudinei Barsotti Salvadeo
+Copyright (c) 2026 André Claudinei Barsotti Salvadeo
 
 Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
@@ -737,12 +737,33 @@ Para problemas, questões ou sugestões:
 
 ---
 
-**Versão**: 3.2.0 - Edição Aprimorada
+**Versão**: 3.2.1 - Edição Aprimorada
 **Última Atualização**: Janeiro de 2026
 **Autor**: André Claudinei Barsotti Salvadeo (com Assistência de IA)
 **Licença**: MIT
 
 ## Histórico de Mudanças
+
+### Versão 3.2.1 (Janeiro de 2026) - Qualidade de Código
+
+**Qualidade de Código**: Resolvidos 7 code smells do SonarQube em gui_utils.py e gui_conversion_handler.py
+
+1. **Duplicação de Literais de String (S1192)**: Extraídos 3 literais de string repetidos para constantes nomeadas em `constants.py`:
+   - `DATE_FORMAT_DISPLAY` para 'DD/MM/YYYY'
+   - `DATE_FORMAT_STRPTIME` para '%d/%m/%Y'
+   - `DEFAULT_NOT_MAPPED` para '<Not Mapped>'
+
+2. **Complexidade Cognitiva (S3776)**: Refatorado `_process_single_row()` em `gui_conversion_handler.py` para reduzir a complexidade cognitiva abaixo do limite, extraindo métodos auxiliares
+
+3. **F-string Sem Placeholders (S3457)**: Substituídas f-strings desnecessárias por strings regulares
+
+4. **Uso de Print (S5886)**: Substituídas chamadas `print()` por chamadas `logging` apropriadas
+
+**Impacto**: Melhorada a manutenibilidade do código e conformidade com o quality gate do SonarQube. Sem alterações funcionais.
+
+**Notas de Atualização**: Atualização direta da v3.2.0. Sem alterações que quebrem compatibilidade. Toda funcionalidade existente preservada.
+
+**Suite de Testes**: Todos os 499 testes passando.
 
 ### Versão 3.2.0 (Janeiro de 2026) - Nova Funcionalidade
 

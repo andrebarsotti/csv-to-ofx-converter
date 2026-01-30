@@ -20,7 +20,7 @@ src/
   gui_conversion_handler.py # ConversionHandler class - CSV to OFX conversion orchestration
   gui_transaction_manager.py # TransactionManager class - transaction operations and context menus
   gui_wizard_step.py       # WizardStep base class - abstract base for wizard steps (~355 lines)
-  constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED)
+  constants.py             # Shared constants (NOT_MAPPED, NOT_SELECTED, DEFAULT_NOT_MAPPED, DATE_FORMAT_DISPLAY, DATE_FORMAT_STRPTIME)
   gui_steps/               # Wizard step implementations package (Phase D complete - all 7 steps)
     __init__.py            # Package initialization, exports all step classes
     file_selection_step.py # FileSelectionStep - Step 1: File selection (174 lines, 7 tests)
@@ -711,9 +711,9 @@ python3 -m unittest discover tests -v
 - `test_gui_wizard_step.py` (32 tests) - Not executed (Tkinter imports fail in CI)
 - `test_gui_steps/*` (206 tests) - Not executed (Tkinter imports fail in CI)
 
-**Executed Tests** (215 total):
-- All non-GUI tests (94 tests)
-- GUI utility tests (121 tests) - Use mocks, no Tkinter dependencies
+**Executed Tests** (246 total):
+- All non-GUI tests (120 tests)
+- GUI utility tests (126 tests) - Use mocks, no Tkinter dependencies
 
 **Coverage Configuration**:
 - Measured using coverage.py
