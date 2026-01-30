@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-**CSV to OFX Converter** has a comprehensive test suite using the `unittest` framework from Python's standard library. The suite contains **493 tests** organized in separate modules.
+**CSV to OFX Converter** has a comprehensive test suite using the `unittest` framework from Python's standard library. The suite contains **499 tests** organized in separate modules.
 
 ### 1.1 Testing Tools
 
@@ -29,7 +29,7 @@ tests/
 ├── test_gui_conversion_handler.py # ConversionHandler tests (23 tests)
 ├── test_gui_transaction_manager.py # TransactionManager tests (26 tests)
 ├── test_gui_wizard_step.py      # WizardStep class tests (32 tests)
-├── test_integration.py          # E2E integration tests (5 tests)
+├── test_integration.py          # E2E integration tests (11 tests)
 └── test_gui_steps/              # Wizard step tests (206 tests)
     ├── test_file_selection_step.py
     ├── test_csv_format_step.py

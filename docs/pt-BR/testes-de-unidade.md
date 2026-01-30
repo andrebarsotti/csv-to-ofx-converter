@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-O **CSV to OFX Converter** possui uma suíte de testes abrangente utilizando o framework `unittest` da biblioteca padrão do Python. A suíte contém **493 testes** organizados em módulos separados.
+O **CSV to OFX Converter** possui uma suíte de testes abrangente utilizando o framework `unittest` da biblioteca padrão do Python. A suíte contém **499 testes** organizados em módulos separados.
 
 ### 1.1 Ferramentas de Teste
 
@@ -29,7 +29,7 @@ tests/
 ├── test_gui_conversion_handler.py # Testes do ConversionHandler (23 testes)
 ├── test_gui_transaction_manager.py # Testes do TransactionManager (26 testes)
 ├── test_gui_wizard_step.py      # Testes da classe WizardStep (32 testes)
-├── test_integration.py          # Testes de integração E2E (5 testes)
+├── test_integration.py          # Testes de integração E2E (11 testes)
 └── test_gui_steps/              # Testes dos passos do wizard (206 testes)
     ├── test_file_selection_step.py
     ├── test_csv_format_step.py
