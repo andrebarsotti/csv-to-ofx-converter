@@ -718,26 +718,6 @@ Os arquivos OFX gerados são compatíveis com:
 - Uma conta por arquivo
 - Visualização limitada às primeiras 100 linhas para performance
 
-## Melhorias Futuras
-
-Possíveis aprimoramentos para versões futuras:
-
-1. **Suporte a Conta Bancária**: Adicionar suporte para contas corrente/poupança (BANKMSGSRSV1)
-2. **Múltiplas Contas**: Suportar múltiplas contas em um único arquivo OFX
-3. **Templates**: Salvar e carregar templates de mapeamento de colunas
-4. **Processamento em Lote**: Converter múltiplos arquivos CSV de uma vez
-5. **Auto-Detecção de CSV**: Detectar automaticamente formato CSV e formatos de data
-6. **Categorias de Transação**: Suportar campos de categoria/classe OFX
-7. **Contas de Investimento**: Suporte para ações, títulos e transações de investimento
-8. **Suporte OFX 2.x**: Adicionar suporte para formato XML OFX mais recente
-9. **Formatos de Data Personalizados**: Permitir que usuários especifiquem formatos de data personalizados
-10. **Interface de Linha de Comando**: Adicionar CLI para scripts e automação
-11. **Deduplicação de Transações**: Detectar e tratar transações duplicadas
-12. **Transações Divididas**: Suporte para transações divididas/categorizadas
-13. **Suporte Multi-idioma**: Internacionalização (i18n)
-14. **Suporte a Excel**: Importação direta de arquivos .xlsx/.xls
-15. **Ajuste de Data em Lote**: Opção para ajustar todas as datas fora do intervalo de uma vez sem diálogos
-
 ## Contribuindo
 
 Contribuições são bem-vindas! Sinta-se livre para enviar pull requests ou abrir issues para bugs e solicitações de recursos.
