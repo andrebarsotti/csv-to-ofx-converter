@@ -169,11 +169,11 @@ csv-to-ofx-converter/
 
 ## 6. Additional Information
 
-- **Current Version**: 3.1.0 (November 2025)
+- **Current Version**: 3.2.0 (January 2026)
 - **License**: MIT
 - **Author**: André Claudinei Barsotti Salvadeo
 - **Repository**: [GitHub](https://github.com/andrebarsotti/csv-to-ofx-converter)
 
 ---
 
-*Documentation generated in December 2025*
+*Documentation generated in January 2026*
