@@ -15,23 +15,6 @@ A complete Python application that converts CSV (Comma-Separated Values) files i
 - Use at your own risk - test thoroughly before using with important data
 - Community contributions and improvements are welcome
 
-## ✨ What's New in Version 2.1
-
-**Balance Management Features:**
-
-1. **💰 Initial Balance**: Specify the starting balance for your statement (optional)
-2. **📊 Balance Preview**: New Step 7 showing comprehensive balance summary before export
-3. **🔢 Manual/Auto Balance**: Toggle between automatic and manual final balance calculation
-4. **📱 Responsive Layout**: Window now resizable with optimized space utilization
-
-**Previous Major Features (Version 2.0):**
-
-1. **🎯 Step-by-Step Wizard Interface**: Guided multi-step process with clear progress indicators
-2. **👀 CSV Data Preview**: View your data in a table before converting
-3. **🔄 Value Inversion**: Easily swap debits and credits if needed
-4. **📝 Composite Descriptions**: Combine multiple columns to create transaction descriptions
-5. **✅ Enhanced Date Handling**: Keep, adjust, or exclude out-of-range transactions
-
 ## Features
 
 ### Core Features

@@ -15,23 +15,6 @@ Uma aplicação Python completa que converte arquivos CSV (Comma-Separated Value
 - Use por sua conta e risco - teste completamente antes de uso em dados importantes
 - Contribuições e melhorias da comunidade são bem-vindas
 
-## ✨ Novidades na Versão 2.1
-
-**Funcionalidades de Gerenciamento de Saldos:**
-
-1. **💰 Saldo Inicial**: Especifique o saldo inicial para seu extrato (opcional)
-2. **📊 Visualização de Saldos**: Nova Etapa 7 mostrando resumo completo de saldos antes da exportação
-3. **🔢 Saldo Manual/Automático**: Alterne entre cálculo automático e manual do saldo final
-4. **📱 Layout Responsivo**: Janela agora redimensionável com melhor utilização do espaço
-
-**Funcionalidades Principais Anteriores (Versão 2.0):**
-
-1. **🎯 Interface em Assistente Passo a Passo**: Processo guiado em múltiplas etapas com indicadores de progresso claros
-2. **👀 Visualização de Dados CSV**: Veja seus dados em uma tabela antes de converter
-3. **🔄 Inversão de Valores**: Troque facilmente débitos e créditos quando necessário
-4. **📝 Descrições Compostas**: Combine múltiplas colunas para criar descrições de transações
-5. **✅ Tratamento Aprimorado de Datas**: Mantenha, ajuste ou exclua transações fora do intervalo
-
 ## Funcionalidades
 
 ### Funcionalidades Principais
