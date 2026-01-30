@@ -111,8 +111,9 @@ class ConversionHandler:
         try:
             parser, generator = self._create_parser_and_generator(config)
 
-            date_validator = self._create_date_validator(config)
-            if date_validator is False:
+            try:
+                date_validator = self._create_date_validator(config)
+            except ValueError:
                 return (
                     False,
                     "Invalid date range for validation",
@@ -167,7 +168,10 @@ class ConversionHandler:
             config: ConversionConfig with date validation settings
 
         Returns:
-            DateValidator instance, None if disabled, or False on error
+            DateValidator instance or None if disabled
+
+        Raises:
+            ValueError: If date range is missing or invalid
         """
         if not config.enable_date_validation:
             return None
@@ -176,14 +180,9 @@ class ConversionHandler:
         end_date_str = config.statement_end_date.strip()
 
         if not start_date_str or not end_date_str:
-            return False
+            raise ValueError("Missing date range for validation")
 
-        try:
-            validator = DateValidator(start_date_str, end_date_str)
-            return validator
-        except ValueError as e:
-            logger.error("Invalid date range: %s", e)
-            return False
+        return DateValidator(start_date_str, end_date_str)
 
     def _process_csv_rows(
         self,
