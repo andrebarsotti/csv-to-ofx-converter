@@ -14,6 +14,8 @@ import os
 from typing import Tuple, Optional, List, Dict
 from datetime import datetime
 
+from .constants import DEFAULT_NOT_MAPPED, DATE_FORMAT_DISPLAY, DATE_FORMAT_STRPTIME
+
 
 # ==================== FILE VALIDATION ====================
 
@@ -45,7 +47,7 @@ def validate_csv_file_selection(csv_file_path: str) -> Tuple[bool, Optional[str]
 
 def validate_required_field_mappings(
     field_mappings: Dict[str, str],
-    not_mapped_value: str = "<Not Mapped>"
+    not_mapped_value: str = DEFAULT_NOT_MAPPED
 ) -> Tuple[bool, Optional[str]]:
     """
     Validate that required fields (date and amount) are mapped.
@@ -72,7 +74,7 @@ def validate_required_field_mappings(
 def validate_description_mapping(
     description_mapping: str,
     description_columns: List[str],
-    not_mapped_value: str = "<Not Mapped>",
+    not_mapped_value: str = DEFAULT_NOT_MAPPED,
     not_selected_value: str = "<Not Selected>"
 ) -> Tuple[bool, Optional[str]]:
     """
@@ -134,7 +136,7 @@ def format_date_string(input_string: str, max_length: int = 10) -> str:
     return formatted[:max_length]
 
 
-def validate_date_format(date_string: str, expected_format: str = 'DD/MM/YYYY') -> Tuple[bool, Optional[str]]:
+def validate_date_format(date_string: str, expected_format: str = DATE_FORMAT_DISPLAY) -> Tuple[bool, Optional[str]]:
     """
     Validate that a date string matches the expected format.
 
@@ -148,36 +150,58 @@ def validate_date_format(date_string: str, expected_format: str = 'DD/MM/YYYY') 
     if not date_string or date_string.strip() == '':
         return False, "Date cannot be empty"
 
-    # For DD/MM/YYYY format
-    if expected_format == 'DD/MM/YYYY':
-        parts = date_string.split('/')
-        if len(parts) != 3:
-            return False, f"Date must be in DD/MM/YYYY format (e.g., 01/10/2025)"
-
-        day, month, year = parts
-        if not (day.isdigit() and month.isdigit() and year.isdigit()):
-            return False, "Date parts must be numeric"
-
-        if len(day) != 2 or len(month) != 2 or len(year) != 4:
-            return False, "Date must be in DD/MM/YYYY format (e.g., 01/10/2025)"
-
-        # Validate ranges
-        day_val = int(day)
-        month_val = int(month)
-        year_val = int(year)
-
-        if day_val < 1 or day_val > 31:
-            return False, "Day must be between 01 and 31"
-
-        if month_val < 1 or month_val > 12:
-            return False, "Month must be between 01 and 12"
-
-        if year_val < 1900 or year_val > 2100:
-            return False, "Year must be between 1900 and 2100"
-
-        return True, None
+    if expected_format == DATE_FORMAT_DISPLAY:
+        return _validate_ddmmyyyy(date_string)
 
     return False, f"Unsupported date format: {expected_format}"
+
+
+def _validate_ddmmyyyy(date_string: str) -> Tuple[bool, Optional[str]]:
+    """
+    Validate a date string in DD/MM/YYYY format.
+
+    Args:
+        date_string: Date string to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    parts = date_string.split('/')
+    if len(parts) != 3:
+        return False, "Date must be in DD/MM/YYYY format (e.g., 01/10/2025)"
+
+    day, month, year = parts
+    if not (day.isdigit() and month.isdigit() and year.isdigit()):
+        return False, "Date parts must be numeric"
+
+    if len(day) != 2 or len(month) != 2 or len(year) != 4:
+        return False, "Date must be in DD/MM/YYYY format (e.g., 01/10/2025)"
+
+    return _validate_date_ranges(int(day), int(month), int(year))
+
+
+def _validate_date_ranges(day: int, month: int, year: int) -> Tuple[bool, Optional[str]]:
+    """
+    Validate day, month and year value ranges.
+
+    Args:
+        day: Day value (1-31)
+        month: Month value (1-12)
+        year: Year value (1900-2100)
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if day < 1 or day > 31:
+        return False, "Day must be between 01 and 31"
+
+    if month < 1 or month > 12:
+        return False, "Month must be between 01 and 12"
+
+    if year < 1900 or year > 2100:
+        return False, "Year must be between 1900 and 2100"
+
+    return True, None
 
 
 # ==================== NUMERIC VALIDATION ====================
@@ -310,7 +334,7 @@ def parse_date_for_sorting(date_str: str) -> datetime:
     """
     date_formats = [
         '%Y-%m-%d',    # ISO format: 2025-10-01
-        '%d/%m/%Y',    # Brazilian format: 01/10/2025
+        DATE_FORMAT_STRPTIME,  # Brazilian format: 01/10/2025
         '%m/%d/%Y',    # US format: 10/01/2025
         '%Y/%m/%d',    # Alternative ISO: 2025/10/01
         '%d-%m-%Y',    # Dash format: 01-10-2025
@@ -334,7 +358,7 @@ def parse_date_for_sorting(date_str: str) -> datetime:
 def validate_conversion_prerequisites(
     csv_data: List[Dict],
     field_mappings: Dict[str, str],
-    not_mapped_value: str = "<Not Mapped>"
+    not_mapped_value: str = DEFAULT_NOT_MAPPED
 ) -> Tuple[bool, Optional[str]]:
     """
     Validate all prerequisites for CSV to OFX conversion.
@@ -378,23 +402,23 @@ def validate_date_range_inputs(start_date: str, end_date: str) -> Tuple[bool, Op
         return False, "Please enter an end date"
 
     # Validate format for both dates
-    is_valid, error = validate_date_format(start_date, 'DD/MM/YYYY')
+    is_valid, error = validate_date_format(start_date, DATE_FORMAT_DISPLAY)
     if not is_valid:
         return False, f"Invalid start date: {error}"
 
-    is_valid, error = validate_date_format(end_date, 'DD/MM/YYYY')
+    is_valid, error = validate_date_format(end_date, DATE_FORMAT_DISPLAY)
     if not is_valid:
         return False, f"Invalid end date: {error}"
 
     # Parse dates for comparison (strptime catches impossible calendar dates
     # like 31/02/2025 that pass the basic format check above)
     try:
-        start_dt = datetime.strptime(start_date.strip(), '%d/%m/%Y')
+        start_dt = datetime.strptime(start_date.strip(), DATE_FORMAT_STRPTIME)
     except ValueError:
         return False, "Invalid start date: date does not exist"
 
     try:
-        end_dt = datetime.strptime(end_date.strip(), '%d/%m/%Y')
+        end_dt = datetime.strptime(end_date.strip(), DATE_FORMAT_STRPTIME)
     except ValueError:
         return False, "Invalid end date: date does not exist"
 
