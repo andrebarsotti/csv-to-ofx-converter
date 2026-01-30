@@ -718,26 +718,6 @@ The generated OFX files are compatible with:
 - Single account per file
 - Preview limited to first 100 rows for performance
 
-## Future Improvements
-
-Possible enhancements for future versions:
-
-1. **Bank Account Support**: Add support for checking/savings accounts (BANKMSGSRSV1)
-2. **Multiple Accounts**: Support multiple accounts in a single OFX file
-3. **Templates**: Save and load column mapping templates
-4. **Batch Processing**: Convert multiple CSV files at once
-5. **CSV Auto-Detection**: Automatically detect CSV format and date formats
-6. **Transaction Categories**: Support OFX category/class fields
-7. **Investment Accounts**: Support for stocks, bonds, and investment transactions
-8. **OFX 2.x Support**: Add support for newer OFX XML format
-9. **Custom Date Formats**: Allow users to specify custom date formats
-10. **Command-Line Interface**: Add CLI for scripting and automation
-11. **Transaction Deduplication**: Detect and handle duplicate transactions
-12. **Split Transactions**: Support for split/categorized transactions
-13. **Multi-language Support**: Internationalization (i18n)
-14. **Excel Support**: Direct import from .xlsx/.xls files
-15. **Bulk Date Adjustment**: Option to adjust all out-of-range dates at once without dialogs
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
